@@ -8,7 +8,8 @@ import com.ruralnetwork.depot.VillageDepot;
 import com.ruralnetwork.entite.Route;
 import com.ruralnetwork.entite.Village;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.core5.http.HttpHeaders;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -22,8 +23,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Service IA avec Hugging Face Inference API (gratuit, sans clé)
- * Utilise le modèle de génération de texte publique
+ * Service IA — utilise Google Gemini (Generative Language) quand disponible
+ * et retombe sur une génération locale si hors-ligne ou en cas d'erreur.
  */
 @Service
 public class AssistantIAService {
@@ -36,11 +37,11 @@ public class AssistantIAService {
         this.routeDepot = routeDepot;
     }
 
-    private static final String HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/gpt2";
     private static final Gson gson = new Gson();
 
-    @Value("${huggingface.api.key:}")
-    private String huggingfaceApiKey;
+
+    @Value("${GEMINI_API_KEY:${gemini.api.key:}}")
+    private String geminiApiKey;
 
     public String obtenirRecommandation(String question) {
         try {
@@ -48,11 +49,69 @@ public class AssistantIAService {
             String contexte = construireContexte();
             String prompt = construirePrompt(question, contexte);
 
-            return genererReponseIA(prompt);
+            // Prioritize Gemini (Google) if API key present
+            if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+                try {
+                    return genererReponseGemini(prompt);
+                } catch (Exception e) {
+                    // if Gemini fails, fallback to Hugging Face then local
+                }
+            }
+
+            // If no Gemini key, fallback directly to local generation
+            return genererReponseLocal(prompt);
         } catch (Exception e) {
             // Fallback sur analyse locale
             return genererReponseLocal(question);
         }
+    }
+    private String genererReponseGemini(String prompt) throws Exception {
+        // Use Google Generative Language API endpoint (API key passed as query param)
+        String encodedKey = URLEncoder.encode(geminiApiKey, StandardCharsets.UTF_8.toString());
+        String url = "https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generate?key=" + encodedKey;
+
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(url);
+
+        JsonObject requestBody = new JsonObject();
+        JsonObject promptObj = new JsonObject();
+        promptObj.addProperty("text", prompt);
+        requestBody.add("prompt", promptObj);
+        requestBody.addProperty("maxOutputTokens", 512);
+        requestBody.addProperty("temperature", 0.2);
+
+        httpPost.setEntity(new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON));
+
+        return client.execute(httpPost, response -> {
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(response.getEntity().getContent())
+            );
+            String result = reader.lines().collect(Collectors.joining());
+
+            try {
+                JsonObject json = gson.fromJson(result, JsonObject.class);
+                if (json == null) return genererReponseLocal(prompt);
+
+                // Try common fields in GA responses
+                if (json.has("candidates") && json.get("candidates").isJsonArray()) {
+                    JsonArray candidates = json.getAsJsonArray("candidates");
+                    if (candidates.size() > 0) {
+                        JsonObject first = candidates.get(0).getAsJsonObject();
+                        if (first.has("output")) return first.get("output").getAsString();
+                        if (first.has("content")) return first.get("content").getAsString();
+                        if (first.has("text")) return first.get("text").getAsString();
+                    }
+                }
+
+                // Fallback: try 'candidates' nested or other shapes
+                if (json.has("candidates")) return json.get("candidates").toString();
+                if (json.has("output")) return json.get("output").getAsString();
+            } catch (Exception e) {
+                // ignore and fallback
+            }
+
+            return genererReponseLocal(prompt);
+        });
     }
 
     private String construireContexte() {
@@ -80,41 +139,6 @@ public class AssistantIAService {
                "\nRépondez en tant qu'assistant agricole intelligent pour Madagascar 2035:";
     }
 
-    private String genererReponseIA(String prompt) throws Exception {
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(HUGGING_FACE_API_URL);
-
-        // Créer la requête
-        JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("inputs", prompt);
-        requestBody.addProperty("parameters", "{\"max_length\": 200}");
-
-        httpPost.setEntity(new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON));
-        if (huggingfaceApiKey != null && !huggingfaceApiKey.isBlank()) {
-            httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + huggingfaceApiKey);
-        }
-
-        // Exécuter la requête
-        return client.execute(httpPost, response -> {
-            BufferedReader reader = new BufferedReader(
-                new InputStreamReader(response.getEntity().getContent())
-            );
-            String result = reader.lines().collect(Collectors.joining());
-
-            try {
-                JsonArray jsonArray = gson.fromJson(result, JsonArray.class);
-                if (jsonArray != null && jsonArray.size() > 0) {
-                    return jsonArray.get(0).getAsJsonObject()
-                            .get("generated_text")
-                            .getAsString();
-                }
-            } catch (Exception e) {
-                // En cas d'erreur, utiliser le fallback
-            }
-
-            return genererReponseLocal(prompt);
-        });
-    }
 
     public String genererReponseLocal(String question) {
         String questionMin = question.toLowerCase();

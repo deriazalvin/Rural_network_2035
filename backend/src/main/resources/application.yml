@@ -30,6 +30,4 @@ logging:
     root: INFO
     com.ruralnetwork: DEBUG
 
-huggingface:
-  api:
-    key: ""
+
