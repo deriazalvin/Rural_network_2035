@@ -1,4 +1,4 @@
-const DEFAULT_BASE = 'http://localhost:8080/api';
+const DEFAULT_BASE = '/api';
 
 export class ServiceDonnees {
   constructor(baseUrl = DEFAULT_BASE) {
@@ -66,7 +66,13 @@ export class ServiceDonnees {
   optimiserTournee(payload) { return this.request('/optimisations', { method: 'POST', body: JSON.stringify(payload) }); }
 
   // Assistant IA
-  analyserIA(question) { return this.request('/ia/analyser', { method: 'POST', body: JSON.stringify({ question }) }); }
+  // ServiceDonnees.js
+    analyserIA(question) { 
+      return this.request('/ia/analyser', { 
+        method: 'POST', 
+        body: JSON.stringify({ "question": question }) 
+      }); 
+    }
 
   // Auth
   async login({ email, motDePasse }) {

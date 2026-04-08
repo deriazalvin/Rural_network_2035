@@ -21,7 +21,9 @@ public class AssistantIAControleur {
     public ResponseEntity<Map<String, String>> analyser(@RequestBody Map<String, String> request) {
         String question = request.get("question");
         if (question == null || question.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> erreur = new HashMap<>();
+            erreur.put("error", "Le champ 'question' est obligatoire.");
+            return ResponseEntity.status(400).body(erreur);
         }
 
         String reponse = assistantIAService.obtenirRecommandation(question);

@@ -82,36 +82,97 @@ public class AssistantIAService {
 
         httpPost.setEntity(new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON));
 
+        // Log request for debugging
+        System.out.println("[AssistantIAService] Gemini request body: " + requestBody.toString());
+
         return client.execute(httpPost, response -> {
             BufferedReader reader = new BufferedReader(
                 new InputStreamReader(response.getEntity().getContent())
             );
             String result = reader.lines().collect(Collectors.joining());
 
+            // Log raw response to help debug identical-answer issue
+            System.out.println("[AssistantIAService] Gemini raw response: " + result);
+
             try {
                 JsonObject json = gson.fromJson(result, JsonObject.class);
                 if (json == null) return genererReponseLocal(prompt);
 
-                // Try common fields in GA responses
+                // Robust extraction: try common fields, then recursively find first string
                 if (json.has("candidates") && json.get("candidates").isJsonArray()) {
                     JsonArray candidates = json.getAsJsonArray("candidates");
-                    if (candidates.size() > 0) {
-                        JsonObject first = candidates.get(0).getAsJsonObject();
-                        if (first.has("output")) return first.get("output").getAsString();
-                        if (first.has("content")) return first.get("content").getAsString();
-                        if (first.has("text")) return first.get("text").getAsString();
+                    for (int i = 0; i < candidates.size(); i++) {
+                        try {
+                            JsonObject cand = candidates.get(i).getAsJsonObject();
+                            if (cand.has("output") && cand.get("output").isJsonPrimitive()) {
+                                return cand.get("output").getAsString();
+                            }
+                            if (cand.has("content")) {
+                                if (cand.get("content").isJsonPrimitive()) {
+                                    return cand.get("content").getAsString();
+                                } else if (cand.get("content").isJsonArray()) {
+                                    JsonArray cont = cand.getAsJsonArray("content");
+                                    for (int j = 0; j < cont.size(); j++) {
+                                        String found = findFirstString(cont.get(j));
+                                        if (found != null) return found;
+                                    }
+                                } else {
+                                    String found = findFirstString(cand.get("content"));
+                                    if (found != null) return found;
+                                }
+                            }
+                            // fallback within candidate
+                            String found = findFirstString(cand);
+                            if (found != null) return found;
+                        } catch (Exception e) {
+                            // continue to next candidate
+                        }
                     }
                 }
 
-                // Fallback: try 'candidates' nested or other shapes
-                if (json.has("candidates")) return json.get("candidates").toString();
-                if (json.has("output")) return json.get("output").getAsString();
+                // Try top-level common fields
+                if (json.has("output") && json.get("output").isJsonPrimitive()) return json.get("output").getAsString();
+                if (json.has("content") && json.get("content").isJsonPrimitive()) return json.get("content").getAsString();
+
+                // As a last resort, try to find any string in the JSON
+                String any = findFirstString(json);
+                if (any != null) return any;
             } catch (Exception e) {
                 // ignore and fallback
             }
 
             return genererReponseLocal(prompt);
         });
+    }
+
+    // Recursively search a JsonElement for the first non-empty string value
+    private String findFirstString(com.google.gson.JsonElement el) {
+        if (el == null || el.isJsonNull()) return null;
+        if (el.isJsonPrimitive()) {
+            try {
+                if (el.getAsJsonPrimitive().isString()) {
+                    String s = el.getAsString();
+                    if (s != null && !s.isBlank()) return s;
+                }
+            } catch (Exception ignored) {}
+            return null;
+        }
+        if (el.isJsonArray()) {
+            JsonArray arr = el.getAsJsonArray();
+            for (int i = 0; i < arr.size(); i++) {
+                String r = findFirstString(arr.get(i));
+                if (r != null) return r;
+            }
+            return null;
+        }
+        if (el.isJsonObject()) {
+            JsonObject obj = el.getAsJsonObject();
+            for (String key : obj.keySet()) {
+                String r = findFirstString(obj.get(key));
+                if (r != null) return r;
+            }
+        }
+        return null;
     }
 
     private String construireContexte() {

@@ -27,9 +27,10 @@ export function AssistantIA({ villages, routes }) {
 
     if (modeIA === 'ia') {
       // Utiliser l'IA avec connexion internet
-      serviceDonnees.obtenirRecommandationIA(question)
+      serviceDonnees.analyserIA(question)
         .then(resultat => {
-          setReponse(resultat);
+          // Backend renvoie { reponse: "..." }
+          setReponse(resultat && resultat.reponse ? resultat.reponse : JSON.stringify(resultat));
           setChargement(false);
         })
         .catch(error => {

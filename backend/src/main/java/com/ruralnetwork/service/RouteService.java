@@ -21,6 +21,11 @@ public class RouteService {
     }
 
     public RouteDTO ajouterRoute(RouteDTO dto) {
+        // Validate incoming IDs before calling repository (avoid IllegalArgumentException from JPA)
+        if (dto.getVillageDepart_id() == null || dto.getVillage_arrivee_id() == null) {
+            throw new IllegalArgumentException("IDs de village manquants");
+        }
+
         Village depart = villageDepot.findById(dto.getVillageDepart_id()).orElse(null);
         Village arrivee = villageDepot.findById(dto.getVillage_arrivee_id()).orElse(null);
 
