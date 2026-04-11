@@ -65,14 +65,7 @@ export class ServiceDonnees {
   // Optimisation (délégation au backend)
   optimiserTournee(payload) { return this.request('/optimisations', { method: 'POST', body: JSON.stringify(payload) }); }
 
-  // Assistant IA
-  // ServiceDonnees.js
-    analyserIA(question) { 
-      return this.request('/ia/analyser', { 
-        method: 'POST', 
-        body: JSON.stringify({ "question": question }) 
-      }); 
-    }
+  // Assistant IA removed — functionality deleted per project cleanup
 
   // Auth
   async login({ email, motDePasse }) {

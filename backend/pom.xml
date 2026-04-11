@@ -24,6 +24,7 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        
     </properties>
 
     <dependencies>
@@ -96,6 +97,7 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <!-- No IA system properties configured -->
                 </configuration>
             </plugin>
             <!-- Enable annotation processing for Lombok -->

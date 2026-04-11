@@ -4,7 +4,7 @@ Ce document résume ce qui a été réalisé dans le projet à ce stade.
 
 - Frontend :
   - Application React construite avec Vite.
-  - Composants principaux : `AssistantIA`, `GestionRoutes`, `GestionVillages`, `OptimisationTournees`, `TableauBord`.
+  - Composants principaux : `GestionRoutes`, `GestionVillages`, `OptimisationTournees`, `TableauBord`.
   - Intégration d'un service de données (`ServiceDonnees.js`) et d'un client Supabase (`supabase.js`).
   - Implémentations JavaScript des algorithmes (Dijkstra, OptimisationTournee) pour visualisation et tests côté client.
 

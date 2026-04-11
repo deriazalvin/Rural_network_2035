@@ -5,7 +5,6 @@ import { GestionVillages } from './composants/GestionVillages.jsx';
 import { GestionRoutes } from './composants/GestionRoutes.jsx';
 import { OptimisationTournees } from './composants/OptimisationTournees.jsx';
 import { TableauBord } from './composants/TableauBord.jsx';
-import { AssistantIA } from './composants/AssistantIA.jsx';
 import LandingPage from './composants/LandingPage.tsx';
 import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
@@ -268,8 +267,7 @@ function App() {
             { id: 'tableau-bord', label: 'Tableau', icon: 'fa-chart-line' },
             { id: 'villages', label: 'Villages', icon: 'fa-tree-city' },
             { id: 'routes', label: 'Routes', icon: 'fa-route' },
-            { id: 'optimisation', label: 'Calcul', icon: 'fa-gears' },
-            { id: 'ia', label: 'Assistant', icon: 'fa-robot' }
+            { id: 'optimisation', label: 'Calcul', icon: 'fa-gears' }
           ].map((item) => (
             <li 
               key={item.id} 
@@ -336,12 +334,7 @@ function App() {
           />
         )}
 
-        {ongletActif === 'ia' && (
-          <AssistantIA
-            villages={villages}
-            routes={routes}
-          />
-        )}
+        {/* Assistant IA removed from UI */}
       </main>
     </div>
   );

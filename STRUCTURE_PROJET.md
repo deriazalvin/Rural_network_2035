@@ -6,7 +6,7 @@ Résumé de l'arborescence et des responsabilités des principaux dossiers et fi
   - `pom.xml` : configuration Maven.
   - `src/main/java/com/ruralnetwork/` : code source Java.
     - `algorithme/` : classes d'algorithmes (Dijkstra, OptimisationTournee).
-    - `controleur/` : contrôleurs REST (AssistantIAControleur, RouteControleur, ...).
+    - `controleur/` : contrôleurs REST (RouteControleur, ...).
     - `depot/` : dépôts d'accès aux données (similaires à DAO).
     - `dto/` : objets de transfert (DTO).
     - `entite/` : modèles métier (Route, Village, Tournee, Utilisateur, Performance).
@@ -16,7 +16,7 @@ Résumé de l'arborescence et des responsabilités des principaux dossiers et fi
 
 - `src/` : frontend React (Vite)
   - `App.jsx`, `main.jsx` : points d'entrée React.
-  - `composants/` : composants UI (AssistantIA.jsx, GestionRoutes.jsx, ...).
+  - `composants/` : composants UI (GestionRoutes.jsx, ...).
   - `algorithmes/`, `structures/` : implémentations JS des algorithmes et structures.
   - `services/` : interactions API / persistance (ServiceDonnees.js, supabase.js).
   - `Styles/` : snippets et templates CSS utilisés par l'application.
