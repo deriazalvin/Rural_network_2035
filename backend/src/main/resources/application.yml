@@ -1,18 +1,14 @@
 spring:
   application:
     name: rural-network-2035
-
-  spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/rural_network?useSSL=false&serverTimezone=UTC
     username: rural_user
     password: "060307"
-
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
-
   web:
     cors:
       allowed-origins: "http://localhost:5174,http://localhost:5173,http://localhost:5175,http://localhost:3000"

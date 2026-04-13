@@ -55,6 +55,13 @@
             <version>6.1.0</version>
         </dependency>
 
+        <!-- Explicit Logback classic dependency to ensure logging classes are present at runtime -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+
         <!-- Lombok removed to avoid Java 25 annotation-processor incompatibility -->
 
         <!-- JSON -->

@@ -12,10 +12,13 @@ if [ -f "$ENV_FILE" ]; then
   source "$ENV_FILE"
 fi
 
-# Default port if not provided
-: "${SERVER_PORT:=8081}"
+# Do not override `server.port` from application.yml unless `SERVER_PORT` is explicitly provided
+: "${SERVER_PORT:=}"
 
-echo "Starting backend on port ${SERVER_PORT} (if set)"
-# IA integration removed
-
-exec mvn -Dspring-boot.run.arguments="--server.port=${SERVER_PORT}" -f "$SCRIPT_DIR/pom.xml" spring-boot:run
+if [ -n "${SERVER_PORT}" ]; then
+  echo "Starting backend on port ${SERVER_PORT} (overriding application.yml)"
+  exec mvn -Dspring-boot.run.arguments="--server.port=${SERVER_PORT}" -f "$SCRIPT_DIR/pom.xml" spring-boot:run
+else
+  echo "Starting backend using port from application.yml (or default)"
+  exec mvn -f "$SCRIPT_DIR/pom.xml" spring-boot:run
+fi

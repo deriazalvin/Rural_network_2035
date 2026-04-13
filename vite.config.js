@@ -6,7 +6,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        // Keep proxy in sync with backend `server.port` (application.yml).
+        // application.yml currently uses port 8080, so proxy to 8080.
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
