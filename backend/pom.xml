@@ -71,6 +71,11 @@
             <version>2.10.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version> <scope>provided</scope>
+        </dependency>
         <!-- HTTP Client -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>

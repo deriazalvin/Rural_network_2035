@@ -1,5 +1,6 @@
 package com.ruralnetwork.service;
 
+import com.ruralnetwork.algorithme.CalculDistance;
 import com.ruralnetwork.depot.RouteDepot;
 import com.ruralnetwork.depot.VillageDepot;
 import com.ruralnetwork.dto.RouteDTO;
@@ -14,10 +15,12 @@ public class RouteService {
 
     private final RouteDepot routeDepot;
     private final VillageDepot villageDepot;
+    private final CalculDistance calculDistance;
 
-    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot) {
+    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot , CalculDistance calculDistance ) {
         this.routeDepot = routeDepot;
         this.villageDepot = villageDepot;
+        this.calculDistance =  calculDistance;
     }
 
     public RouteDTO ajouterRoute(RouteDTO dto) {
@@ -38,7 +41,11 @@ public class RouteService {
         Route route = new Route();
         route.setVillageDepart(depart);
         route.setVillageArrivee(arrivee);
-        route.setDistance(dto.getDistance());
+        double distance = calculDistance.calculerDistanceHaversine(
+            depart.getLatitude(), depart.getLongitude(),
+            arrivee.getLatitude(), arrivee.getLongitude()
+        );
+        route.setDistance(distance);
         route.setQualiteRoute(qualite);
         route.setEstBloquee(false);
 

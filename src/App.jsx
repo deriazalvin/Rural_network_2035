@@ -35,12 +35,10 @@ function App() {
     };
   }, []);
 
-  // Listen for global auth event from AuthForm
   useEffect(() => {
     const handler = (e) => {
       const detail = e?.detail || null;
       if (detail) {
-        // set utilisateur if available in payload
         setUtilisateur(detail.user || detail);
       }
     };
@@ -52,8 +50,6 @@ function App() {
     chargerDonnees();
   }, [enLigne]);
 
-  // After login, the landing page may store a navigation target in localStorage ('rn_nav_to').
-  // Execute this on mount to restore the requested tab if the user is authenticated.
   useEffect(() => {
     try {
       const token = gestionSession.obtenirToken();
@@ -72,7 +68,6 @@ function App() {
   const chargerDonnees = async () => {
     try {
       if (enLigne) {
-        // Ne pas appeler /performances au chargement pour éviter les 404 côté frontend
         const [villagesData, routesData] = await Promise.all([
           serviceDonnees.obtenirTousLesVillages(),
           serviceDonnees.obtenirToutesLesRoutes()
@@ -80,7 +75,6 @@ function App() {
 
         setVillages(villagesData);
         setRoutes(routesData);
-        // laisser performances vide par défaut; sera rempli lors d'opérations futures
         setPerformances([]);
 
         stockageLocal.sauvegarderVillages(villagesData);
@@ -116,7 +110,7 @@ function App() {
         const villageTemporaire = {
           ...village,
           id: `temp_${Date.now()}`,
-          date_creation: new Date().toISOString()
+          dateCreation: new Date().toISOString()
         };
         setVillages([...villages, villageTemporaire]);
         stockageLocal.ajouterModificationEnAttente({
@@ -152,7 +146,7 @@ function App() {
         const routeTemporaire = {
           ...route,
           id: `temp_${Date.now()}`,
-          date_creation: new Date().toISOString()
+          dateCreation: new Date().toISOString()
         };
         setRoutes([...routes, routeTemporaire]);
         stockageLocal.ajouterModificationEnAttente({
@@ -169,19 +163,18 @@ function App() {
   const bloquerRoute = async (id, estBloquee) => {
     try {
       if (enLigne) {
-        await serviceDonnees.modifierRoute(id, { est_bloquee: estBloquee });
+        await serviceDonnees.modifierRoute(id, { estBloquee: estBloquee });
       }
-      setRoutes(routes.map(r => r.id === id ? { ...r, est_bloquee: estBloquee } : r));
+      setRoutes(routes.map(r => r.id === id ? { ...r, estBloquee: estBloquee } : r));
     } catch (error) {
       console.error('Erreur modification route:', error);
     }
   };
 
-  const optimiserTournee = async ({ villageDepart, villagesAVisiter, capaciteCamion }) => {
+  const optimiserTournee = async ({ villageDepartId, villagesAVisiter, capaciteCamion }) => {
     try {
-      // Déléguer l'optimisation au backend (Spring Boot)
       const payload = {
-        villageDepart,
+        villageDepartId,
         villagesAVisiter,
         capaciteCamion,
         villages,
@@ -251,7 +244,6 @@ function App() {
   return (
     
     <div className="app">
-      {/* On ajoute les orbes décoratifs en fond comme dans index.html */}
       <div className="orb orb-1"></div>
       <div className="orb orb-2"></div>
 
@@ -260,7 +252,6 @@ function App() {
         <p>Plateforme d'optimisation de la logistique agricole malagasy</p>
       </header>
 
-      {/* Structure de navigation mise à jour pour le style Glass */}
       <nav className="navbar">
         <ul className="nav-list">
           {[
@@ -295,7 +286,7 @@ function App() {
           </li>
         </ul>
 
-        <div className={`statut-connexion-glass ${enLigne ? 'en-ligne' : 'hors-ligne'}`}>
+        <div className={`statut-connexion-glass ${enLigne ? 'en-ligne' : 'hors-ligne'}`}> 
           {enLigne ? '🟢' : '🔴'}
         </div>
       </nav>
@@ -333,8 +324,6 @@ function App() {
             resultatsOptimisation={resultatsOptimisation}
           />
         )}
-
-        {/* Assistant IA removed from UI */}
       </main>
     </div>
   );

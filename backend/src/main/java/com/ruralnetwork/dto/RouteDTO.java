@@ -1,50 +1,46 @@
 package com.ruralnetwork.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+/**
+ * DTO pour la gestion des routes dans le Smart Rural Network 2035.
+ * Utilise Lombok pour réduire le code boilerplate.
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RouteDTO {
+
     private String id;
-    private String villageDepart;
-    private String villageArrivee;
-    private String villageDepart_id;
-    private String village_arrivee_id;
+
+    @NotBlank(message = "Le village de départ est obligatoire")
+    private String villageDepartId;
+
+    @NotBlank(message = "Le village d'arrivée est obligatoire")
+    private String villageArriveeId;
+
+    /**
+     * Distance calculée automatiquement par l'algorithme (Dijkstra/A*).
+     * Ne doit pas être saisie manuellement par l'utilisateur.
+     */
     private Double distance;
+
+    @NotNull(message = "La qualité de la route est obligatoire")
     private String qualiteRoute;
-    private Boolean estBloquee;
 
-    public RouteDTO() {}
+    @Builder.Default
+    private Boolean estBloquee = false;
 
-    public RouteDTO(String id, String villageDepart, String villageArrivee, String villageDepart_id,
-                    String village_arrivee_id, Double distance, String qualiteRoute, Boolean estBloquee) {
-        this.id = id;
-        this.villageDepart = villageDepart;
-        this.villageArrivee = villageArrivee;
-        this.villageDepart_id = villageDepart_id;
-        this.village_arrivee_id = village_arrivee_id;
-        this.distance = distance;
-        this.qualiteRoute = qualiteRoute;
-        this.estBloquee = estBloquee;
-    }
+    private String dateCreation;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getVillageDepart() { return villageDepart; }
-    public void setVillageDepart(String villageDepart) { this.villageDepart = villageDepart; }
-
-    public String getVillageArrivee() { return villageArrivee; }
-    public void setVillageArrivee(String villageArrivee) { this.villageArrivee = villageArrivee; }
-
-    public String getVillageDepart_id() { return villageDepart_id; }
-    public void setVillageDepart_id(String villageDepart_id) { this.villageDepart_id = villageDepart_id; }
-
-    public String getVillage_arrivee_id() { return village_arrivee_id; }
-    public void setVillage_arrivee_id(String village_arrivee_id) { this.village_arrivee_id = village_arrivee_id; }
-
-    public Double getDistance() { return distance; }
-    public void setDistance(Double distance) { this.distance = distance; }
-
-    public String getQualiteRoute() { return qualiteRoute; }
-    public void setQualiteRoute(String qualiteRoute) { this.qualiteRoute = qualiteRoute; }
-
-    public Boolean getEstBloquee() { return estBloquee; }
-    public void setEstBloquee(Boolean estBloquee) { this.estBloquee = estBloquee; }
+    // Champs informatifs pour l'affichage côté Front-end
+    private String nomVillageDepart;
+    private String nomVillageArrivee;
 }
