@@ -66,7 +66,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    chargerDonnees();
+    const token = gestionSession.obtenirToken();
+    if (token) {
+      chargerDonnees();
+    }
   }, [enLigne, utilisateur]);
 
   useEffect(() => {

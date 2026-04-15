@@ -1,8 +1,7 @@
 package com.ruralnetwork.controleur;
 
-import com.ruralnetwork.dto.OptimisationDTO;
 import com.ruralnetwork.dto.OptimisationResultatDTO;
-import com.ruralnetwork.service.OptimisationService;
+import com.ruralnetwork.service.orchestration.OrchestrateurOptimisation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -13,10 +12,10 @@ import java.util.Map;
 @CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173"})
 public class OptimisationControleur {
 
-    private final OptimisationService optimisationService;
+    private final OrchestrateurOptimisation orchestrateurOptimisation;
 
-    public OptimisationControleur(OptimisationService optimisationService) {
-        this.optimisationService = optimisationService;
+    public OptimisationControleur(OrchestrateurOptimisation orchestrateurOptimisation) {
+        this.orchestrateurOptimisation = orchestrateurOptimisation;
     }
 
     /**
@@ -40,7 +39,7 @@ public class OptimisationControleur {
                 return ResponseEntity.badRequest().build();
             }
 
-            OptimisationResultatDTO resultat = optimisationService.optimiserTournees(depotId, camionIds);
+            OptimisationResultatDTO resultat = orchestrateurOptimisation.optimiserTournees(depotId, camionIds);
             return ResponseEntity.ok(resultat);
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,7 +52,7 @@ public class OptimisationControleur {
      * POST /api/optimisations
      */
     @PostMapping
-    public ResponseEntity<?> optimiser(@RequestBody OptimisationDTO dto) {
+    public ResponseEntity<?> optimiser(@RequestBody Map<String, Object> dto) {
         try {
             // Cette méthode est conservée pour la compatibilité rétroactive
             return ResponseEntity.ok(Map.of("error", "Utilisez /api/optimisations/multi-camions pour l'optimisation"));

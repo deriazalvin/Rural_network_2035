@@ -1,9 +1,9 @@
 package com.ruralnetwork.service;
 
+import com.ruralnetwork.algorithme.GreedyTourneeOptimization;
 import com.ruralnetwork.depot.CamionDepot;
 import com.ruralnetwork.depot.RouteDepot;
 import com.ruralnetwork.depot.VillageDepot;
-import com.ruralnetwork.dto.EtapeTourneeDTO;
 import com.ruralnetwork.dto.OptimisationResultatDTO;
 import com.ruralnetwork.dto.TourneeDTO;
 import com.ruralnetwork.entite.Camion;
@@ -38,6 +38,7 @@ public class OptimisationService {
 
     /**
      * Optimise les tournées pour les camions disponibles.
+     * Utilise l'algorithme GreedyTourneeOptimization du dossier algorithme/
      */
     public OptimisationResultatDTO optimiserTournees(String depotId, List<String> camionIds) {
         long startTime = System.currentTimeMillis();
@@ -70,7 +71,9 @@ public class OptimisationService {
         List<Village> villagesAVisiter = new ArrayList<>(tousLesVillages);
         villagesAVisiter.remove(depot);
         
-        Double distanceBaseline = calculerDistanceBaseline(depot, villagesAVisiter, matriceDistances);
+        // Utiliser l'algorithme greedy pour calculer la baseline
+        GreedyTourneeOptimization optimisationAlgorithme = new GreedyTourneeOptimization(matriceDistances);
+        Double distanceBaseline = optimisationAlgorithme.calculerDistanceBaseline(depot, villagesAVisiter);
         Double coutBaseline = distanceBaseline * COST_PER_KM;
 
         // Appliquer l'algorithme greedy pour chaque camion
@@ -83,8 +86,9 @@ public class OptimisationService {
 
         int colorIndex = 0;
         for (Camion camion : camions) {
-            TourneeDTO tournee = construireTourneeGreedy(
-                camion, depot, villagesAVisiter, villagesVisites, matriceDistances, colorIndex
+            String couleur = colorIndex < COLORS.length ? COLORS[colorIndex] : COLORS[0];
+            TourneeDTO tournee = optimisationAlgorithme.construireTournee(
+                    camion, depot, villagesAVisiter, villagesVisites, couleur
             );
             tournees.add(tournee);
             distanceTotalKm += tournee.getDistanceTotalKm();
@@ -134,94 +138,5 @@ public class OptimisationService {
         }
 
         return matrice;
-    }
-
-    /**
-     * Calcule la distance de la solution naïve (visite des villages dans l'ordre).
-     */
-    private Double calculerDistanceBaseline(Village depot, List<Village> villages,
-                                           Map<String, Map<String, Double>> matrice) {
-        Double distance = 0.0;
-        Village current = depot;
-
-        for (Village next : villages) {
-            Double d = matrice.get(current.getId()).get(next.getId());
-            if (d == null || d == Double.MAX_VALUE) d = 0.0;
-            distance += d;
-            current = next;
-        }
-
-        // Retour au dépôt
-        Double d = matrice.get(current.getId()).get(depot.getId());
-        if (d == null || d == Double.MAX_VALUE) d = 0.0;
-        distance += d;
-
-        return distance;
-    }
-
-    /**
-     * Construit une tournée greedy pour un camion donné.
-     */
-    private TourneeDTO construireTourneeGreedy(
-            Camion camion, Village depot, List<Village> villagesAVisiter,
-            Set<String> villagesVisites, Map<String, Map<String, Double>> matrice, int colorIndex) {
-
-        List<EtapeTourneeDTO> etapes = new ArrayList<>();
-        Double distanceTotalKm = 0.0;
-        Double chargeTotalKg = 0.0;
-        
-        Village current = depot;
-        Set<String> visited = new HashSet<>(villagesVisites);
-
-        while (true) {
-            // Trouver le village non visité le plus proche
-            Village nextVillage = null;
-            Double minDistance = Double.MAX_VALUE;
-
-            for (Village v : villagesAVisiter) {
-                if (!visited.contains(v.getId())) {
-                    Double dist = matrice.get(current.getId()).get(v.getId());
-                    if (dist != null && dist < Double.MAX_VALUE && dist < minDistance) {
-                        // Vérifier la capacité
-                        if (chargeTotalKg + v.getProductionNonTransportee() <= camion.getCapaciteKg()) {
-                            minDistance = dist;
-                            nextVillage = v;
-                        }
-                    }
-                }
-            }
-
-            if (nextVillage == null) break; // Aucun village accessible
-
-            // Ajouter le village à la tournée
-            distanceTotalKm += minDistance;
-            chargeTotalKg += nextVillage.getProductionNonTransportee();
-
-            EtapeTourneeDTO etape = new EtapeTourneeDTO(
-                nextVillage.getId(), nextVillage.getNom(),
-                nextVillage.getLatitude(), nextVillage.getLongitude(),
-                distanceTotalKm, chargeTotalKg, nextVillage.getProductionNonTransportee()
-            );
-            etapes.add(etape);
-
-            visited.add(nextVillage.getId());
-            villagesVisites.add(nextVillage.getId());
-            current = nextVillage;
-        }
-
-        // Retour au dépôt
-        Double distanceRetour = matrice.get(current.getId()).get(depot.getId());
-        if (distanceRetour == null || distanceRetour == Double.MAX_VALUE) distanceRetour = 0.0;
-        distanceTotalKm += distanceRetour;
-
-        Double coutTotal = distanceTotalKm * COST_PER_KM;
-
-        String couleur = colorIndex < COLORS.length ? COLORS[colorIndex] : COLORS[0];
-
-        return new TourneeDTO(
-            camion.getId(), camion.getNom(), couleur,
-            distanceTotalKm, chargeTotalKg, camion.getCapaciteKg(),
-            coutTotal, etapes
-        );
     }
 }

@@ -1,12 +1,16 @@
-package com.ruralnetwork.algorithme;
+package com.ruralnetwork.algorithme.impl;
+
+import com.ruralnetwork.algorithme.interfaces.IAlgorithmeGraphe;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 /**
- * Implémentation de l'algorithme de Dijkstra pour calculer le plus court chemin.
- * Idéal pour trouver des chemins optimaux entre deux points dans un graphe pondéré.
+ * Implémentation de l'algorithme Dijkstra pour trouver le plus court chemin.
+ * Respecte l'interface IAlgorithmeGraphe.
  */
-public class Dijkstra {
+@Component
+public class Dijkstra implements IAlgorithmeGraphe {
 
     private final Map<String, Map<String, Double>> matriceDistances;
 
@@ -14,33 +18,27 @@ public class Dijkstra {
         this.matriceDistances = matriceDistances;
     }
 
-    /**
-     * Calcule le plus court chemin entre deux nœuds.
-     *
-     * @param depart ID du nœud de départ
-     * @param destination ID du nœud de destination
-     * @return ResultatChemin contenant la distance et le chemin
-     */
-    public ResultatChemin calculerPlusCourtChemin(String depart, String destination) {
+    @Override
+    public ResultatChemin calculerShortestPath(String depart, String destination) {
         if (depart.equals(destination)) {
             return new ResultatChemin(0.0, Arrays.asList(depart));
         }
 
         Map<String, Double> distances = new HashMap<>();
         Map<String, String> precedents = new HashMap<>();
-        PriorityQueue<NœudDistant> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.distance));
+        PriorityQueue<NoeudDistant> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.distance));
 
         // Initialiser les distances
         for (String noeud : matriceDistances.keySet()) {
             distances.put(noeud, Double.MAX_VALUE);
         }
         distances.put(depart, 0.0);
-        queue.add(new NœudDistant(depart, 0.0));
+        queue.add(new NoeudDistant(depart, 0.0));
 
         Set<String> traites = new HashSet<>();
 
         while (!queue.isEmpty()) {
-            NœudDistant actuel = queue.poll();
+            NoeudDistant actuel = queue.poll();
 
             if (traites.contains(actuel.noeud)) continue;
             traites.add(actuel.noeud);
@@ -63,7 +61,7 @@ public class Dijkstra {
                 if (nouvelleDistance < distances.get(voisin)) {
                     distances.put(voisin, nouvelleDistance);
                     precedents.put(voisin, actuel.noeud);
-                    queue.add(new NœudDistant(voisin, nouvelleDistance));
+                    queue.add(new NoeudDistant(voisin, nouvelleDistance));
                 }
             }
         }
@@ -75,46 +73,25 @@ public class Dijkstra {
 
         // Reconstruire le chemin
         List<String> chemin = new ArrayList<>();
-        String current = destination;
-        while (current != null) {
-            chemin.add(0, current);
-            current = precedents.get(current);
+        String courant = destination;
+        while (courant != null) {
+            chemin.add(0, courant);
+            courant = precedents.get(courant);
         }
 
         return new ResultatChemin(distanceFinal, chemin);
     }
 
     /**
-     * Classe interne représentant un nœud avec sa distance.
+     * Classe interne pour représenter un nœud avec sa distance du point de départ.
      */
-    private static class NœudDistant {
+    private static class NoeudDistant {
         String noeud;
         Double distance;
 
-        NœudDistant(String noeud, Double distance) {
+        NoeudDistant(String noeud, Double distance) {
             this.noeud = noeud;
             this.distance = distance;
-        }
-    }
-
-    /**
-     * Classe représentant le résultat de l'algorithme Dijkstra.
-     */
-    public static class ResultatChemin {
-        private final Double distance;
-        private final List<String> chemin;
-
-        public ResultatChemin(Double distance, List<String> chemin) {
-            this.distance = distance;
-            this.chemin = chemin;
-        }
-
-        public Double getDistance() {
-            return distance;
-        }
-
-        public List<String> getChemin() {
-            return chemin;
         }
     }
 }
