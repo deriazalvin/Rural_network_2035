@@ -92,7 +92,7 @@ export default function AgriLogPremium() {
 
         <div className="master-container text-center relative z-10">
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-flex items-center gap-3 bg-green-50 text-green-700 px-6 py-2 rounded-full text-[11px] font-black mb-12 border border-green-100 uppercase tracking-widest">
-            <Sparkles size={16} fill="currentColor" /> Intelligence Artificielle pour Madagascar
+            <Sparkles size={16} fill="currentColor" /> Ptojet d'innovation pour Madagascar
           </motion.div>
 
           <h1 className="text-5xl md:text-8xl font-extrabold tracking-tighter leading-[0.95] mb-12">
