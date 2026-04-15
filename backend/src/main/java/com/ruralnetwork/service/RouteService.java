@@ -17,14 +17,15 @@ public class RouteService {
     private final VillageDepot villageDepot;
     private final CalculDistance calculDistance;
 
-    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot , CalculDistance calculDistance ) {
+    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot, CalculDistance calculDistance) {
         this.routeDepot = routeDepot;
         this.villageDepot = villageDepot;
-        this.calculDistance =  calculDistance;
+        this.calculDistance = calculDistance;
     }
 
+    // ⭐ MÉTHODE MODIFIÉE - AUTO-CALCUL DE LA DISTANCE ⭐
     public RouteDTO ajouterRoute(RouteDTO dto) {
-        // Validate incoming IDs before calling repository (avoid IllegalArgumentException from JPA)
+        // Validate incoming IDs before calling repository
         if (dto.getVillageDepart_id() == null || dto.getVillage_arrivee_id() == null) {
             throw new IllegalArgumentException("IDs de village manquants");
         }
@@ -38,16 +39,18 @@ public class RouteService {
 
         Route.QualiteRoute qualite = Route.QualiteRoute.valueOf(dto.getQualiteRoute());
 
+        // ⭐ AUTO-CALCULATE DISTANCE using Haversine ⭐
+        double distanceCalculee = calculDistance.calculerDistanceHaversine(
+                depart.getLatitude(), depart.getLongitude(),
+                arrivee.getLatitude(), arrivee.getLongitude()
+        );
+
         Route route = new Route();
         route.setVillageDepart(depart);
         route.setVillageArrivee(arrivee);
-        double distance = calculDistance.calculerDistanceHaversine(
-            depart.getLatitude(), depart.getLongitude(),
-            arrivee.getLatitude(), arrivee.getLongitude()
-        );
-        route.setDistance(distance);
+        route.setDistance(distanceCalculee);  // ← AUTO-CALCULATED
         route.setQualiteRoute(qualite);
-        route.setEstBloquee(false);
+        route.setEstBloquee(dto.getEstBloquee() != null ? dto.getEstBloquee() : false);
 
         Route saved = routeDepot.save(route);
         return convertToDTO(saved);
