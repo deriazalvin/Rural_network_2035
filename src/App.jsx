@@ -10,6 +10,7 @@ import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/AuthForm.jsx';
 import { Circle } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 
 function App() {
   const [ongletActif, setOngletActif] = useState('tableau-bord');

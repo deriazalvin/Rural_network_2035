@@ -365,6 +365,117 @@ body {
   word-break: break-word;
 }
 
+/* Dashboard improvements */
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--vert-principal);
+  margin-bottom: 18px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.card-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, var(--blanc), #fbfbfb);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: var(--ombre);
+}
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74,124,44,0.08);
+  border-radius: 10px;
+  color: var(--vert-principal);
+}
+
+.card-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gris-fonce);
+}
+.card-label { font-size: 0.85rem; color: var(--gris); }
+
+.chart-area {
+  background: var(--blanc);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: var(--ombre);
+}
+.chart-placeholder {
+  height: 220px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gris);
+  font-style: italic;
+  margin-top: 12px;
+}
+
+.dashboard-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.side-card {
+  background: var(--blanc);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: var(--ombre);
+}
+
+.big-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+.circle-value { font-size: 1.25rem; font-weight: 800; color: var(--vert-principal); }
+.circle-label { color: var(--gris); font-size: 0.95rem; margin-top: 6px; }
+
+.side-card.small { padding: 10px; }
+.side-row { margin: 8px 0; color: var(--gris-fonce); }
+
+.mini-line { display:flex; gap:8px; padding:8px 0; border-bottom:1px dashed rgba(0,0,0,0.04); }
+.mini-date { color:var(--gris); width:90px; }
+.mini-detail { color:var(--gris-fonce); font-weight:600; }
+
+.tableau-performances.compact .ligne-performance.compact { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.04); }
+.date-performance { color:var(--gris); min-width:110px; }
+.reduction-performance { color:var(--vert-principal); font-weight:700; }
+.economie-performance { color:var(--gris); }
+
 /* ======= AUTH FORM & LOGOUT STYLES ======= */
 .auth-form {
   max-width: 420px;
