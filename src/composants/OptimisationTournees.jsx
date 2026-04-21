@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Truck, BarChart2 } from 'lucide-react';
 
 export function OptimisationTournees({ villages, onOptimiser, resultatsOptimisation }) {
   const [villageDepart, setVillageDepart] = useState('');
@@ -42,7 +43,10 @@ export function OptimisationTournees({ villages, onOptimiser, resultatsOptimisat
 
   return (
     <div className="section-carte">
-      <h2>🚚 Optimisation des Tournées</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Truck size={26} />
+        Optimisation des Tournées
+      </h2>
 
       <form onSubmit={gererOptimisation} className="formulaire">
         <div className="grille-formulaire">
@@ -95,7 +99,9 @@ export function OptimisationTournees({ villages, onOptimiser, resultatsOptimisat
 
       {resultatsOptimisation && (
         <div className="resultats-optimisation">
-          <h3>📊 Résultats de l'Optimisation</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BarChart2 size={18} /> Résultats de l'Optimisation
+          </h3>
 
           <div className="grille-comparaison">
             <div className="carte-resultat naive">

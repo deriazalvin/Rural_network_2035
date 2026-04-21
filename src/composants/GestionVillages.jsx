@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { MapPin, BarChart2, Clock } from 'lucide-react';
 import NominatimService from '../services/NominatimService';
 
 export function GestionVillages({ villages, onAjouterVillage, onSupprimerVillage }) {
@@ -66,7 +67,10 @@ export function GestionVillages({ villages, onAjouterVillage, onSupprimerVillage
 
   return (
     <div className="section-carte">
-      <h2>📍 Gestion des Villages</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <MapPin size={26} />
+        Gestion des Villages
+      </h2>
 
       <form onSubmit={gererAjout} className="formulaire">
         <div className="grille-formulaire">
@@ -89,7 +93,7 @@ export function GestionVillages({ villages, onAjouterVillage, onSupprimerVillage
                 fontSize: '0.8rem',
                 color: '#6b7280'
               }}>
-                ⏳
+                <Clock size={16} />
               </div>
             )}
             {showSuggestions && suggestions.length > 0 && (
@@ -177,7 +181,9 @@ export function GestionVillages({ villages, onAjouterVillage, onSupprimerVillage
                   </button>
                 </div>
                 <p className="detail-village">
-                  📊 Production: {village.volume_production} kg
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <BarChart2 size={14} /> Production: {village.volume_production} kg
+                  </span>
                 </p>
                 <p className="detail-village-secondaire">
                   Lat: {village.latitude.toFixed(4)}, Lon: {village.longitude.toFixed(4)}

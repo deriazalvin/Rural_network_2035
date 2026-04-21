@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Map, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 export function GestionRoutes({ villages, routes, onAjouterRoute, onBloquerRoute }) {
   const [villageDepart, setVillageDepart] = useState('');
@@ -19,17 +20,15 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onBloquerRoute
       return;
     }
 
-    // Convert slider value to quality
     let qualite = 'MOYENNE';
     if (qualiteValue <= 33) qualite = 'MAUVAISE';
     else if (qualiteValue >= 66) qualite = 'BONNE';
 
     onAjouterRoute({
-      village_depart_id: villageDepart,
+      villageDepart_id: villageDepart,
       village_arrivee_id: villageArrivee,
-      qualite_route: qualite,
-      est_bloquee: estBloquee
-      // Distance will be auto-calculated by backend!
+      qualiteRoute: qualite,
+      estBloquee
     });
 
     setVillageDepart('');
@@ -43,23 +42,29 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onBloquerRoute
     return village ? village.nom : 'Inconnu';
   };
 
-  const getQualiteLabel = (value) => {
-    if (value <= 33) return '❌ Mauvaise';
-    if (value >= 66) return '✅ Bonne';
-    return '⚠️ Moyenne';
+  // fonction propre (label + icône)
+  const getQualite = (value) => {
+    if (value <= 33) {
+      return { label: "Mauvaise", icon: <XCircle size={18} color="#D32F2F" /> };
+    }
+    if (value >= 66) {
+      return { label: "Bonne", icon: <CheckCircle size={18} color="#2E7D32" /> };
+    }
+    return { label: "Moyenne", icon: <AlertTriangle size={18} color="#F9A825" /> };
   };
 
-  const getQualiteEmoji = (qualiteText) => {
-    if (qualiteText === 'BONNE') return '✅';
-    if (qualiteText === 'MAUVAISE') return '❌';
-    return '⚠️';
-  };
+  const qualite = getQualite(qualiteValue);
 
   return (
     <div className="section-carte">
-      <h2>🛣️ Gestion des Routes</h2>
+
+      <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <Map size={26} color="#2E7D32" />
+        Gestion des Routes
+      </h2>
 
       <form onSubmit={gererAjout} className="formulaire">
+
         <div className="grille-formulaire">
           <select
             value={villageDepart}
@@ -84,30 +89,37 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onBloquerRoute
           </select>
         </div>
 
-        {/* Quality Slider */}
+        {/* QUALITY SLIDER */}
         <div style={{ marginBottom: '16px' }}>
-          <label style={{ 
-            display: 'block', 
-            marginBottom: '8px', 
+
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '8px',
             fontWeight: 600,
             color: 'var(--gris-fonce)'
           }}>
-            Qualité de la route: {getQualiteLabel(qualiteValue)}
+            Qualité de la route :
+            {qualite.icon}
+            {qualite.label}
           </label>
+
           <input
             type="range"
             min="0"
             max="100"
             value={qualiteValue}
             onChange={(e) => setQualiteValue(parseInt(e.target.value))}
-            style={{ 
-              width: '100%', 
+            style={{
+              width: '100%',
               cursor: 'pointer',
               height: '6px',
               borderRadius: '3px',
               background: 'linear-gradient(to right, #dc2626, #f59e0b, #10b981)'
             }}
           />
+
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -121,73 +133,80 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onBloquerRoute
           </div>
         </div>
 
-        {/* Route Blocked Checkbox */}
-        <div style={{ 
-          marginBottom: '16px', 
-          display: 'flex', 
-          alignItems: 'center', 
+        {/* CHECKBOX */}
+        <div style={{
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
           gap: '8px',
           padding: '12px',
           background: estBloquee ? '#fee2e2' : 'var(--gris-clair)',
-          borderRadius: '6px',
-          transition: 'background 0.2s'
+          borderRadius: '6px'
         }}>
           <input
             type="checkbox"
-            id="estBloquee"
             checked={estBloquee}
             onChange={(e) => setEstBloquee(e.target.checked)}
-            style={{ 
-              width: '18px', 
-              height: '18px', 
-              cursor: 'pointer',
-              accentColor: 'var(--vert-principal)'
-            }}
           />
-          <label htmlFor="estBloquee" style={{ 
-            cursor: 'pointer', 
-            fontWeight: 500,
-            color: estBloquee ? 'var(--rouge)' : 'var(--gris-fonce)'
+
+          <label style={{
+            cursor: 'pointer',
+            fontWeight: 500
           }}>
-            🚧 Route bloquée
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertTriangle size={16} /> Route bloquée
+            </span>
           </label>
         </div>
 
         <button type="submit" className="bouton-principal">
-          Ajouter la Route (distance auto-calculée)
+          Ajouter la Route
         </button>
       </form>
 
+      {/* LISTE */}
       <div className="liste-routes">
+
         <h3>Routes Enregistrées ({routes.length})</h3>
+
         {routes.length === 0 ? (
-          <p className="texte-vide">Aucune route enregistrée</p>
+          <p>Aucune route enregistrée</p>
         ) : (
           <div className="grille-cartes">
+
             {routes.map((route) => (
-              <div key={route.id} className={`carte-route ${route.est_bloquee ? 'bloquee' : ''}`}>
+              <div key={route.id} className={`carte-route ${route.estBloquee ? 'bloquee' : ''}`}>
+
                 <div className="route-info">
                   <h4>
-                    {obtenirNomVillage(route.village_depart_id)} → {obtenirNomVillage(route.village_arrivee_id)}
+                    {obtenirNomVillage(route.villageDepart_id)} → {obtenirNomVillage(route.village_arrivee_id)}
                   </h4>
-                  <p className="detail-route">
-                    📏 {route.distance?.toFixed(2) || 'N/A'} km | {getQualiteEmoji(route.qualite_route)} {route.qualite_route}
+
+                  <p>
+                     {route.distance?.toFixed(2) || 'N/A'} km | {route.qualiteRoute}
                   </p>
-                  {route.est_bloquee && (
-                    <span className="badge-bloquee">🚧 Bloquée</span>
+
+                  {route.estBloquee && (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={14} /> Bloquée
+                    </span>
                   )}
                 </div>
+
                 <button
-                  onClick={() => onBloquerRoute(route.id, !route.est_bloquee)}
-                  className={route.est_bloquee ? 'bouton-debloquer' : 'bouton-bloquer'}
+                  onClick={() => onBloquerRoute(route.id, !route.estBloquee)}
                 >
-                  {route.est_bloquee ? 'Débloquer' : 'Bloquer'}
+                  {route.estBloquee ? 'Débloquer' : 'Bloquer'}
                 </button>
+
               </div>
             ))}
+
           </div>
         )}
+
       </div>
+
     </div>
   );
 }

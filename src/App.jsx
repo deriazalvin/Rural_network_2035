@@ -9,6 +9,7 @@ import LandingPage from './composants/LandingPage.tsx';
 import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/AuthForm.jsx';
+import { Circle } from "lucide-react";
 
 function App() {
   const [ongletActif, setOngletActif] = useState('tableau-bord');
@@ -171,14 +172,12 @@ function App() {
     }
   };
 
-  const optimiserTournee = async ({ villageDepartId, villagesAVisiter, capaciteCamion }) => {
+  const optimiserTournee = async ({ villageDepart, villagesAVisiter, capaciteCamion }) => {
     try {
       const payload = {
-        villageDepartId,
+        villageDepart,
         villagesAVisiter,
-        capaciteCamion,
-        villages,
-        routes
+        capaciteCamion
       };
 
       const comparaison = await serviceDonnees.optimiserTournee(payload);
@@ -188,26 +187,26 @@ function App() {
         const tourneeNaive = await serviceDonnees.sauvegarderTournee({
           nom: 'Tournée Naïve',
           capacite_camion: capaciteCamion,
-          distance_totale: comparaison.naive.distanceTotale,
-          cout_carburant: comparaison.naive.distanceTotale * 0.8,
-          type_optimisation: 'naive',
-          itineraire: comparaison.naive.itineraire
+            distance_totale: comparaison.naive.distanceTotale,
+            cout_carburant: comparaison.naive.distanceTotale * 0.8,
+            type_optimisation: 'NAIVE',
+            itineraire: JSON.stringify(comparaison.naive.itineraire)
         });
 
         const tourneeOptimisee = await serviceDonnees.sauvegarderTournee({
           nom: 'Tournée Optimisée',
           capacite_camion: capaciteCamion,
-          distance_totale: comparaison.optimisee.distanceTotale,
-          cout_carburant: comparaison.optimisee.distanceTotale * 0.8,
-          type_optimisation: 'optimisee',
-          itineraire: comparaison.optimisee.itineraire
+            distance_totale: comparaison.optimisee.distanceTotale,
+            cout_carburant: comparaison.optimisee.distanceTotale * 0.8,
+            type_optimisation: 'OPTIMISEE',
+            itineraire: JSON.stringify(comparaison.optimisee.itineraire)
         });
 
         const performance = await serviceDonnees.sauvegarderPerformance({
           tournee_naive_id: tourneeNaive.id,
           tournee_optimisee_id: tourneeOptimisee.id,
-          reduction_distance_pourcentage: comparaison.reductionPourcentage,
-          economie_carburant: comparaison.economieCarburant
+          reduction_distance_pourcentage: Number(comparaison.reductionPourcentage),
+          economie_carburant: Number(comparaison.economieCarburant)
         });
 
         setPerformances([performance, ...performances]);
@@ -248,7 +247,7 @@ function App() {
       <div className="orb orb-2"></div>
 
       <header className="entete">
-        <h1>🌾 Rural Network 2035</h1>
+        <h1> Rural Network 2035</h1>
         <p>Plateforme d'optimisation de la logistique agricole malagasy</p>
       </header>
 
@@ -286,9 +285,13 @@ function App() {
           </li>
         </ul>
 
-        <div className={`statut-connexion-glass ${enLigne ? 'en-ligne' : 'hors-ligne'}`}> 
-          {enLigne ? '🟢' : '🔴'}
-        </div>
+        <div className={`statut-connexion-glass ${enLigne ? 'en-ligne' : 'hors-ligne'}`}>
+          <Circle
+            size={12}
+            fill={enLigne ? "#22c55e" : "#ef4444"}
+            color={enLigne ? "#22c55e" : "#ef4444"}
+          />
+      </div>
       </nav>
 
       <main>

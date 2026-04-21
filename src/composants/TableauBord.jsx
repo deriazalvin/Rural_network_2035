@@ -1,3 +1,5 @@
+import { BarChart2, MapPin, Map, Package, AlertTriangle, DollarSign } from 'lucide-react';
+
 export function TableauBord({ villages, routes, performances }) {
   const calculerStatistiques = () => {
     const nombreVillages = villages.length;
@@ -25,11 +27,14 @@ export function TableauBord({ villages, routes, performances }) {
 
   return (
     <div className="section-carte">
-      <h2>📈 Tableau de Bord</h2>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <BarChart2 size={26} />
+        Tableau de Bord
+      </h2>
 
       <div className="grille-statistiques">
         <div className="carte-stat">
-          <div className="stat-icone">📍</div>
+          <div className="stat-icone"><MapPin size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.nombreVillages}</h3>
             <p>Villages</p>
@@ -37,7 +42,7 @@ export function TableauBord({ villages, routes, performances }) {
         </div>
 
         <div className="carte-stat">
-          <div className="stat-icone">🛣️</div>
+          <div className="stat-icone"><Map size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.nombreRoutes}</h3>
             <p>Routes</p>
@@ -45,7 +50,7 @@ export function TableauBord({ villages, routes, performances }) {
         </div>
 
         <div className="carte-stat">
-          <div className="stat-icone">📦</div>
+          <div className="stat-icone"><Package size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.productionTotale.toFixed(0)} kg</h3>
             <p>Production Totale</p>
@@ -53,7 +58,7 @@ export function TableauBord({ villages, routes, performances }) {
         </div>
 
         <div className="carte-stat">
-          <div className="stat-icone">🚧</div>
+          <div className="stat-icone"><AlertTriangle size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.routesBloquees}</h3>
             <p>Routes Bloquées</p>
@@ -61,7 +66,7 @@ export function TableauBord({ villages, routes, performances }) {
         </div>
 
         <div className="carte-stat performance">
-          <div className="stat-icone">📊</div>
+          <div className="stat-icone"><BarChart2 size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.gainMoyen.toFixed(1)}%</h3>
             <p>Gain Moyen</p>
@@ -69,7 +74,7 @@ export function TableauBord({ villages, routes, performances }) {
         </div>
 
         <div className="carte-stat economie">
-          <div className="stat-icone">💰</div>
+          <div className="stat-icone"><DollarSign size={20} /></div>
           <div className="stat-contenu">
             <h3>{stats.economieTotale.toFixed(0)} Ar</h3>
             <p>Économie Totale</p>
