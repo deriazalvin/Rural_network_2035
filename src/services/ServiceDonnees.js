@@ -12,8 +12,21 @@
           ...options
         });
         if (!res.ok) {
-          const text = await res.text().catch(() => '');
-          throw new Error(`HTTP ${res.status} ${res.statusText} - ${text}`);
+          // Essaie de parser le JSON de la réponse d'erreur
+          let errorMessage = `HTTP ${res.status} ${res.statusText}`;
+          try {
+            const jsonError = await res.json();
+            if (jsonError.message) {
+              errorMessage = jsonError.message;
+            }
+          } catch (e) {
+            // Si ce n'est pas du JSON, utilise le text
+            const text = await res.text().catch(() => '');
+            if (text) {
+              errorMessage = text;
+            }
+          }
+          throw new Error(errorMessage);
         }
         if (res.status === 204) return null;
         return res.json();

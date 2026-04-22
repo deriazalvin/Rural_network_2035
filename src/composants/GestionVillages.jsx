@@ -1,9 +1,17 @@
   import { useState, useRef } from 'react';
-  import { MapPin, BarChart2, Clock } from 'lucide-react';
+  import { MapPin, BarChart2, Clock, Trash2 } from 'lucide-react';
   import NominatimService from '../services/NominatimService';
   import "leaflet/dist/leaflet.css";
-  import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-  import L from 'leaflet';
+  import { MapContainer, TileLayer, Marker, Popup , Polyline  } from 'react-leaflet';
+  import markerIcon from "leaflet/dist/images/marker-icon.png";
+  import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+  delete L.Icon.Default.prototype._getIconUrl;
+
+  L.Icon.Default.mergeOptions({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+  });
 
   export function GestionVillages({ villages, onAjouterVillage, onSupprimerVillage }) {
     const [nom, setNom] = useState('');
@@ -58,7 +66,7 @@
         nom,
         latitude: parseFloat(latitude),
         longitude: parseFloat(longitude),
-        volume_production: parseFloat(volumeProduction)
+        volumeProduction: parseFloat(volumeProduction)
       });
 
       setNom('');
@@ -80,7 +88,7 @@
             <div style={{ position: 'relative', width: '100%' }}>
               <input
                 type="text"
-                placeholder="Nom du village (avec autocomplete)"
+                placeholder="Nom du village"
                 value={nom}
                 onChange={(e) => handleNomChange(e.target.value)}
                 onFocus={() => nom.length >= 2 && setShowSuggestions(true)}
@@ -139,7 +147,7 @@
             <input
               type="number"
               step="0.000001"
-              placeholder="Latitude (auto-remplie)"
+              placeholder="Latitude"
               value={latitude}
               onChange={(e) => setLatitude(e.target.value)}
               className="champ-saisie"
@@ -147,7 +155,7 @@
             <input
               type="number"
               step="0.000001"
-              placeholder="Longitude (auto-remplie)"
+              placeholder="Longitude "
               value={longitude}
               onChange={(e) => setLongitude(e.target.value)}
               className="champ-saisie"
@@ -178,14 +186,13 @@
                     <h4>{village.nom}</h4>
                     <button
                       onClick={() => onSupprimerVillage(village.id)}
-                      className="bouton-supprimer"
                     >
-                      ×
+                      <Trash2 size={18} />
                     </button>
                   </div>
                   <p className="detail-village">
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <BarChart2 size={14} /> Production: {village.volume_production} kg
+                      <BarChart2 size={14} /> Production: {village.volumeProduction} kg
                     </span>
                   </p>
                   <p className="detail-village-secondaire">
@@ -196,6 +203,7 @@
             </div>
           )}
         </div>
+        
       </div>
     );
   }

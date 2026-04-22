@@ -5,12 +5,14 @@ import { GestionVillages } from './composants/GestionVillages.jsx';
 import { GestionRoutes } from './composants/GestionRoutes.jsx';
 import { OptimisationTournees } from './composants/OptimisationTournees.jsx';
 import { TableauBord } from './composants/TableauBord.jsx';
+import { NotificationErreur } from './composants/NotificationErreur.jsx';
 import LandingPage from './composants/LandingPage.tsx';
 import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/AuthForm.jsx';
 import { Circle } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { AlertCircle, XOctagon, MapPinOff, Activity } from 'lucide-react';
 
 function App() {
   const [ongletActif, setOngletActif] = useState('tableau-bord');
@@ -18,11 +20,17 @@ function App() {
   const [routes, setRoutes] = useState([]);
   const [performances, setPerformances] = useState([]);
   const [resultatsOptimisation, setResultatsOptimisation] = useState(null);
+  const [notification, setNotification] = useState(null);
   const [enLigne, setEnLigne] = useState(navigator.onLine);
   const [chargement, setChargement] = useState(true);
   const [utilisateur, setUtilisateur] = useState(null);
 
   const serviceDonnees = new ServiceDonnees();
+
+  const normaliserVillage = (village) => ({
+    ...village,
+    volumeProduction: village.volumeProduction ?? village.volume_production ?? 0
+  });
 
   useEffect(() => {
     const gererConnexion = () => setEnLigne(true);
@@ -75,7 +83,7 @@ function App() {
           serviceDonnees.obtenirToutesLesRoutes()
         ]);
 
-        setVillages(villagesData);
+        setVillages(villagesData.map(normaliserVillage));
         setRoutes(routesData);
         setPerformances([]);
 
@@ -89,7 +97,7 @@ function App() {
       } else {
         const villagesLocaux = stockageLocal.obtenirVillages();
         const routesLocales = stockageLocal.obtenirRoutes();
-        setVillages(villagesLocaux);
+        setVillages(villagesLocaux.map(normaliserVillage));
         setRoutes(routesLocales);
       }
     } catch (error) {
@@ -111,13 +119,17 @@ function App() {
       } else {
         const villageTemporaire = {
           ...village,
+          volumeProduction: village.volumeProduction ?? village.volume_production ?? 0,
           id: `temp_${Date.now()}`,
           dateCreation: new Date().toISOString()
         };
         setVillages([...villages, villageTemporaire]);
         stockageLocal.ajouterModificationEnAttente({
           type: 'ajout_village',
-          data: village
+          data: {
+            ...village,
+            volumeProduction: village.volumeProduction ?? village.volume_production ?? 0
+          }
         });
       }
     } catch (error) {
@@ -158,7 +170,50 @@ function App() {
       }
     } catch (error) {
       console.error('Erreur ajout route:', error);
-      alert('Erreur lors de l\'ajout de la route');
+      
+      // Détecte le type d'erreur pour afficher un message approprié
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('route existe déjà') || errorMessage.includes('doublons bidirectionnels')) {
+          setNotification({
+            type: 'doublon',
+            Icone: AlertCircle, // On passe le composant directement
+            titre: 'Route déjà existante',
+            message: 'Une route existe déjà entre ces deux villages .'
+          });
+      } else if (errorMessage.includes('Village de départ non trouvé') || 
+                  errorMessage.includes('Village d\'arrivée non trouvé')) {
+          setNotification({
+            type: 'erreur',
+            Icone: MapPinOff,
+            titre: 'Village introuvable',
+            message: 'Le village sélectionné n\'existe pas.'
+          });
+      } else if (errorMessage.includes('villages de départ et arrivée doivent être différents')) {
+          setNotification({
+            type: 'erreur',
+            Icone: AlertCircle,
+            titre: 'Villages identiques',
+            message: 'Vous devez sélectionner deux villages différents.'
+          });
+      } else if (errorMessage.includes('Impossible de calculer la distance')) {
+          setNotification({
+            type: 'erreur',
+            Icone: Activity,
+            titre: 'Erreur calcul distance',
+            message: 'Vérifiez que l\'API OSRM est accessible.'
+          });
+      } else {
+          setNotification({
+            type: 'erreur',
+            Icone: XOctagon,
+            titre: 'Erreur lors de l\'ajout',
+            message: errorMessage
+          });
+      }
+      
+      // Ferme automatiquement après 5 secondes
+      setTimeout(() => setNotification(null), 5000);
     }
   };
 
@@ -329,6 +384,15 @@ function App() {
           />
         )}
       </main>
+
+      {notification && (
+        <NotificationErreur
+          type={notification.type}
+          titre={notification.titre}
+          message={notification.message}
+          onFermer={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }

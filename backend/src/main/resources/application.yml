@@ -21,9 +21,13 @@ server:
   servlet:
     context-path: /api
 
+# Configuration OSRM (Open Source Routing Machine)
+osrm:
+  api:
+    url: http://localhost:5000
+
 logging:
   level:
     root: INFO
     com.ruralnetwork: DEBUG
-
 

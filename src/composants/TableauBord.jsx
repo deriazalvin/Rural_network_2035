@@ -26,9 +26,12 @@ ChartJS.register(
 export function TableauBord({ villages, routes, performances }) {
   const calculerStatistiques = () => {
     const nombreVillages = villages.length;
-    const nombreRoutes = routes.length;
-    const productionTotale = villages.reduce((sum, v) => sum + parseFloat(v.volume_production || 0), 0);
-    const routesBloquees = routes.filter(r => r.est_bloquee).length;
+    // On ne compte que les routes actives pour le total des routes "utilisables"
+    const routesActives = routes.filter(r => !r.estBloquee).length;
+    const productionTotale = villages.reduce((sum, v) => sum + parseFloat(v.volumeProduction || 0), 0);
+    
+    // CORRECTION ICI : on utilise estBloquee (sans underscore)
+    const routesBloquees = routes.filter(r => r.estBloquee === true).length;
 
     const gainMoyen = performances.length > 0
       ? performances.reduce((sum, p) => sum + parseFloat(p.reduction_distance_pourcentage || 0), 0) / performances.length
@@ -38,7 +41,7 @@ export function TableauBord({ villages, routes, performances }) {
 
     return {  
       nombreVillages,
-      nombreRoutes,
+      nombreRoutes: routesActives, // On affiche les routes praticables
       productionTotale,
       routesBloquees,
       gainMoyen,
@@ -47,6 +50,17 @@ export function TableauBord({ villages, routes, performances }) {
   };
 
   const stats = calculerStatistiques();
+
+  const topVillage = villages.length > 0
+    ? villages.reduce((best, village) => {
+        const production = parseFloat(village.volumeProduction || 0);
+        const bestProduction = parseFloat(best.volumeProduction || 0);
+        return production > bestProduction ? village : best;
+      }, villages[0])
+    : null;
+
+  const topProduction = topVillage ? parseFloat(topVillage.volumeProduction || 0) : 0;
+  const topShare = stats.productionTotale > 0 ? Math.min(1, topProduction / stats.productionTotale) : 0;
 
   return (
     <div className="section-carte dashboard">
@@ -182,14 +196,22 @@ export function TableauBord({ villages, routes, performances }) {
             <div className="side-row"><strong>{stats.routesBloquees}</strong> Bloquées</div>
           </div>
 
-          <div className="side-card">
-            <h4>Dernières optimisations</h4>
-            {performances.slice(0,4).map((p, i) => (
-              <div key={i} className="mini-line">
-                <div className="mini-date">{new Date(p.date_comparaison).toLocaleDateString('fr-FR')}</div>
-                <div className="mini-detail">{parseFloat(p.reduction_distance_pourcentage).toFixed(1)}% • {parseFloat(p.economie_carburant).toFixed(0)} Ar</div>
-              </div>
-            ))}
+          <div className="side-card top-village-card">
+            <h4>Village le plus producteur</h4>
+            {topVillage ? (
+              <>
+                <div className="top-village-name">{topVillage.nom}</div>
+                <div className="top-village-stat">{topProduction.toFixed(0)} kg</div>
+                <div className="top-village-bar">
+                  <div className="top-village-fill" style={{ width: `${topShare * 100}%` }} />
+                </div>
+                <div className="top-village-note">
+                  {Math.round(topShare * 100)} % de la production totale
+                </div>
+              </>
+            ) : (
+              <p>Aucun village enregistré</p>
+            )}
           </div>
         </aside>
       </div>

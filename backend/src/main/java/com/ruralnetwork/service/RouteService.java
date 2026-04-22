@@ -1,12 +1,12 @@
 package com.ruralnetwork.service;
 
-import com.ruralnetwork.algorithme.CalculDistance;
 import com.ruralnetwork.depot.RouteDepot;
 import com.ruralnetwork.depot.VillageDepot;
 import com.ruralnetwork.dto.RouteDTO;
 import com.ruralnetwork.entite.Route;
 import com.ruralnetwork.entite.Village;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,43 +15,95 @@ public class RouteService {
 
     private final RouteDepot routeDepot;
     private final VillageDepot villageDepot;
-    private final CalculDistance calculDistance;
+    private final OsrmRoutingService osrmService;
 
-    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot, CalculDistance calculDistance) {
+    public RouteService(RouteDepot routeDepot, VillageDepot villageDepot, OsrmRoutingService osrmService) {
         this.routeDepot = routeDepot;
         this.villageDepot = villageDepot;
-        this.calculDistance = calculDistance;
+        this.osrmService = osrmService;
     }
 
-    // ⭐ MÉTHODE MODIFIÉE - AUTO-CALCUL DE LA DISTANCE ⭐
+    /**
+     * Ajoute une nouvelle route entre deux villages.
+     * La distance est AUTO-CALCULÉE via l'API OSRM (calcul de distance réelle par routes).
+     * 
+     * ⚠️ RÈGLE: Empêche les doublons bidirectionnels
+     * Si une route existe entre Village A et Village B (peu importe le sens), elle ne peut pas être créée
+     * 
+     * @param dto DTO contenant: villageDepart_id, village_arrivee_id, qualiteRoute, estBloquee (optionnel)
+     * @return RouteDTO sauvegardée avec distance calculée via OSRM
+     */
     public RouteDTO ajouterRoute(RouteDTO dto) {
-        // Validate incoming IDs before calling repository
-        if (dto.getVillageDepart_id() == null || dto.getVillage_arrivee_id() == null) {
-            throw new IllegalArgumentException("IDs de village manquants");
+        // 1️⃣ VALIDATION: IDs de village obligatoires
+        if (dto.getVillageDepart_id() == null || dto.getVillageDepart_id().trim().isEmpty()) {
+            throw new IllegalArgumentException("Village de départ requis");
+        }
+        if (dto.getVillage_arrivee_id() == null || dto.getVillage_arrivee_id().trim().isEmpty()) {
+            throw new IllegalArgumentException("Village d'arrivée requis");
         }
 
-        Village depart = villageDepot.findById(dto.getVillageDepart_id()).orElse(null);
-        Village arrivee = villageDepot.findById(dto.getVillage_arrivee_id()).orElse(null);
-
-        if (depart == null || arrivee == null) {
-            throw new IllegalArgumentException("Villages non trouvés");
+        // 2️⃣ VALIDATION: Les villages doivent être différents
+        if (dto.getVillageDepart_id().equals(dto.getVillage_arrivee_id())) {
+            throw new IllegalArgumentException("Les villages de départ et arrivée doivent être différents");
         }
 
-        Route.QualiteRoute qualite = Route.QualiteRoute.valueOf(dto.getQualiteRoute());
+        // 3️⃣ FETCH: Récupérer les villages
+        Village depart = villageDepot.findById(dto.getVillageDepart_id())
+                .orElseThrow(() -> new IllegalArgumentException("Village de départ non trouvé: " + dto.getVillageDepart_id()));
+        
+        Village arrivee = villageDepot.findById(dto.getVillage_arrivee_id())
+                .orElseThrow(() -> new IllegalArgumentException("Village d'arrivée non trouvé: " + dto.getVillage_arrivee_id()));
 
-        // ⭐ AUTO-CALCULATE DISTANCE using Haversine ⭐
-        double distanceCalculee = calculDistance.calculerDistanceHaversine(
-                depart.getLatitude(), depart.getLongitude(),
-                arrivee.getLatitude(), arrivee.getLongitude()
-        );
+        // 4️⃣ VALIDATION: Vérifier les doublons bidirectionnels
+        // Si une route existe entre A↔B (peu importe le sens), on la refuse
+        boolean routeExiste = routeDepot.findBidirectionalRoute(
+                dto.getVillageDepart_id(), 
+                dto.getVillage_arrivee_id()
+        ).isPresent();
+        
+        if (routeExiste) {
+            throw new IllegalArgumentException(
+                "Une route existe déjà entre " + depart.getNom() + " et " + arrivee.getNom() + 
+                " (peu importe le sens). Les doublons bidirectionnels ne sont pas autorisés"
+            );
+        }
 
+        // 5️⃣ VALIDATION: Qualité de route obligatoire
+        if (dto.getQualiteRoute() == null || dto.getQualiteRoute().trim().isEmpty()) {
+            throw new IllegalArgumentException("Qualité de route requise");
+        }
+
+        // 6️⃣ CONVERT: Valider et convertir l'enum
+        Route.QualiteRoute qualite;
+        try {
+            qualite = Route.QualiteRoute.valueOf(dto.getQualiteRoute().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Qualité invalide. Valeurs acceptées: BONNE, MOYENNE, MAUVAISE");
+        }
+
+        // 7️⃣ CALCULATE: Auto-calculer la distance via API OSRM
+        double distanceCalculee;
+        try {
+            distanceCalculee = osrmService.obtenirDistanceRoutiere(
+                    depart.getLatitude(), 
+                    depart.getLongitude(),
+                    arrivee.getLatitude(), 
+                    arrivee.getLongitude()
+            );
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException("Impossible de calculer la distance: " + e.getMessage());
+        }
+
+        // 8️⃣ CREATE: Créer la route avec tous les paramètres
         Route route = new Route();
         route.setVillageDepart(depart);
         route.setVillageArrivee(arrivee);
-        route.setDistance(distanceCalculee);  // ← AUTO-CALCULATED
+        route.setDistance(distanceCalculee);  // ⭐ AUTO-CALCULÉE VIA OSRM
         route.setQualiteRoute(qualite);
         route.setEstBloquee(dto.getEstBloquee() != null ? dto.getEstBloquee() : false);
+        route.setDateCreation(LocalDateTime.now());
 
+        // 9️⃣ SAVE: Sauvegarder et retourner
         Route saved = routeDepot.save(route);
         return convertToDTO(saved);
     }
@@ -73,19 +125,31 @@ public class RouteService {
         routeDepot.deleteById(id);
     }
 
+    /**
+     * Modifie une route existante (qualité et mise à jour du statut bloquée).
+     * La distance reste AUTO-CALCULÉE et ne peut pas être modifiée.
+     */
     public RouteDTO modifierRoute(String id, RouteDTO dto) {
-        return routeDepot.findById(id)
-                .map(route -> {
-                    route.setDistance(dto.getDistance());
-                    if (dto.getQualiteRoute() != null) {
-                        route.setQualiteRoute(Route.QualiteRoute.valueOf(dto.getQualiteRoute()));
-                    }
-                    if (dto.getEstBloquee() != null) {
-                        route.setEstBloquee(dto.getEstBloquee());
-                    }
-                    return convertToDTO(routeDepot.save(route));
-                })
-                .orElse(null);
+        Route route = routeDepot.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Route non trouvée: " + id));
+
+        // Mettre à jour la qualité si fournie
+        if (dto.getQualiteRoute() != null && !dto.getQualiteRoute().trim().isEmpty()) {
+            try {
+                route.setQualiteRoute(Route.QualiteRoute.valueOf(dto.getQualiteRoute().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Qualité invalide. Valeurs acceptées: BONNE, MOYENNE, MAUVAISE");
+            }
+        }
+
+        // Mettre à jour le statut bloquée si fourni
+        if (dto.getEstBloquee() != null) {
+            route.setEstBloquee(dto.getEstBloquee());
+        }
+
+        // NOTE: La distance n'est PAS modifiée - elle est TOUJOURS auto-calculée
+        Route updated = routeDepot.save(route);
+        return convertToDTO(updated);
     }
 
     private RouteDTO convertToDTO(Route route) {
@@ -98,6 +162,13 @@ public class RouteService {
         dto.setDistance(route.getDistance());
         dto.setQualiteRoute(route.getQualiteRoute().name());
         dto.setEstBloquee(route.getEstBloquee());
+        dto.setDistance(route.getDistance());
+        dto.setQualiteRoute(route.getQualiteRoute().name());
+        dto.setEstBloquee(route.getEstBloquee());
+        double dureeDeBaseSecondes = (route.getDistance() / 40.0) * 3600;
+        double facteur = route.getQualiteRoute().facteur;
+        double dureePondereeMinutes = (dureeDeBaseSecondes / 60.0) * facteur;
+        dto.setDureeMinutes(dureePondereeMinutes);
         return dto;
     }
 }

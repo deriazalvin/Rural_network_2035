@@ -86,7 +86,7 @@ export function OptimisationTournees({ villages, onOptimiser, resultatsOptimisat
                     checked={villagesSelectionnes.includes(village.id)}
                     onChange={() => toggleVillage(village.id)}
                   />
-                  <span>{village.nom} ({village.volume_production} kg)</span>
+                  <span>{village.nom} ({village.volumeProduction} kg)</span>
                 </label>
               ))}
           </div>

@@ -188,23 +188,7 @@ body {
   margin: 0;
 }
 
-.bouton-supprimer {
-  background: var(--rouge);
-  color: var(--blanc);
-  border: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 1.2rem;
-  line-height: 1;
-  transition: all 0.2s;
-}
 
-.bouton-supprimer:hover {
-  background: #b91c1c;
-  transform: scale(1.1);
-}
 
 .detail-village, .detail-route {
   margin: 8px 0;
@@ -475,6 +459,13 @@ body {
 .date-performance { color:var(--gris); min-width:110px; }
 .reduction-performance { color:var(--vert-principal); font-weight:700; }
 .economie-performance { color:var(--gris); }
+
+.top-village-card h4 { margin-bottom: 12px; color: var(--gris-fonce); font-size: 0.95rem; }
+.top-village-name { font-size: 1.05rem; font-weight: 800; color: var(--gris-fonce); margin-bottom: 6px; }
+.top-village-stat { font-size: 1rem; font-weight: 700; color: var(--vert-principal); }
+.top-village-bar { height: 12px; background: #eef5ea; border-radius: 999px; margin-top: 14px; overflow: hidden; }
+.top-village-fill { height: 100%; background: linear-gradient(90deg, rgba(37,99,235,0.9), rgba(46,125,50,0.95)); border-radius: 999px; transition: width 0.3s ease; }
+.top-village-note { margin-top: 10px; color: var(--gris); font-size: 0.9rem; }
 
 /* ======= AUTH FORM & LOGOUT STYLES ======= */
 .auth-form {
@@ -993,5 +984,34 @@ body {
 
   .economie-performance {
     text-align: left;
+  }
+
+  /* Structure de la grille */
+  .grille-cartes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  /* La carte elle-même */
+  .carte-route {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pousse le bouton vers le bas */
+    min-height: 180px; /* Assure une hauteur uniforme */
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .route-info {
+    flex-grow: 1; /* Prend tout l'espace disponible au milieu */
+  }
+
+  /* Le bouton d'action (Bloquer / Réactiver) */
+  .bouton-bloquer, .bouton-debloquer {
+    margin-top: 15px; /* Espace minimum avec le contenu du dessus */
+    width: 100%;
   }
 }
