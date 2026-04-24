@@ -162,13 +162,27 @@ public class RouteService {
         dto.setDistance(route.getDistance());
         dto.setQualiteRoute(route.getQualiteRoute().name());
         dto.setEstBloquee(route.getEstBloquee());
-        dto.setDistance(route.getDistance());
-        dto.setQualiteRoute(route.getQualiteRoute().name());
-        dto.setEstBloquee(route.getEstBloquee());
+        
+        // Calcul de la durée basée sur la distance et la qualité
         double dureeDeBaseSecondes = (route.getDistance() / 40.0) * 3600;
         double facteur = route.getQualiteRoute().facteur;
         double dureePondereeMinutes = (dureeDeBaseSecondes / 60.0) * facteur;
         dto.setDureeMinutes(dureePondereeMinutes);
+        
+        // Récupérer la géométrie OSRM à la volée
+        try {
+            OsrmRoutingService.OsrmRouteInfo routeInfo = osrmService.obtenirInfosRoute(
+                route.getVillageDepart().getLatitude(),
+                route.getVillageDepart().getLongitude(),
+                route.getVillageArrivee().getLatitude(),
+                route.getVillageArrivee().getLongitude()
+            );
+            dto.setGeometry(routeInfo.getGeometry());
+        } catch (Exception e) {
+            // Si erreur OSRM, on laisse la géométrie vide (log l'erreur)
+            System.err.println("Erreur récupération géométrie OSRM pour route " + route.getId() + ": " + e.getMessage());
+        }
+        
         return dto;
     }
 }

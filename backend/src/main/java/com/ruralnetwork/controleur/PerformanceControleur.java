@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/performances")
+@RequestMapping("/performances")
 @CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173"})
 public class PerformanceControleur {
 

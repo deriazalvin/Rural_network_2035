@@ -41,10 +41,24 @@ public class OsrmRoutingService {
      * @throws RuntimeException si l'API OSRM n'est pas disponible
      */
     public double obtenirDistanceRoutiere(double lat1, double lon1, double lat2, double lon2) {
+        return obtenirInfosRoute(lat1, lon1, lat2, lon2).getDistance();
+    }
+
+    /**
+     * Récupère les informations complètes de la route (distance et géométrie)
+     * 
+     * @param lat1 Latitude du départ
+     * @param lon1 Longitude du départ
+     * @param lat2 Latitude de l'arrivée
+     * @param lon2 Longitude de l'arrivée
+     * @return Un objet contenant distance et géométrie encodée
+     * @throws RuntimeException si l'API OSRM n'est pas disponible
+     */
+    public OsrmRouteInfo obtenirInfosRoute(double lat1, double lon1, double lat2, double lon2) {
         try {
-            // Format OSRM: /route/v1/driving/lon1,lat1;lon2,lat2
+            // Format OSRM: /route/v1/driving/lon1,lat1;lon2,lat2?overview=full
             String coordinates = String.format("%f,%f;%f,%f", lon1, lat1, lon2, lat2);
-            String url = osrmBaseUrl + "/route/v1/driving/" + coordinates + "?overview=false";
+            String url = osrmBaseUrl + "/route/v1/driving/" + coordinates + "?overview=full";
             
             logger.info("Appel OSRM: " + url);
             
@@ -64,18 +78,23 @@ public class OsrmRoutingService {
                 throw new RuntimeException("OSRM error - code: " + message);
             }
             
-            // Récupère the distance en mètres de la première route
+            // Récupère les infos de la première route
             if (!root.has("routes") || root.get("routes").size() == 0) {
                 throw new RuntimeException("OSRM n'a trouvé aucune route entre les deux points");
             }
             
-            double distanceMetres = root.get("routes").get(0).get("distance").asDouble();
+            JsonNode routeNode = root.get("routes").get(0);
+            double distanceMetres = routeNode.get("distance").asDouble();
+            double durationSeconds = routeNode.get("duration").asDouble();
+            String geometry = routeNode.get("geometry").asText();
             
-            // Conversion en kilomètres et arrondir à 2 décimales
+            // Conversion en kilomètres
             double distanceKm = Math.round((distanceMetres / 1000.0) * 100.0) / 100.0;
+            double durationMinutes = durationSeconds / 60.0;
             
-            logger.info("Distance OSRM calculée: " + distanceKm + " km");
-            return distanceKm;
+            logger.info("Distance OSRM: " + distanceKm + " km, Durée: " + durationMinutes + " min");
+            
+            return new OsrmRouteInfo(distanceKm, durationMinutes, geometry);
             
         } catch (RestClientException e) {
             String errorMsg = "Erreur connexion OSRM - L'API n'est probablement pas accessible sur " + osrmBaseUrl;
@@ -88,9 +107,28 @@ public class OsrmRoutingService {
             throw new RuntimeException(errorMsg + ": " + e.getMessage(), e);
             
         } catch (Exception e) {
-            String errorMsg = "Erreur calcul distance OSRM";
+            String errorMsg = "Erreur calcul route OSRM";
             logger.severe(errorMsg);
             throw new RuntimeException(errorMsg + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Classe helper pour retourner les infos complètes de la route
+     */
+    public static class OsrmRouteInfo {
+        public final double distance;
+        public final double dureeMinutes;
+        public final String geometry;
+        
+        public OsrmRouteInfo(double distance, double dureeMinutes, String geometry) {
+            this.distance = distance;
+            this.dureeMinutes = dureeMinutes;
+            this.geometry = geometry;
+        }
+        
+        public double getDistance() { return distance; }
+        public double getDureeMinutes() { return dureeMinutes; }
+        public String getGeometry() { return geometry; }
     }
 }

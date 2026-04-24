@@ -23,6 +23,12 @@ public class Village {
     @Column(nullable = false)
     private Double volumeProduction;
 
+    @Column(name = "production_totale", nullable = false)
+    private Double productionTotale;
+
+    @Column(name = "production_non_transportee", nullable = false)
+    private Double productionNonTransportee;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;
 
@@ -34,6 +40,8 @@ public class Village {
         this.latitude = latitude;
         this.longitude = longitude;
         this.volumeProduction = volumeProduction;
+        this.productionTotale = volumeProduction != null ? volumeProduction : 0.0;
+        this.productionNonTransportee = volumeProduction != null ? volumeProduction : 0.0;
         this.dateCreation = dateCreation;
     }
 
@@ -52,6 +60,12 @@ public class Village {
     public Double getVolumeProduction() { return volumeProduction; }
     public void setVolumeProduction(Double volumeProduction) { this.volumeProduction = volumeProduction; }
 
+    public Double getProductionTotale() { return productionTotale; }
+    public void setProductionTotale(Double productionTotale) { this.productionTotale = productionTotale; }
+
+    public Double getProductionNonTransportee() { return productionNonTransportee; }
+    public void setProductionNonTransportee(Double productionNonTransportee) { this.productionNonTransportee = productionNonTransportee; }
+
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
@@ -60,6 +74,12 @@ public class Village {
         dateCreation = LocalDateTime.now();
         if (volumeProduction == null) {
             volumeProduction = 0.0;
+        }
+        if (productionTotale == null) {
+            productionTotale = volumeProduction;
+        }
+        if (productionNonTransportee == null) {
+            productionNonTransportee = volumeProduction;
         }
     }
 }

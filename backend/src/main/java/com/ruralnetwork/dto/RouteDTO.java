@@ -18,6 +18,7 @@ public class RouteDTO {
     private String qualiteRoute;
     private Boolean estBloquee;
     private Double dureeMinutes;
+    private String geometry; // Polyline encodée OSRM
 
     // Getters
     public String getId() { return id; }
@@ -29,6 +30,7 @@ public class RouteDTO {
     public String getQualiteRoute() { return qualiteRoute; }
     public Boolean getEstBloquee() { return estBloquee; }
     public Double getDureeMinutes() { return dureeMinutes; }
+    public String getGeometry() { return geometry; }
 
     // Setters
     public void setId(String id) { this.id = id; }
@@ -40,4 +42,5 @@ public class RouteDTO {
     public void setQualiteRoute(String qualiteRoute) { this.qualiteRoute = qualiteRoute; }
     public void setEstBloquee(Boolean estBloquee) { this.estBloquee = estBloquee; }
     public void setDureeMinutes(Double dureeMinutes) { this.dureeMinutes = dureeMinutes; }
+    public void setGeometry(String geometry) { this.geometry = geometry; }
 }

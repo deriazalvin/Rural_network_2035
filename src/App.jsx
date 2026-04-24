@@ -6,6 +6,7 @@ import { GestionRoutes } from './composants/GestionRoutes.jsx';
 import { OptimisationTournees } from './composants/OptimisationTournees.jsx';
 import { TableauBord } from './composants/TableauBord.jsx';
 import { NotificationErreur } from './composants/NotificationErreur.jsx';
+import GestionCamions from './composants/GestionCamions.jsx';
 import LandingPage from './composants/LandingPage.tsx';
 import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
@@ -18,7 +19,9 @@ function App() {
   const [ongletActif, setOngletActif] = useState('tableau-bord');
   const [villages, setVillages] = useState([]);
   const [routes, setRoutes] = useState([]);
+  const [camions, setCamions] = useState([]);
   const [performances, setPerformances] = useState([]);
+  const [optimisations, setOptimisations] = useState([]);
   const [resultatsOptimisation, setResultatsOptimisation] = useState(null);
   const [notification, setNotification] = useState(null);
   const [enLigne, setEnLigne] = useState(navigator.onLine);
@@ -78,17 +81,20 @@ function App() {
   const chargerDonnees = async () => {
     try {
       if (enLigne) {
-        const [villagesData, routesData] = await Promise.all([
+        const [villagesData, routesData, camionsData] = await Promise.all([
           serviceDonnees.obtenirTousLesVillages(),
-          serviceDonnees.obtenirToutesLesRoutes()
+          serviceDonnees.obtenirToutesLesRoutes(),
+          serviceDonnees.obtenirTousLesCamions().catch(() => [])
         ]);
 
         setVillages(villagesData.map(normaliserVillage));
         setRoutes(routesData);
+        setCamions(camionsData || []);
         setPerformances([]);
 
         stockageLocal.sauvegarderVillages(villagesData);
         stockageLocal.sauvegarderRoutes(routesData);
+        stockageLocal.sauvegarderCamions(camionsData || []);
 
         const nombreSynchronise = await stockageLocal.synchroniser(serviceDonnees);
         if (nombreSynchronise > 0) {
@@ -97,15 +103,25 @@ function App() {
       } else {
         const villagesLocaux = stockageLocal.obtenirVillages();
         const routesLocales = stockageLocal.obtenirRoutes();
+        const camionsLocaux = stockageLocal.obtenirCamions();
         setVillages(villagesLocaux.map(normaliserVillage));
         setRoutes(routesLocales);
+        setCamions(camionsLocaux);
       }
+
+      // Charger les optimisations (toujours depuis le cache local)
+      const optimisationsLocales = stockageLocal.obtenirOptimisations();
+      setOptimisations(optimisationsLocales);
     } catch (error) {
       console.error('Erreur chargement:', error);
       const villagesLocaux = stockageLocal.obtenirVillages();
       const routesLocales = stockageLocal.obtenirRoutes();
+      const camionsLocaux = stockageLocal.obtenirCamions();
+      const optimisationsLocales = stockageLocal.obtenirOptimisations();
       setVillages(villagesLocaux);
       setRoutes(routesLocales);
+      setCamions(camionsLocaux);
+      setOptimisations(optimisationsLocales);
     } finally {
       setChargement(false);
     }
@@ -148,6 +164,18 @@ function App() {
       setVillages(villages.filter(v => v.id !== id));
     } catch (error) {
       console.error('Erreur suppression village:', error);
+    }
+  };
+
+  const modifierVillage = async (id, village) => {
+    try {
+      if (enLigne) {
+        await serviceDonnees.modifierVillage(id, village);
+      }
+      setVillages(villages.map(v => v.id === id ? { ...v, ...village } : v));
+    } catch (error) {
+      console.error('Erreur modification village:', error);
+      alert('Erreur lors de la modification du village');
     }
   };
 
@@ -225,6 +253,103 @@ function App() {
       setRoutes(routes.map(r => r.id === id ? { ...r, estBloquee: estBloquee } : r));
     } catch (error) {
       console.error('Erreur modification route:', error);
+    }
+  };
+
+  // Wrapper pour mettre à jour les camions ET les sauvegarder en cache local
+  const mettreAJourCamions = (nouveauxCamions) => {
+    setCamions(nouveauxCamions);
+    stockageLocal.sauvegarderCamions(nouveauxCamions);
+  };
+
+  // Valider une optimisation et sauvegarder les résultats
+  const validerOptimisation = (resultat) => {
+    try {
+      // Calculer les statistiques de l'optimisation
+      const distanceTotale = resultat.tournees?.reduce((sum, t) => sum + (t.distanceTotale || 0), 0) || 0;
+      const coutTotal = resultat.coutTotal || 0;
+      const gainMoyen = resultat.gainPercentage || 0;
+      
+      // Sauvegarder l'optimisation dans le localStorage
+      stockageLocal.ajouterOptimisation({
+        id: `opt_${Date.now()}`,
+        distanceTotale,
+        coutTotal,
+        gainPercentage: gainMoyen,
+        nbTournees: (resultat.tournees || []).length,
+        nbCamions: (resultat.tournees || []).length,
+        tournees: resultat.tournees,
+        villagesNonDesservis: resultat.villagesNonDesservis || []
+      });
+      
+      // Mettre à jour l'état des optimisations
+      setOptimisations(stockageLocal.obtenirOptimisations());
+      
+      // Mettre à jour les villages pour ajouter la "collecte restante"
+      const villageMisAJour = villages.map(v => {
+        const collecteRestante = resultat.tournees?.reduce((sum, t) => {
+          const etape = t.etapes?.find(e => e.villageId === v.id);
+          return sum + (etape?.productionCollectee || 0);
+        }, 0) || 0;
+        
+        return {
+          ...v,
+          collecteRestante: (parseFloat(v.volumeProduction || 0) - collecteRestante),
+          productionTotaleHistorique: (parseFloat(v.productionTotaleHistorique || 0) + parseFloat(v.volumeProduction || 0))
+        };
+      });
+      
+      setVillages(villageMisAJour);
+      stockageLocal.sauvegarderVillages(villageMisAJour);
+      
+      // Réinitialiser le résultat d'optimisation
+      setResultatsOptimisation(null);
+      
+      // Afficher une notification de succès
+      setNotification({
+        type: 'succes',
+        titre: 'Optimisation validée',
+        message: `${(resultat.tournees || []).length} tournée(s) enregistrée(s) avec succès!`
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Erreur validation optimisation:', error);
+      setNotification({
+        type: 'erreur',
+        titre: 'Erreur lors de la validation',
+        message: error.message
+      });
+    }
+  };
+
+  const modifierRoute = async (id, route) => {
+    try {
+      if (enLigne) {
+        await serviceDonnees.modifierRoute(id, route);
+      }
+      setRoutes(routes.map(r => r.id === id ? { ...r, ...route } : r));
+    } catch (error) {
+      console.error('Erreur modification route:', error);
+      
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('route existe déjà') || errorMessage.includes('doublons bidirectionnels')) {
+        setNotification({
+          type: 'doublon',
+          Icone: AlertCircle,
+          titre: 'Route déjà existante',
+          message: 'Une route existe déjà entre ces deux villages.'
+        });
+      } else {
+        setNotification({
+          type: 'erreur',
+          Icone: XOctagon,
+          titre: 'Erreur lors de la modification',
+          message: errorMessage
+        });
+      }
+      
+      setTimeout(() => setNotification(null), 5000);
     }
   };
 
@@ -313,6 +438,7 @@ function App() {
             { id: 'tableau-bord', label: 'Tableau', icon: 'fa-chart-line' },
             { id: 'villages', label: 'Villages', icon: 'fa-tree-city' },
             { id: 'routes', label: 'Routes', icon: 'fa-route' },
+            { id: 'camions', label: 'Flotte', icon: 'fa-truck' },
             { id: 'optimisation', label: 'Calcul', icon: 'fa-gears' }
           ].map((item) => (
             <li 
@@ -355,7 +481,7 @@ function App() {
           <TableauBord
             villages={villages}
             routes={routes}
-            performances={performances}
+            optimisations={optimisations}
           />
         )}
 
@@ -363,6 +489,7 @@ function App() {
           <GestionVillages
             villages={villages}
             onAjouterVillage={ajouterVillage}
+            onModifierVillage={modifierVillage}
             onSupprimerVillage={supprimerVillage}
           />
         )}
@@ -372,15 +499,26 @@ function App() {
             villages={villages}
             routes={routes}
             onAjouterRoute={ajouterRoute}
+            onModifierRoute={modifierRoute}
             onBloquerRoute={bloquerRoute}
+          />
+        )}
+
+        {ongletActif === 'camions' && (
+          <GestionCamions
+            camions={camions}
+            onModifierCamions={mettreAJourCamions}
           />
         )}
 
         {ongletActif === 'optimisation' && (
           <OptimisationTournees
             villages={villages}
-            onOptimiser={optimiserTournee}
-            resultatsOptimisation={resultatsOptimisation}
+            camions={camions}
+            depot={villages.length > 0 ? villages[0] : null}
+            resultatOptimisation={resultatsOptimisation}
+            onOptimiser={setResultatsOptimisation}
+            onValidation={validerOptimisation}
           />
         )}
       </main>

@@ -1,11 +1,46 @@
     const DEFAULT_BASE = '/api';
 
+    // Déterminer l'URL de base selon l'environnement
+    async function getBaseUrl() {
+      // En développement: utiliser le proxy Vite (/api)
+      if (import.meta.env.DEV) {
+        return DEFAULT_BASE;
+      }
+      
+      // En production: essayer de charger config.json
+      try {
+        const response = await fetch('/config.json');
+        if (response.ok) {
+          const config = await response.json();
+          return config.apiBaseUrl ? `${config.apiBaseUrl}/api` : DEFAULT_BASE;
+        }
+      } catch (e) {
+        console.warn('Config.json not found, using default API base');
+      }
+      return DEFAULT_BASE;
+    }
+
+    let cachedBase = null;
+
     export class ServiceDonnees {
       constructor(baseUrl = DEFAULT_BASE) {
         this.base = baseUrl.replace(/\/$/, '');
       }
 
+      async initBase() {
+        if (!cachedBase) {
+          cachedBase = await getBaseUrl();
+          this.base = cachedBase;
+        }
+        return this.base;
+      }
+
       async request(path, options = {}) {
+        // Initialiser la base URL une seule fois
+        if (!cachedBase && !import.meta.env.DEV) {
+          await this.initBase();
+        }
+
         const url = `${this.base}${path}`;
         const res = await fetch(url, {
           headers: { 'Content-Type': 'application/json' },
@@ -78,9 +113,13 @@
       // Optimisation (délégation au backend)
       optimiserTournee(payload) { return this.request('/optimisations', { method: 'POST', body: JSON.stringify(payload) }); }
 
-      // Assistant IA removed — functionality deleted per project cleanup
-
-      // Auth
+    // Camions
+    obtenirTousLesCamions() { return this.request('/camions'); }
+    obtenirCamionParId(id) { return this.request(`/camions/${id}`); }
+    ajouterCamion(c) { return this.request('/camions', { method: 'POST', body: JSON.stringify(c) }); }
+    modifierCamion(id, data) { return this.request(`/camions/${id}`, { method: 'PUT', body: JSON.stringify(data) }); }
+    modifierEtatCamion(id, etat) { return this.request(`/camions/${id}/etat`, { method: 'PUT', body: JSON.stringify({ etat }) }); }
+    supprimerCamion(id) { return this.request(`/camions/${id}`, { method: 'DELETE' }); }
       async login({ email, motDePasse }) {
         return this.request('/auth/login', { method: 'POST', body: JSON.stringify({ email, motDePasse }) });
       }
