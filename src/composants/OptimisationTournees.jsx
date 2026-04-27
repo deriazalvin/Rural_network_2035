@@ -1,15 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Zap, MapPin, Truck, AlertCircle, ChevronDown, ChevronRight, Save } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import L from 'leaflet';
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+import React, { useState, useMemo, useEffect } from 'react';
+import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save } from 'lucide-react';
 
 /**
  * Composant OptimisationTournees
@@ -24,9 +14,14 @@ export function OptimisationTournees({
   onValidation = () => {}
 }) {
   const [camionsSelectiones, setCamionsSelectiones] = useState(new Set());
+  const [depotSelectionne, setDepotSelectionne] = useState(depot);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
   const [tourneeExpandue, setTourneeExpandue] = useState(new Set());
+
+  useEffect(() => {
+    setDepotSelectionne(depot);
+  }, [depot]);
 
   const camionsDisponibles = camions.filter(c => c.etat === 'DISPONIBLE');
 
@@ -43,7 +38,7 @@ export function OptimisationTournees({
   };
 
   const lancerOptimisation = async () => {
-    if (!depot) {
+    if (!depotSelectionne) {
       setErreur('Sélectionnez un dépôt.');
       return;
     }
@@ -60,7 +55,7 @@ export function OptimisationTournees({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          depotId: depot.id,
+          depotId: depotSelectionne.id,
           camionIds: Array.from(camionsSelectiones)
         })
       });
@@ -258,6 +253,55 @@ export function OptimisationTournees({
           ))}
         </div>
 
+        {/* === VISUALISATION RÉSEAU SIMPLE === */}
+        <div style={{
+          marginTop: '24px',
+          padding: '16px',
+          background: '#ffffff',
+          border: '2px solid #e8dfc8',
+          borderRadius: '12px'
+        }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Visualisation du réseau</h3>
+          {resultatOptimisation.tournees?.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {resultatOptimisation.tournees.map((tournee, tIdx) => (
+                <div key={tIdx} style={{ display: 'grid', gap: '10px' }}>
+                  <div style={{ fontWeight: '700', color: '#134e4a' }}>{tournee.camionNom} - Route</div>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: tournee.couleurHex || '#2d5016' }} />
+                      <strong>Dépôt</strong>
+                    </div>
+                    {tournee.etapes?.map((etape, eIdx) => (
+                      <React.Fragment key={eIdx}>
+                        <div style={{ width: '24px', height: '2px', background: tournee.couleurHex || '#2d5016' }} />
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '999px', background: '#f8fafc', border: '1px solid #d1d5db' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: tournee.couleurHex || '#2d5016' }} />
+                          {etape.villageNom}
+                        </div>
+                      </React.Fragment>
+                    ))}
+                    {tournee.etapes?.length > 0 && (
+                      <>
+                        <div style={{ width: '24px', height: '2px', background: tournee.couleurHex || '#2d5016' }} />
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '999px', background: '#f3f4f6', border: '1px solid #e5e7eb' }}>
+                          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#9ca3af' }} />
+                          Retour dépôt
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>
+                    {tournee.etapes?.length || 0} arrêt(s), {tournee.distanceTotalKm?.toFixed(1) || 0} km, charge {tournee.chargeTotalKg?.toFixed(0) || 0}/{tournee.capaciteKg?.toFixed(0) || 0} kg
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: '#334155', fontSize: '0.9rem' }}>Aucune tournée à afficher.</div>
+          )}
+        </div>
+
         {/* === VILLAGES NON DESSERVIS === */}
         {resultatOptimisation.villagesNonDesservis?.length > 0 && (
           <div style={{
@@ -340,18 +384,35 @@ export function OptimisationTournees({
 
       <div style={{ marginBottom: '24px' }}>
         <h3>Dépôt de Départ</h3>
-        {depot ? (
-          <div style={{
-            padding: '12px',
-            background: '#f3f4f6',
-            border: '2px solid #2d5016',
-            borderRadius: '8px',
-            marginTop: '8px',
-            fontWeight: '600',
-            color: '#2d5016'
-          }}>
-            📍 {depot.nom}
-          </div>
+        {villages.length > 0 ? (
+          <select
+            value={depotSelectionne?.id || ''}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              const selectedVillage = villages.find(v => v.id === selectedId);
+              setDepotSelectionne(selectedVillage);
+            }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginTop: '8px',
+              borderRadius: '8px',
+              border: '2px solid #2d5016',
+              fontSize: '0.95rem',
+              fontWeight: '500',
+              color: '#2d5016',
+              backgroundColor: '#f3f4f6',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <option value="">Choisir un dépôt...</option>
+            {villages.map((village) => (
+              <option key={village.id} value={village.id}>
+                {village.nom}
+              </option>
+            ))}
+          </select>
         ) : (
           <div style={{
             padding: '12px',
@@ -361,7 +422,7 @@ export function OptimisationTournees({
             marginTop: '8px',
             color: '#991b1b'
           }}>
-            ⚠️ Aucun dépôt sélectionné. Créez un village et configurez-le comme dépôt.
+            ⚠️ Aucun village disponible. Créez des villages pour choisir un dépôt.
           </div>
         )}
       </div>

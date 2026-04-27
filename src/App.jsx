@@ -49,10 +49,21 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Nettoyer toutes les anciennes données au démarrage de l'application
+    gestionSession.nettoyerToutesDonneesAnciennes();
+  }, []);
+
+  useEffect(() => {
     const handler = (e) => {
       const detail = e?.detail || null;
       if (detail) {
-        setUtilisateur(detail.user || detail);
+        const user = detail.user || detail;
+        setUtilisateur(user);
+        gestionSession.sauvegarderUtilisateur(user);
+        // Nettoyer complètement les données locales à chaque connexion pour garantir l'isolation
+        gestionSession.nettoyerDonneesLocales();
+        // Recharger les données après le nettoyage
+        setTimeout(() => chargerDonnees(), 100);
       }
     };
     window.addEventListener('rn-user-logged', handler);
@@ -61,7 +72,7 @@ function App() {
 
   useEffect(() => {
     chargerDonnees();
-  }, [enLigne]);
+  }, [enLigne, utilisateur]);
 
   useEffect(() => {
     try {
@@ -86,6 +97,13 @@ function App() {
           serviceDonnees.obtenirToutesLesRoutes(),
           serviceDonnees.obtenirTousLesCamions().catch(() => [])
         ]);
+
+        // Nettoyer toujours les données locales au démarrage pour éviter la persistance
+        // entre comptes - seules les données de la base de données comptent
+        stockageLocal.sauvegarderVillages([]);
+        stockageLocal.sauvegarderRoutes([]);
+        stockageLocal.sauvegarderCamions([]);
+        stockageLocal.sauvegarderOptimisations([]);
 
         setVillages(villagesData.map(normaliserVillage));
         setRoutes(routesData);
@@ -417,6 +435,9 @@ function App() {
 
   const logout = () => {
     gestionSession.supprimerToken();
+    gestionSession.supprimerUtilisateur();
+    // Nettoyer toutes les données locales au logout pour éviter la persistance
+    gestionSession.nettoyerDonneesLocales();
     setUtilisateur(null);
     setOngletActif('tableau-bord');
   };
@@ -457,6 +478,31 @@ function App() {
         </ul>
 
         <ul className="nav-list" style={{ marginLeft: 8 }}>
+          <li className="nav-item" onClick={() => { 
+            if (window.confirm('Voulez-vous vraiment nettoyer toutes les données locales ? Cette action supprimera toutes vos données sauvegardées localement et rechargera les données depuis la base de données.')) {
+              gestionSession.nettoyerDonneesLocales();
+              chargerDonnees();
+              alert('Données locales nettoyées. Les données de la base de données ont été rechargées.');
+            }
+          }}>
+            <a href="#" onClick={(e) => e.preventDefault()}>
+              <div className="nav-content">
+                <span className="text">Nettoyer</span>
+                <span className="icon"><i className="fa-solid fa-trash"></i></span>
+              </div>
+            </a>
+          </li>
+          <li className="nav-item" onClick={() => { 
+            const keys = gestionSession.debuggerLocalStorage();
+            alert(`Clés localStorage trouvées: ${keys.join(', ')}\nOuvrez la console (F12) pour voir les détails.`);
+          }}>
+            <a href="#" onClick={(e) => e.preventDefault()}>
+              <div className="nav-content">
+                <span className="text">Debug</span>
+                <span className="icon"><i className="fa-solid fa-bug"></i></span>
+              </div>
+            </a>
+          </li>
           <li className="nav-item logout" onClick={() => { logout(); }}>
             <a href="#" onClick={(e) => { e.preventDefault(); logout(); }}>
               <div className="nav-content">

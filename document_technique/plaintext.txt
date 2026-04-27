@@ -25,7 +25,7 @@ API OSRM (localhost:5000)
 Conversion: mètres → km
   ↓ save
 Base de données (distance calculée réelle)
-
+uted --algorithm mld /data/madagascar-latest.osrm
 docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed --algorithm mld /data/madagascar-latest.osrm
  
 
