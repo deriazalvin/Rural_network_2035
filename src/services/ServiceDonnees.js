@@ -42,8 +42,16 @@
         }
 
         const url = `${this.base}${path}`;
+        
+        // Extraire le token depuis localStorage et l'ajouter à l'Authorization header
+        const token = localStorage.getItem('rn_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const res = await fetch(url, {
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           ...options
         });
         if (!res.ok) {

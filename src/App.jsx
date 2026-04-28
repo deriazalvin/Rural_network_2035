@@ -49,11 +49,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Nettoyer toutes les anciennes données au démarrage de l'application
-    gestionSession.nettoyerToutesDonneesAnciennes();
-  }, []);
-
-  useEffect(() => {
     const handler = (e) => {
       const detail = e?.detail || null;
       if (detail) {
@@ -489,17 +484,6 @@ function App() {
               <div className="nav-content">
                 <span className="text">Nettoyer</span>
                 <span className="icon"><i className="fa-solid fa-trash"></i></span>
-              </div>
-            </a>
-          </li>
-          <li className="nav-item" onClick={() => { 
-            const keys = gestionSession.debuggerLocalStorage();
-            alert(`Clés localStorage trouvées: ${keys.join(', ')}\nOuvrez la console (F12) pour voir les détails.`);
-          }}>
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              <div className="nav-content">
-                <span className="text">Debug</span>
-                <span className="icon"><i className="fa-solid fa-bug"></i></span>
               </div>
             </a>
           </li>

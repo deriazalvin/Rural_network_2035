@@ -28,17 +28,21 @@ public class Camion {
     @Column(name = "couleur_hex", length = 7)
     private String couleurHex;
 
+    @Column(name = "utilisateur_id", nullable = false)
+    private Long utilisateurId;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;
 
     public Camion() {}
 
-    public Camion(String id, String nom, Double capaciteKg, EtatCamion etat, String couleurHex, LocalDateTime dateCreation) {
+    public Camion(String id, String nom, Double capaciteKg, EtatCamion etat, String couleurHex, Long utilisateurId, LocalDateTime dateCreation) {
         this.id = id;
         this.nom = nom;
         this.capaciteKg = capaciteKg;
         this.etat = etat;
         this.couleurHex = couleurHex;
+        this.utilisateurId = utilisateurId;
         this.dateCreation = dateCreation;
     }
 
@@ -57,6 +61,9 @@ public class Camion {
 
     public String getCouleurHex() { return couleurHex; }
     public void setCouleurHex(String couleurHex) { this.couleurHex = couleurHex; }
+
+    public Long getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(Long utilisateurId) { this.utilisateurId = utilisateurId; }
 
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }

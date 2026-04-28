@@ -2,6 +2,7 @@ package com.ruralnetwork.controleur;
 
 import com.ruralnetwork.entite.Tournee;
 import com.ruralnetwork.depot.TourneeDepot;
+import com.ruralnetwork.util.TokenUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -18,49 +19,45 @@ import java.util.Map;
 public class TourneeControleur {
 
     private final TourneeDepot tourneeDepot;
+    private final TokenUtil tokenUtil;
 
-    public TourneeControleur(TourneeDepot tourneeDepot) {
+    public TourneeControleur(TourneeDepot tourneeDepot, TokenUtil tokenUtil) {
         this.tourneeDepot = tourneeDepot;
+        this.tokenUtil = tokenUtil;
     }
 
-    /**
-     * GET /api/tournees
-     * Récupère toutes les tournées avec pagination (50 dernières par défaut)
-     */
+    private Long extractUserId(String authHeader) {
+        Long userId = tokenUtil.getUserIdFromAuthHeader(authHeader);
+        if (userId == null) {
+            throw new IllegalArgumentException("Invalid or missing authorization token");
+        }
+        return userId;
+    }
+
     @GetMapping
-    public ResponseEntity<List<Tournee>> obtenirToutesLesTournees() {
+    public ResponseEntity<List<Tournee>> obtenirToutesLesTournees(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserId(authHeader);
         Pageable pageable = PageRequest.of(0, 50);
-        List<Tournee> tournees = tourneeDepot.findAllByOrderByDateCreationDesc(pageable);
+        List<Tournee> tournees = tourneeDepot.findByUtilisateurIdOrderByDateCreationDesc(userId, pageable);
         return ResponseEntity.ok(tournees);
     }
 
-    /**
-     * GET /api/tournees/{id}
-     * Récupère une tournée spécifique par son ID
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<Tournee> obtenirTourneeParId(@PathVariable String id) {
-        return tourneeDepot.findById(id)
+    public ResponseEntity<Tournee> obtenirTourneeParId(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserId(authHeader);
+        return tourneeDepot.findByIdAndUtilisateurId(id, userId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * POST /api/tournees
-     * Crée une nouvelle tournée
-     * Body attendu:
-     * {
-     *   "nom": "Tournée Naïve",
-     *   "capacite_camion": 5000,
-     *   "distance_totale": 125.5,
-     *   "cout_carburant": 100.4,
-     *   "type_optimisation": "NAIVE",
-     *   "itineraire": "[\"village1\", \"village2\", \"village3\"]"
-     * }
-     */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> creerTournee(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<Map<String, Object>> creerTournee(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
         try {
+            Long userId = extractUserId(authHeader);
+
             String nom = (String) body.get("nom");
             Double capaciteCamion = ((Number) body.get("capacite_camion")).doubleValue();
             Double distanceTotale = ((Number) body.get("distance_totale")).doubleValue();
@@ -68,18 +65,8 @@ public class TourneeControleur {
             String typeOptimisation = (String) body.get("type_optimisation");
             String itineraire = (String) body.get("itineraire");
 
-            // Validation
-            if (nom == null || nom.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Le nom de la tournée est requis"));
-            }
-
-            if (capaciteCamion == null || capaciteCamion <= 0) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "La capacité du camion doit être positive"));
-            }
-
-            Tournee.TypeOptimisation type = Tournee.TypeOptimisation.valueOf(typeOptimisation);
+            Tournee.TypeOptimisation type =
+                    Tournee.TypeOptimisation.valueOf(typeOptimisation);
 
             Tournee tournee = new Tournee();
             tournee.setNom(nom);
@@ -88,6 +75,7 @@ public class TourneeControleur {
             tournee.setCoutCarburant(coutCarburant);
             tournee.setTypeOptimisation(type);
             tournee.setItineraire(itineraire);
+            tournee.setUtilisateurId(userId);
             tournee.setDateCreation(LocalDateTime.now());
 
             Tournee saved = tourneeDepot.save(tournee);
@@ -103,13 +91,31 @@ public class TourneeControleur {
             resultat.put("date_creation", saved.getDateCreation());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(resultat);
+
         } catch (IllegalArgumentException e) {
+
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Type d'optimisation invalide: " + e.getMessage()));
+                    .body(Map.of("error",
+                            "Type d'optimisation invalide: " + e.getMessage()));
+
         } catch (Exception e) {
+
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> supprimerTournee(
+            @PathVariable String id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long userId = extractUserId(authHeader);
+
+        tourneeDepot.findByIdAndUtilisateurId(id, userId)
+                .ifPresent(tournee -> tourneeDepot.deleteById(id));
+
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -158,20 +164,6 @@ public class TourneeControleur {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
-     * DELETE /api/tournees/{id}
-     * Supprime une tournée
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> supprimerTournee(@PathVariable String id) {
-        try {
-            tourneeDepot.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

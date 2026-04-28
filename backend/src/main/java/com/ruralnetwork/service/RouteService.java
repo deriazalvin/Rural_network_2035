@@ -25,15 +25,10 @@ public class RouteService {
 
     /**
      * Ajoute une nouvelle route entre deux villages.
-     * La distance est AUTO-CALCULÉE via l'API OSRM (calcul de distance réelle par routes).
-     * 
-     * ⚠️ RÈGLE: Empêche les doublons bidirectionnels
-     * Si une route existe entre Village A et Village B (peu importe le sens), elle ne peut pas être créée
-     * 
-     * @param dto DTO contenant: villageDepart_id, village_arrivee_id, qualiteRoute, estBloquee (optionnel)
-     * @return RouteDTO sauvegardée avec distance calculée via OSRM
+     * Valide que les deux villages appartiennent à l'utilisateur.
+     * La distance est AUTO-CALCULÉE via l'API OSRM.
      */
-    public RouteDTO ajouterRoute(RouteDTO dto) {
+    public RouteDTO ajouterRoute(RouteDTO dto, Long utilisateurId) {
         // 1️⃣ VALIDATION: IDs de village obligatoires
         if (dto.getVillageDepart_id() == null || dto.getVillageDepart_id().trim().isEmpty()) {
             throw new IllegalArgumentException("Village de départ requis");
@@ -47,15 +42,14 @@ public class RouteService {
             throw new IllegalArgumentException("Les villages de départ et arrivée doivent être différents");
         }
 
-        // 3️⃣ FETCH: Récupérer les villages
-        Village depart = villageDepot.findById(dto.getVillageDepart_id())
-                .orElseThrow(() -> new IllegalArgumentException("Village de départ non trouvé: " + dto.getVillageDepart_id()));
+        // 3️⃣ FETCH: Récupérer les villages et valider qu'ils appartiennent à l'utilisateur
+        Village depart = villageDepot.findByIdAndUtilisateurId(dto.getVillageDepart_id(), utilisateurId)
+                .orElseThrow(() -> new IllegalArgumentException("Village de départ non trouvé ou accès refusé"));
         
-        Village arrivee = villageDepot.findById(dto.getVillage_arrivee_id())
-                .orElseThrow(() -> new IllegalArgumentException("Village d'arrivée non trouvé: " + dto.getVillage_arrivee_id()));
+        Village arrivee = villageDepot.findByIdAndUtilisateurId(dto.getVillage_arrivee_id(), utilisateurId)
+                .orElseThrow(() -> new IllegalArgumentException("Village d'arrivée non trouvé ou accès refusé"));
 
         // 4️⃣ VALIDATION: Vérifier les doublons bidirectionnels
-        // Si une route existe entre A↔B (peu importe le sens), on la refuse
         boolean routeExiste = routeDepot.findBidirectionalRoute(
                 dto.getVillageDepart_id(), 
                 dto.getVillage_arrivee_id()
@@ -63,8 +57,7 @@ public class RouteService {
         
         if (routeExiste) {
             throw new IllegalArgumentException(
-                "Une route existe déjà entre " + depart.getNom() + " et " + arrivee.getNom() + 
-                " (peu importe le sens). Les doublons bidirectionnels ne sont pas autorisés"
+                "Une route existe déjà entre " + depart.getNom() + " et " + arrivee.getNom()
             );
         }
 
@@ -94,11 +87,11 @@ public class RouteService {
             throw new IllegalArgumentException("Impossible de calculer la distance: " + e.getMessage());
         }
 
-        // 8️⃣ CREATE: Créer la route avec tous les paramètres
+        // 8️⃣ CREATE: Créer la route
         Route route = new Route();
         route.setVillageDepart(depart);
         route.setVillageArrivee(arrivee);
-        route.setDistance(distanceCalculee);  // ⭐ AUTO-CALCULÉE VIA OSRM
+        route.setDistance(distanceCalculee);
         route.setQualiteRoute(qualite);
         route.setEstBloquee(dto.getEstBloquee() != null ? dto.getEstBloquee() : false);
         route.setDateCreation(LocalDateTime.now());
@@ -108,30 +101,49 @@ public class RouteService {
         return convertToDTO(saved);
     }
 
-    public List<RouteDTO> obtenirToutesLesRoutes() {
+    public List<RouteDTO> obtenirToutesLesRoutes(Long utilisateurId) {
         return routeDepot.findAll()
                 .stream()
+                .filter(route -> 
+                    route.getVillageDepart().getUtilisateurId().equals(utilisateurId) &&
+                    route.getVillageArrivee().getUtilisateurId().equals(utilisateurId)
+                )
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public RouteDTO obtenirRouteParId(String id) {
+    public RouteDTO obtenirRouteParId(String id, Long utilisateurId) {
         return routeDepot.findById(id)
+                .filter(route ->
+                    route.getVillageDepart().getUtilisateurId().equals(utilisateurId) &&
+                    route.getVillageArrivee().getUtilisateurId().equals(utilisateurId)
+                )
                 .map(this::convertToDTO)
                 .orElse(null);
     }
 
-    public void supprimerRoute(String id) {
-        routeDepot.deleteById(id);
+    public void supprimerRoute(String id, Long utilisateurId) {
+        routeDepot.findById(id)
+                .filter(route ->
+                    route.getVillageDepart().getUtilisateurId().equals(utilisateurId) &&
+                    route.getVillageArrivee().getUtilisateurId().equals(utilisateurId)
+                )
+                .ifPresent(route -> routeDepot.deleteById(id));
     }
 
     /**
-     * Modifie une route existante (qualité et mise à jour du statut bloquée).
-     * La distance reste AUTO-CALCULÉE et ne peut pas être modifiée.
+     * Modifie une route existante (qualité et statut bloquée).
+     * Valide que les deux villages appartiennent à l'utilisateur.
      */
-    public RouteDTO modifierRoute(String id, RouteDTO dto) {
+    public RouteDTO modifierRoute(String id, RouteDTO dto, Long utilisateurId) {
         Route route = routeDepot.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Route non trouvée: " + id));
+
+        // Valider l'accès
+        if (!route.getVillageDepart().getUtilisateurId().equals(utilisateurId) ||
+            !route.getVillageArrivee().getUtilisateurId().equals(utilisateurId)) {
+            throw new IllegalArgumentException("Accès refusé");
+        }
 
         // Mettre à jour la qualité si fournie
         if (dto.getQualiteRoute() != null && !dto.getQualiteRoute().trim().isEmpty()) {
@@ -147,7 +159,6 @@ public class RouteService {
             route.setEstBloquee(dto.getEstBloquee());
         }
 
-        // NOTE: La distance n'est PAS modifiée - elle est TOUJOURS auto-calculée
         Route updated = routeDepot.save(route);
         return convertToDTO(updated);
     }
@@ -179,8 +190,7 @@ public class RouteService {
             );
             dto.setGeometry(routeInfo.getGeometry());
         } catch (Exception e) {
-            // Si erreur OSRM, on laisse la géométrie vide (log l'erreur)
-            System.err.println("Erreur récupération géométrie OSRM pour route " + route.getId() + ": " + e.getMessage());
+            // Si erreur OSRM, on laisse la géométrie vide
         }
         
         return dto;

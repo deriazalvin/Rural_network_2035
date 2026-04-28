@@ -16,36 +16,38 @@ public class VillageService {
         this.villageDepot = villageDepot;
     }
 
-    public VillageDTO ajouterVillage(VillageDTO dto) {
+    public VillageDTO ajouterVillage(VillageDTO dto, Long utilisateurId) {
         Village village = new Village();
         village.setNom(dto.getNom());
         village.setLatitude(dto.getLatitude());
         village.setLongitude(dto.getLongitude());
         village.setVolumeProduction(dto.getVolumeProduction());
+        village.setUtilisateurId(utilisateurId);
 
         Village saved = villageDepot.save(village);
         return convertToDTO(saved);
     }
 
-    public List<VillageDTO> obtenirTousLesVillages() {
-        return villageDepot.findAllByOrderByNomAsc()
+    public List<VillageDTO> obtenirTousLesVillages(Long utilisateurId) {
+        return villageDepot.findByUtilisateurIdOrderByNomAsc(utilisateurId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public VillageDTO obtenirVillageParId(String id) {
-        return villageDepot.findById(id)
+    public VillageDTO obtenirVillageParId(String id, Long utilisateurId) {
+        return villageDepot.findByIdAndUtilisateurId(id, utilisateurId)
                 .map(this::convertToDTO)
                 .orElse(null);
     }
 
-    public void supprimerVillage(String id) {
-        villageDepot.deleteById(id);
+    public void supprimerVillage(String id, Long utilisateurId) {
+        villageDepot.findByIdAndUtilisateurId(id, utilisateurId)
+                .ifPresent(village -> villageDepot.deleteById(id));
     }
 
-    public VillageDTO modifierVillage(String id, VillageDTO dto) {
-        return villageDepot.findById(id)
+    public VillageDTO modifierVillage(String id, VillageDTO dto, Long utilisateurId) {
+        return villageDepot.findByIdAndUtilisateurId(id, utilisateurId)
                 .map(village -> {
                     village.setNom(dto.getNom());
                     village.setLatitude(dto.getLatitude());

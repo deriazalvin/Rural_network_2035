@@ -29,5 +29,4 @@ osrm:
 logging:
   level:
     root: INFO
-    com.ruralnetwork: DEBUG
 

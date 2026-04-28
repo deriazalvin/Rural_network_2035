@@ -13,7 +13,7 @@ const getUserScope = () => {
     if (user?.id) return `_${user.id}`;
     if (user?.email) return `_${encodeURIComponent(user.email)}`;
   } catch (e) {
-    console.warn('Impossible de parser l’utilisateur en session', e);
+    // Fail silently
   }
   return '';
 };
@@ -113,7 +113,7 @@ export const stockageLocal = {
         }
         count++;
       } catch (e) {
-        console.warn('Erreur synchronisation:', e);
+        // Sync failed, skip this modification
       }
     }
     return count;
@@ -157,43 +157,10 @@ export const gestionSession = {
     localStorage.removeItem(KEY_CAMIONS);
     localStorage.removeItem(KEY_OPTIMISATIONS);
     localStorage.removeItem(KEY_PENDING);
-    
-    // Clean up any other potential leftover keys
-    this.nettoyerToutesDonneesAnciennes();
   },
-
   nettoyerToutesDonneesAnciennes() {
-    // Nettoyer toutes les clés qui pourraient contenir des données anciennes
-    const keysToRemove = [
-      'rn_villages', 'rn_routes', 'rn_camions', 'rn_optimisations', 'rn_pending',
-      // Clés avec préfixes utilisateur potentiels
-      ...Object.keys(localStorage).filter(key => 
-        key.startsWith('rn_villages_') || 
-        key.startsWith('rn_routes_') || 
-        key.startsWith('rn_camions_') || 
-        key.startsWith('rn_optimisations_')
-      )
-    ];
-    
-    console.log('Nettoyage des clés anciennes:', keysToRemove);
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    // This function has been removed - use nettoyerDonneesLocales() instead
   },
-
-  debuggerLocalStorage() {
-    const allKeys = Object.keys(localStorage);
-    const relevantKeys = allKeys.filter(key => key.startsWith('rn_'));
-    console.log('Clés localStorage pertinentes:', relevantKeys);
-    relevantKeys.forEach(key => {
-      try {
-        const value = localStorage.getItem(key);
-        const parsed = JSON.parse(value);
-        console.log(`${key}:`, parsed?.length || 'vide', 'éléments');
-      } catch (e) {
-        console.log(`${key}: valeur non-JSON`);
-      }
-    });
-    return relevantKeys;
-  }
 };
 
 export default stockageLocal;

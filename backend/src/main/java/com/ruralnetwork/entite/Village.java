@@ -29,12 +29,15 @@ public class Village {
     @Column(name = "production_non_transportee", nullable = false)
     private Double productionNonTransportee;
 
+    @Column(name = "utilisateur_id", nullable = false)
+    private Long utilisateurId;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;
 
     public Village() {}
 
-    public Village(String id, String nom, Double latitude, Double longitude, Double volumeProduction, LocalDateTime dateCreation) {
+    public Village(String id, String nom, Double latitude, Double longitude, Double volumeProduction, Long utilisateurId, LocalDateTime dateCreation) {
         this.id = id;
         this.nom = nom;
         this.latitude = latitude;
@@ -42,6 +45,7 @@ public class Village {
         this.volumeProduction = volumeProduction;
         this.productionTotale = volumeProduction != null ? volumeProduction : 0.0;
         this.productionNonTransportee = volumeProduction != null ? volumeProduction : 0.0;
+        this.utilisateurId = utilisateurId;
         this.dateCreation = dateCreation;
     }
 
@@ -65,6 +69,9 @@ public class Village {
 
     public Double getProductionNonTransportee() { return productionNonTransportee; }
     public void setProductionNonTransportee(Double productionNonTransportee) { this.productionNonTransportee = productionNonTransportee; }
+
+    public Long getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(Long utilisateurId) { this.utilisateurId = utilisateurId; }
 
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }

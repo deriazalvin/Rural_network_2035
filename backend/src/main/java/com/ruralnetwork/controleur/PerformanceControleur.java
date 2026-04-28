@@ -4,6 +4,7 @@ import com.ruralnetwork.entite.Performance;
 import com.ruralnetwork.entite.Tournee;
 import com.ruralnetwork.depot.PerformanceDepot;
 import com.ruralnetwork.depot.TourneeDepot;
+import com.ruralnetwork.util.TokenUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,40 +22,53 @@ public class PerformanceControleur {
 
     private final PerformanceDepot performanceDepot;
     private final TourneeDepot tourneeDepot;
+    private final TokenUtil tokenUtil;
 
-    public PerformanceControleur(PerformanceDepot performanceDepot, TourneeDepot tourneeDepot) {
+    public PerformanceControleur(PerformanceDepot performanceDepot, TourneeDepot tourneeDepot, TokenUtil tokenUtil) {
         this.performanceDepot = performanceDepot;
         this.tourneeDepot = tourneeDepot;
+        this.tokenUtil = tokenUtil;
+    }
+
+    private Long extractUserId(String authHeader) {
+        Long userId = tokenUtil.getUserIdFromAuthHeader(authHeader);
+        if (userId == null) {
+            throw new IllegalArgumentException("Invalid or missing authorization token");
+        }
+        return userId;
     }
 
     @GetMapping
-    public ResponseEntity<List<Performance>> obtenirToutesLesPerformances() {
+    public ResponseEntity<List<Performance>> obtenirToutesLesPerformances(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserId(authHeader);
         Pageable pageable = PageRequest.of(0, 50);
-        List<Performance> performances = performanceDepot.findAllByOrderByDateComparaisonDesc(pageable);
+        List<Performance> performances = performanceDepot.findByUtilisateurIdOrderByDateComparaisonDesc(userId, pageable);
         return ResponseEntity.ok(performances);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Performance> obtenirPerformanceParId(@PathVariable String id) {
-        return performanceDepot.findById(id)
+    public ResponseEntity<Performance> obtenirPerformanceParId(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserId(authHeader);
+        return performanceDepot.findByIdAndUtilisateurId(id, userId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> sauvegarderPerformance(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<Map<String, Object>> sauvegarderPerformance(@RequestBody Map<String, Object> body, @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            Long userId = extractUserId(authHeader);
             String tourneeNaiveId = (String) body.get("tournee_naive_id");
             String tourneeOptimiseeId = (String) body.get("tournee_optimisee_id");
             Double reductionPourcentage = ((Number) body.get("reduction_distance_pourcentage")).doubleValue();
             Double economieCarburant = ((Number) body.get("economie_carburant")).doubleValue();
 
-            Tournee tourneeNaive = tourneeDepot.findById(tourneeNaiveId).orElse(null);
-            Tournee tourneeOptimisee = tourneeDepot.findById(tourneeOptimiseeId).orElse(null);
+            Tournee tourneeNaive = tourneeDepot.findByIdAndUtilisateurId(tourneeNaiveId, userId).orElse(null);
+            Tournee tourneeOptimisee = tourneeDepot.findByIdAndUtilisateurId(tourneeOptimiseeId, userId).orElse(null);
 
             if (tourneeNaive == null || tourneeOptimisee == null) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Tournées non trouvées"));
+                        .body(Map.of("error", "Tournées non trouvées ou accès refusé"));
             }
 
             Performance performance = new Performance();
@@ -62,6 +76,7 @@ public class PerformanceControleur {
             performance.setTourneeOptimisee(tourneeOptimisee);
             performance.setReductionDistancePourcentage(reductionPourcentage);
             performance.setEconomieCarburant(economieCarburant);
+            performance.setUtilisateurId(userId);
             performance.setDateComparaison(LocalDateTime.now());
 
             Performance saved = performanceDepot.save(performance);
@@ -82,8 +97,10 @@ public class PerformanceControleur {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> supprimerPerformance(@PathVariable String id) {
-        performanceDepot.deleteById(id);
+    public ResponseEntity<Void> supprimerPerformance(@PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserId(authHeader);
+        performanceDepot.findByIdAndUtilisateurId(id, userId)
+                .ifPresent(performance -> performanceDepot.deleteById(id));
         return ResponseEntity.noContent().build();
     }
 }

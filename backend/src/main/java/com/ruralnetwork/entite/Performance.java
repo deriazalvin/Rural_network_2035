@@ -25,18 +25,22 @@ public class Performance {
     @Column(name = "economie_carburant", nullable = false)
     private Double economieCarburant;
 
+    @Column(name = "utilisateur_id", nullable = false)
+    private Long utilisateurId;
+
     @Column(name = "date_comparaison", nullable = false, updatable = false)
     private LocalDateTime dateComparaison;
 
     public Performance() {}
 
     public Performance(String id, Tournee tourneeNaive, Tournee tourneeOptimisee,
-                       Double reductionDistancePourcentage, Double economieCarburant, LocalDateTime dateComparaison) {
+                       Double reductionDistancePourcentage, Double economieCarburant, Long utilisateurId, LocalDateTime dateComparaison) {
         this.id = id;
         this.tourneeNaive = tourneeNaive;
         this.tourneeOptimisee = tourneeOptimisee;
         this.reductionDistancePourcentage = reductionDistancePourcentage;
         this.economieCarburant = economieCarburant;
+        this.utilisateurId = utilisateurId;
         this.dateComparaison = dateComparaison;
     }
 
@@ -54,6 +58,9 @@ public class Performance {
 
     public Double getEconomieCarburant() { return economieCarburant; }
     public void setEconomieCarburant(Double economieCarburant) { this.economieCarburant = economieCarburant; }
+
+    public Long getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(Long utilisateurId) { this.utilisateurId = utilisateurId; }
 
     public LocalDateTime getDateComparaison() { return dateComparaison; }
     public void setDateComparaison(LocalDateTime dateComparaison) { this.dateComparaison = dateComparaison; }

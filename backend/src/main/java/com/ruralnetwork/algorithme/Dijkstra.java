@@ -3,12 +3,6 @@ package com.ruralnetwork.algorithme;
 import com.ruralnetwork.structure.Graphe;
 import com.ruralnetwork.structure.TasBinaire;
 import java.util.*;
-
-/**
- * Algorithme de Dijkstra
- * Calcul du plus court chemin entre deux villages
- * Complexité: O(E log V) avec tas binaire
- */
 public class Dijkstra {
 
     private final Graphe graphe;

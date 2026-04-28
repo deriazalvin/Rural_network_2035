@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface VillageDepot extends JpaRepository<Village, String> {
     Optional<Village> findByNom(String nom);
     List<Village> findAllByOrderByNomAsc();
+    List<Village> findByUtilisateurIdOrderByNomAsc(Long utilisateurId);
+    Optional<Village> findByIdAndUtilisateurId(String id, Long utilisateurId);
 }

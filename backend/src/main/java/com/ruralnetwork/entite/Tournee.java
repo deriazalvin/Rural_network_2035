@@ -30,13 +30,16 @@ public class Tournee {
     @Column(columnDefinition = "jsonb")
     private String itineraire;
 
+    @Column(name = "utilisateur_id", nullable = false)
+    private Long utilisateurId;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     private LocalDateTime dateCreation;
 
     public Tournee() {}
 
     public Tournee(String id, String nom, Double capaciteCamion, Double distanceTotale, Double coutCarburant,
-                   TypeOptimisation typeOptimisation, String itineraire, LocalDateTime dateCreation) {
+                   TypeOptimisation typeOptimisation, String itineraire, Long utilisateurId, LocalDateTime dateCreation) {
         this.id = id;
         this.nom = nom;
         this.capaciteCamion = capaciteCamion;
@@ -44,6 +47,7 @@ public class Tournee {
         this.coutCarburant = coutCarburant;
         this.typeOptimisation = typeOptimisation;
         this.itineraire = itineraire;
+        this.utilisateurId = utilisateurId;
         this.dateCreation = dateCreation;
     }
 
@@ -67,6 +71,9 @@ public class Tournee {
 
     public String getItineraire() { return itineraire; }
     public void setItineraire(String itineraire) { this.itineraire = itineraire; }
+
+    public Long getUtilisateurId() { return utilisateurId; }
+    public void setUtilisateurId(Long utilisateurId) { this.utilisateurId = utilisateurId; }
 
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
