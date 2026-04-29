@@ -48,15 +48,7 @@
     const productionTotale = villages.reduce((sum, v) => sum + v.volumeProduction, 0);
     const moyenneParVillage = totalVillages > 0 ? (productionTotale / totalVillages).toFixed(2) : 0;
 
-    // Calcul du barycentre logistique
-    const calculerBarycentre = () => {
-      if (villagesFiltres.length === 0) return null;
-      const latMoy = villagesFiltres.reduce((sum, v) => sum + v.latitude, 0) / villagesFiltres.length;
-      const lonMoy = villagesFiltres.reduce((sum, v) => sum + v.longitude, 0) / villagesFiltres.length;
-      return { latitude: latMoy, longitude: lonMoy };
-    };
 
-    const barycentre = calculerBarycentre();
 
     const handleNomChange = (value) => {
       setNom(value);
@@ -475,7 +467,7 @@
                 })}
               </div>
 
-              {/* === CARTE AVEC BARYCENTRE === */}
+              {/* === CARTE DES VILLAGES === */}
               <div style={{
                 marginBottom: '24px',
                 borderRadius: '12px',
@@ -485,8 +477,8 @@
                 border: '1px solid #e5e7eb'
               }}>
                 <MapContainer
-                  center={barycentre ? [barycentre.latitude, barycentre.longitude] : [33.5731, -7.5898]}
-                  zoom={barycentre ? 12 : 5}
+                  center={[33.5731, -7.5898]}
+                  zoom={5}
                   style={{ width: '100%', height: '100%' }}
                 >
                   <TileLayer
@@ -518,27 +510,7 @@
                     </Marker>
                   ))}
 
-                  {/* === MARQUEUR BARYCENTRE (DÉPÔT CENTRAL) === */}
-                  {barycentre && (
-                    <Marker
-                      position={[barycentre.latitude, barycentre.longitude]}
-                      icon={L.icon({
-                        iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMyRDMxMzAiIHJ4PSI0Ii8+PHBhdGggZD0iTTE2IDE4TDEwIDI2SDE2VjMwSDE2VjI2SDIySzE2IDE4WiIgZmlsbD0iI0ZGRjEwMCIvPjwvc3ZnPg==',
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 32],
-                        popupAnchor: [0, -32],
-                        shadowSize: [0, 0]
-                      })}
-                    >
-                      <Popup>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          <span style={{ color: '#f59e0b' }}>📦 Dépôt Central (Barycentre)</span><br />
-                          Lat: {barycentre.latitude.toFixed(4)}<br />
-                          Lon: {barycentre.longitude.toFixed(4)}
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
+
                 </MapContainer>
               </div>
 
