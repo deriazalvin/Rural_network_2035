@@ -69,6 +69,8 @@ function App() {
     const token = gestionSession.obtenirToken();
     if (token) {
       chargerDonnees();
+    } else {
+      setChargement(false);
     }
   }, [enLigne, utilisateur]);
 
@@ -88,6 +90,7 @@ function App() {
   }, []);
 
   const chargerDonnees = async () => {
+    setChargement(true);
     try {
       if (enLigne) {
         const [villagesData, routesData, camionsData] = await Promise.all([
