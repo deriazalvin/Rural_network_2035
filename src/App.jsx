@@ -7,7 +7,7 @@ import { OptimisationTournees } from './composants/OptimisationTournees.jsx';
 import { TableauBord } from './composants/TableauBord.jsx';
 import { NotificationErreur } from './composants/NotificationErreur.jsx';
 import GestionCamions from './composants/GestionCamions.jsx';
-import LandingPage from './composants/LandingPage.tsx';
+import LandingPage from './composants/LandingPage.jsx';
 import PublicPages from './composants/PublicPages.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/AuthForm.jsx';
