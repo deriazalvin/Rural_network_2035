@@ -4,18 +4,21 @@ import { stockageLocal, gestionSession } from './utilitaires/stockageLocal.js';
 import { GestionVillages } from './composants/GestionVillages.jsx';
 import { GestionRoutes } from './composants/GestionRoutes.jsx';
 import { OptimisationTournees } from './composants/OptimisationTournees.jsx';
-import { TableauBord } from './composants/TableauBord.jsx';
+import { TableauBordNew } from './composants/tableau-bord/TableauBordNew';
 import { NotificationErreur } from './composants/NotificationErreur.jsx';
 import GestionCamions from './composants/GestionCamions.jsx';
 import LandingPage from './composants/LandingPage.jsx';
 import PublicPages from './composants/PublicPages.jsx';
+import LogoRN from './composants/LogoRN.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/AuthForm.jsx';
-import { Circle } from "lucide-react";
+import { Circle, Sun, Moon } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { AlertCircle, XOctagon, MapPinOff, Activity } from 'lucide-react';
+import { useTheme } from './contexts/ThemeContext.jsx';
 
 function App() {
+  const { darkMode, toggleDarkMode } = useTheme();
   const [ongletActif, setOngletActif] = useState('tableau-bord');
   const [villages, setVillages] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -450,8 +453,15 @@ function App() {
       <div className="orb orb-2"></div>
 
       <header className="entete">
-        <h1> Rural Network 2035</h1>
-        <p>Plateforme d'optimisation de la logistique agricole malagasy</p>
+        <div className="entete-content">
+          <div className="entete-logo">
+            <LogoRN size="lg" showText={true} />
+          </div>
+          <div className="entete-text">
+            <h1>Rural Network 2035</h1>
+            <p>Plateforme d'optimisation de la logistique agricole malagasy</p>
+          </div>
+        </div>
       </header>
 
       <nav className="navbar">
@@ -479,6 +489,22 @@ function App() {
         </ul>
 
         <ul className="nav-list" style={{ marginLeft: 8 }}>
+          {/* Bouton toggle dark mode */}
+          <li className="nav-item" onClick={toggleDarkMode} style={{ cursor: 'pointer' }}>
+            <a href="#" onClick={(e) => e.preventDefault()}>
+              <div className="nav-content">
+                <span className="text">{darkMode ? 'Clair' : 'Nuit'}</span>
+                <span className="icon">
+                  {darkMode ? (
+                    <Sun size={18} color="#f39c12" />
+                  ) : (
+                    <Moon size={18} color="#f1c40f" />
+                  )}
+                </span>
+              </div>
+            </a>
+          </li>
+          
           <li className="nav-item" onClick={() => { 
             if (window.confirm('Voulez-vous vraiment nettoyer toutes les données locales ? Cette action supprimera toutes vos données sauvegardées localement et rechargera les données depuis la base de données.')) {
               gestionSession.nettoyerDonneesLocales();
@@ -514,10 +540,11 @@ function App() {
 
       <main>
         {ongletActif === 'tableau-bord' && (
-          <TableauBord
+          <TableauBordNew
             villages={villages}
             routes={routes}
             optimisations={optimisations}
+            resultatsOptimisation={resultatsOptimisation}
           />
         )}
 

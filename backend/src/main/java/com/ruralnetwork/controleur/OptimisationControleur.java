@@ -1,7 +1,10 @@
 package com.ruralnetwork.controleur;
 
 import com.ruralnetwork.dto.OptimisationResultatDTO;
+import com.ruralnetwork.dto.request.OptimisationRequestDTO;
 import com.ruralnetwork.service.orchestration.OrchestrateurOptimisation;
+import com.ruralnetwork.util.TokenUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -13,9 +16,11 @@ import java.util.Map;
 public class OptimisationControleur {
 
     private final OrchestrateurOptimisation orchestrateurOptimisation;
+    private final TokenUtil tokenUtil;
 
-    public OptimisationControleur(OrchestrateurOptimisation orchestrateurOptimisation) {
+    public OptimisationControleur(OrchestrateurOptimisation orchestrateurOptimisation, TokenUtil tokenUtil) {
         this.orchestrateurOptimisation = orchestrateurOptimisation;
+        this.tokenUtil = tokenUtil;
     }
 
     /**
@@ -29,21 +34,30 @@ public class OptimisationControleur {
      * }
      */
     @PostMapping("/multi-camions")
-    public ResponseEntity<OptimisationResultatDTO> optimiserMultiCamions(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> optimiserMultiCamions(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody OptimisationRequestDTO request) {
         try {
-            String depotId = (String) request.get("depotId");
-            @SuppressWarnings("unchecked")
-            List<String> camionIds = (List<String>) request.get("camionIds");
-
-            if (depotId == null || depotId.isEmpty() || camionIds == null || camionIds.isEmpty()) {
-                return ResponseEntity.badRequest().build();
+            Long utilisateurId = tokenUtil.getUserIdFromAuthHeader(authHeader);
+            if (utilisateurId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Authentification requise pour lancer l'optimisation."));
             }
 
-            OptimisationResultatDTO resultat = orchestrateurOptimisation.optimiserTournees(depotId, camionIds);
+            String depotId = request.getDepotId();
+            List<String> camionIds = request.getCamionIds();
+
+            if (depotId == null || depotId.isEmpty() || camionIds == null || camionIds.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Le dépôt et au moins un camion doivent être fournis."));
+            }
+
+            OptimisationResultatDTO resultat = orchestrateurOptimisation.optimiserTournees(utilisateurId, depotId, camionIds);
             return ResponseEntity.ok(resultat);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Erreur d'optimisation interne : " + e.getMessage()));
         }
     }
 

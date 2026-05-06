@@ -7,12 +7,12 @@ import { UserPlus, LogIn, Shield } from 'lucide-react';
 const CTASection = () => {
   // Redirection vers création de compte
   const handleSignUp = () => {
-    window.location.href = '/auth?action=signup';
+    window.dispatchEvent(new CustomEvent('rn-open-auth', { detail: { mode: 'signup' } }));
   };
 
   // Redirection vers connexion
   const handleLogin = () => {
-    window.location.href = '/auth';
+    window.dispatchEvent(new CustomEvent('rn-open-auth', { detail: { mode: 'login' } }));
   };
 
   return (

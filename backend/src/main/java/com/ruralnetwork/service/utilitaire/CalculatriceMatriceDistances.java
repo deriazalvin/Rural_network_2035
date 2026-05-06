@@ -1,5 +1,6 @@
 package com.ruralnetwork.service.utilitaire;
 
+import com.ruralnetwork.algorithme.impl.Dijkstra;
 import com.ruralnetwork.depot.RouteDepot;
 import com.ruralnetwork.entite.Route;
 import com.ruralnetwork.entite.Village;
@@ -42,7 +43,21 @@ public class CalculatriceMatriceDistances {
             matrice.put(v1.getId(), lignes);
         }
 
-        return matrice;
+        // Calculer les plus courts chemins entre tous les villages pour prendre en compte
+        // les routes indirectes et les chaînes de correspondance.
+        Dijkstra dijkstra = new Dijkstra(matrice);
+        Map<String, Map<String, Double>> matricePlusCourte = new HashMap<>();
+
+        for (Village source : villages) {
+            Map<String, Double> lignesPlusCourtes = new HashMap<>();
+            for (Village cible : villages) {
+                Double distance = dijkstra.calculerShortestPath(source.getId(), cible.getId()).getDistance();
+                lignesPlusCourtes.put(cible.getId(), distance);
+            }
+            matricePlusCourte.put(source.getId(), lignesPlusCourtes);
+        }
+
+        return matricePlusCourte;
     }
 
     /**
@@ -52,7 +67,7 @@ public class CalculatriceMatriceDistances {
     private Double extraireDistanceEntreVillages(String villageId1, String villageId2) {
         Optional<Route> route = routeDepot.findBidirectionalRoute(villageId1, villageId2);
         
-        if (route.isEmpty()) {
+        if (route.isEmpty() || Boolean.TRUE.equals(route.get().getEstBloquee())) {
             return Double.MAX_VALUE;
         }
         

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wand2, CheckCircle} from 'lucide-react';
+import { Wand2, CheckCircle, Brain } from 'lucide-react';
 import { Map, Truck } from "lucide-react";
 /**
  * Composant ShowcaseSection - Section de démonstration des solutions
@@ -28,6 +28,18 @@ const ShowcaseSection = () => {
         'Gestion des capacités et disponibilités',
         'Planification des tournées',
         'Historique des performances'
+    ]
+    },
+    {
+    image: 'https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=800&q=80',
+    badge: Brain,
+    title: 'Optimisation IA des Tournées',
+    description: 'Notre algorithme d\'intelligence artificielle calcule les itinéraires les plus efficaces pour collecter les productions agricoles, minimisant les coûts et le temps.',
+    features: [
+        'Algorithmes d\'optimisation avancés',
+        'Prise en compte de l\'état des routes',
+        'Réduction de 35% des coûts de transport',
+        'Comparaison de scénarios multiples'
     ]
     }
   ];

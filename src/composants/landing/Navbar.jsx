@@ -18,7 +18,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
 
   // Redirection vers authentification
   const handleLogin = () => {
-    window.location.href = '/auth';
+    window.dispatchEvent(new CustomEvent('rn-open-auth', { detail: { mode: 'login' } }));
   };
 
   // Navigation vers sections

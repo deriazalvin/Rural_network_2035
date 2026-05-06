@@ -4,9 +4,9 @@ import AnimatedCounter from './AnimatedCounter';
 import { Map, Truck, BarChart3 } from "lucide-react";
 
 const HeroSection = () => {
-  // Redirection vers les sections appropriées
+  // Redirection vers l'inscription
   const handleGetStarted = () => {
-    window.location.href = '/app';
+    window.dispatchEvent(new CustomEvent('rn-open-auth', { detail: { mode: 'signup' } }));
   };
 
   const scrollToFeatures = () => {
@@ -69,7 +69,7 @@ const HeroSection = () => {
           <div className="hero-buttons">
             <button onClick={handleGetStarted} className="btn-primary">
               <Rocket size={18} />
-              Commencer maintenant
+              Commencer gratuitement
             </button>
             <button onClick={scrollToFeatures} className="btn-secondary">
               <Play size={18} />

@@ -21,6 +21,7 @@ public interface IAlgorithmeOptimisation {
      * @param villagesDisponibles Villages à considérer
      * @param villagesVisites Ensemble des villages déjà attribués
      * @param couleur Couleur hex pour l'affichage
+     * @param matriceDistances Matrice des distances entre villages
      * @return DTO représentant la tournée complète
      */
     TourneeDTO construireTourneeOptimisee(
@@ -28,7 +29,8 @@ public interface IAlgorithmeOptimisation {
             Village depot,
             List<Village> villagesDisponibles,
             Set<String> villagesVisites,
-            String couleur
+            String couleur,
+            Map<String, Map<String, Double>> matriceDistances
     );
     
     /**
@@ -36,7 +38,8 @@ public interface IAlgorithmeOptimisation {
      *
      * @param depot Lieu de départ
      * @param villages Villages à couvrir
+     * @param matriceDistances Matrice des distances entre villages
      * @return Distance totale de la solution naïve
      */
-    Double calculerDistanceReferenceNaive(Village depot, List<Village> villages);
+    Double calculerDistanceReferenceNaive(Village depot, List<Village> villages, Map<String, Map<String, Double>> matriceDistances);
 }

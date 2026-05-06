@@ -16,11 +16,12 @@ public class ConvertisseurData {
 
     /**
      * Extrait les villages à visiter (excluant le dépôt).
+     * Utilise la comparaison d'ID plutôt que l'égalité d'objet.
      */
     public List<Village> extraireVillagesAVisiter(List<Village> tousLesVillages, Village depot) {
-        List<Village> villagesAVisiter = new ArrayList<>(tousLesVillages);
-        villagesAVisiter.remove(depot);
-        return villagesAVisiter;
+        return tousLesVillages.stream()
+                .filter(v -> !v.getId().equals(depot.getId()))
+                .toList();
     }
 
     /**

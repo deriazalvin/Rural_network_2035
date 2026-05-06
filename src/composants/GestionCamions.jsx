@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Trash2, AlertCircle } from 'lucide-react';
+import { Truck, Trash2, Edit2, Plus, AlertCircle } from 'lucide-react';
+import { Card, Button, Input, Modal, Alert, Badge, Table } from './ui/index.js';
 
 /**
- * Composant GestionCamions
- * Gère l'ajout, la modification et la suppression de camions.
+ * Composant GestionCamions - Refactorisé et modulaire
+ * Gère l'ajout, la modification et la suppression de camions
  */
 export default function GestionCamions({ camions = [], onModifierCamions }) {
-  const [formulaire, setFormulaire] = useState({ nom: '', capaciteKg: '', couleurHex: '#2d5016' });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formulaire, setFormulaire] = useState({ nom: '', capaciteKg: '', couleurHex: '#00d4ff' });
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [camionEnEdition, setCamionEnEdition] = useState(null);
 
   const couleursDisponibles = [
-    { label: 'Vert Principal', valeur: '#2d5016' },
-    { label: 'Vert Secondaire', valeur: '#4a7c2c' },
-    { label: 'Orange', valeur: '#d97706' },
-    { label: 'Bleu', valeur: '#2563eb' },
-    { label: 'Rouge', valeur: '#dc2626' }
+    { label: 'Cyan', valeur: '#00d4ff' },
+    { label: 'Purple', valeur: '#7c3aed' },
+    { label: 'Green', valeur: '#4ade80' },
+    { label: 'Orange', valeur: '#fb923c' },
+    { label: 'Red', valeur: '#ef4444' }
   ];
 
   // Fonction pour obtenir les couleurs disponibles (non utilisées par d'autres camions)
@@ -41,6 +44,20 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
     }
   }, [camions]);
 
+  const obtenirHeadersAuthentifies = (headersSupplementaires = {}) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...headersSupplementaires
+    };
+
+    const token = localStorage.getItem('rn_token');
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    return headers;
+  };
+
   const gererSoumission = async (e) => {
     e.preventDefault();
     setErreur('');
@@ -55,7 +72,7 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
     try {
       const reponse = await fetch('/api/camions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: obtenirHeadersAuthentifies(),
         body: JSON.stringify({
           nom: formulaire.nom,
           capaciteKg: capacite,
@@ -83,7 +100,10 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
     if (!window.confirm('Supprimer ce camion ?')) return;
     
     try {
-      const reponse = await fetch(`/api/camions/${id}`, { method: 'DELETE' });
+      const reponse = await fetch(`/api/camions/${id}`, {
+        method: 'DELETE',
+        headers: obtenirHeadersAuthentifies()
+      });
       if (reponse.ok) {
         onModifierCamions(camions.filter(c => c.id !== id));
         setErreur('');
@@ -99,7 +119,7 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
     try {
       const reponse = await fetch(`/api/camions/${id}/etat`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: obtenirHeadersAuthentifies(),
         body: JSON.stringify({ etat: nouvelEtat })
       });
 

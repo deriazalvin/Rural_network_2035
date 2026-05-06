@@ -46,19 +46,19 @@ public class OrchestrateurOptimisation {
     /**
      * Orchestre l'optimisation complète des tournées.
      */
-    public OptimisationResultatDTO optimiserTournees(String depotId, List<String> camionIds) {
+    public OptimisationResultatDTO optimiserTournees(Long utilisateurId, String depotId, List<String> camionIds) {
         long tempsDebut = System.currentTimeMillis();
 
-        // Étape 1 : Récupération des données
-        List<Village> tousLesVillages = villageDepot.findAll();
-        Village depot = villageDepot.findById(depotId).orElse(null);
+        // Étape 1 : Récupération des données utilisateur
+        List<Village> tousLesVillages = villageDepot.findByUtilisateurIdOrderByNomAsc(utilisateurId);
+        Village depot = villageDepot.findByIdAndUtilisateurId(depotId, utilisateurId).orElse(null);
 
         if (depot == null || tousLesVillages.isEmpty()) {
             return creerResultatVide(0L);
         }
 
         // Étape 2 : Validation
-        List<Camion> camionsDisponibles = extraireEtValiderCamions(camionIds);
+        List<Camion> camionsDisponibles = extraireEtValiderCamions(utilisateurId, camionIds);
         if (camionsDisponibles.isEmpty()) {
             return creerResultatVide(0L);
         }
@@ -67,8 +67,8 @@ public class OrchestrateurOptimisation {
         List<Village> villagesAVisiter = convertisseurData.extraireVillagesAVisiter(tousLesVillages, depot);
         Map<String, Map<String, Double>> matriceDistances = calculatriceMatrice.construireMatrice(tousLesVillages);
 
-        // Étape 4 : Calcul baselineépôt
-        Double distanceBaseline = algorithmOptimisation.calculerDistanceReferenceNaive(depot, villagesAVisiter);
+        // Étape 4 : Calcul baseline
+        Double distanceBaseline = algorithmOptimisation.calculerDistanceReferenceNaive(depot, villagesAVisiter, matriceDistances);
         Double coutBaseline = distanceBaseline * COUT_PAR_KM;
 
         // Étape 5 : Construction des tournées
@@ -84,7 +84,7 @@ public class OrchestrateurOptimisation {
             String couleur = convertisseurData.obtenirCouleur(i);
 
             TourneeDTO tournee = algorithmOptimisation.construireTourneeOptimisee(
-                    camion, depot, villagesAVisiter, villagesVisites, couleur
+                    camion, depot, villagesAVisiter, villagesVisites, couleur, matriceDistances
             );
 
             tournees.add(tournee);
@@ -107,10 +107,10 @@ public class OrchestrateurOptimisation {
 
     // ====== Méthodes privées d'aide ======
 
-    private List<Camion> extraireEtValiderCamions(List<String> camionIds) {
+    private List<Camion> extraireEtValiderCamions(Long utilisateurId, List<String> camionIds) {
         List<Camion> camions = new ArrayList<>();
         for (String id : camionIds) {
-            camionDepot.findById(id).ifPresent(camions::add);
+            camionDepot.findByIdAndUtilisateurId(id, utilisateurId).ifPresent(camions::add);
         }
         return convertisseurData.filtrerCamionsDisponibles(camions);
     }

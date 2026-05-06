@@ -18,10 +18,9 @@ import java.util.*;
 public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
 
     private static final Double COUT_PAR_KM = 0.15; // Ariary par km
-    private final Map<String, Map<String, Double>> matriceDistances;
 
-    public OptimisationTourneeGreedy(Map<String, Map<String, Double>> matriceDistances) {
-        this.matriceDistances = matriceDistances;
+    public OptimisationTourneeGreedy() {
+        // Pas d'injection de matriceDistances - elle est passée en paramètre
     }
 
     @Override
@@ -30,7 +29,8 @@ public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
             Village depot,
             List<Village> villagesDisponibles,
             Set<String> villagesVisites,
-            String couleur) {
+            String couleur,
+            Map<String, Map<String, Double>> matriceDistances) {
 
         List<EtapeTourneeDTO> etapes = new ArrayList<>();
         Double distanceTotalKm = 0.0;
@@ -46,7 +46,7 @@ public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
 
             for (Village v : villagesDisponibles) {
                 if (!visites.contains(v.getId())) {
-                    Double dist = matriceDistances.get(courant.getId()).get(v.getId());
+                    Double dist = obtenirDistance(courant.getId(), v.getId(), matriceDistances);
                     
                     if (dist != null && dist < Double.MAX_VALUE && dist < distanceProche) {
                         // Vérifier si on ne dépasse pas la capacité
@@ -77,7 +77,7 @@ public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
         }
 
         // Retour au dépôt
-        Double distanceRetour = matriceDistances.get(courant.getId()).get(depot.getId());
+        Double distanceRetour = obtenirDistance(courant.getId(), depot.getId(), matriceDistances);
         if (distanceRetour == null || distanceRetour == Double.MAX_VALUE) {
             distanceRetour = 0.0;
         }
@@ -93,12 +93,12 @@ public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
     }
 
     @Override
-    public Double calculerDistanceReferenceNaive(Village depot, List<Village> villages) {
+    public Double calculerDistanceReferenceNaive(Village depot, List<Village> villages, Map<String, Map<String, Double>> matriceDistances) {
         Double distance = 0.0;
         Village courant = depot;
 
         for (Village suivant : villages) {
-            Double d = matriceDistances.get(courant.getId()).get(suivant.getId());
+            Double d = obtenirDistance(courant.getId(), suivant.getId(), matriceDistances);
             if (d == null || d == Double.MAX_VALUE) {
                 d = 0.0;
             }
@@ -107,12 +107,23 @@ public class OptimisationTourneeGreedy implements IAlgorithmeOptimisation {
         }
 
         // Retour au dépôt
-        Double d = matriceDistances.get(courant.getId()).get(depot.getId());
+        Double d = obtenirDistance(courant.getId(), depot.getId(), matriceDistances);
         if (d == null || d == Double.MAX_VALUE) {
             d = 0.0;
         }
         distance += d;
 
         return distance;
+    }
+
+    private Double obtenirDistance(String id1, String id2, Map<String, Map<String, Double>> matriceDistances) {
+        if (id1 == null || id2 == null || matriceDistances == null) {
+            return Double.MAX_VALUE;
+        }
+        Map<String, Double> ligne = matriceDistances.get(id1);
+        if (ligne == null) {
+            return Double.MAX_VALUE;
+        }
+        return ligne.getOrDefault(id2, Double.MAX_VALUE);
     }
 }
