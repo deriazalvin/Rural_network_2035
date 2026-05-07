@@ -3,6 +3,7 @@ import { Map, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Clock, ArrowRight, MapPin, Eye, Navigation, Edit } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import '../styles/gestion-routes.css';
 import polyline from 'polyline';
 import 'leaflet/dist/leaflet.css';
 
@@ -113,37 +114,18 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
   };
 
   return (
-    <div className="section-carte">
+    <div className="gestion-routes-container section-carte">
 
-      <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <Map size={26} color="#2E7D32" />
+      <h2 className="gestion-routes-title">
+        <Map size={26} />
         Gestion des Routes
       </h2>
 
       {/* === BARRE D'ONGLETS === */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        marginBottom: '24px',
-        borderBottom: '2px solid #e5e7eb',
-        paddingBottom: '0'
-      }}>
+      <div className="route-tabs">
         <button
           onClick={() => setVueActive('gestion')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            fontWeight: vueActive === 'gestion' ? '600' : '500',
-            color: vueActive === 'gestion' ? '#2E7D32' : '#9ca3af',
-            borderBottom: vueActive === 'gestion' ? '3px solid #2E7D32' : 'none',
-            fontSize: '1rem',
-            transition: 'all 0.2s'
-          }}
+          className={`route-tab ${vueActive === 'gestion' ? 'active' : ''}`}
         >
           <Map size={20} />
           Gestion des Routes
@@ -151,20 +133,7 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
 
         <button
           onClick={() => setVueActive('itineraire')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            fontWeight: vueActive === 'itineraire' ? '600' : '500',
-            color: vueActive === 'itineraire' ? '#2563eb' : '#9ca3af',
-            borderBottom: vueActive === 'itineraire' ? '3px solid #2563eb' : 'none',
-            fontSize: '1rem',
-            transition: 'all 0.2s'
-          }}
+          className={`route-tab navigation ${vueActive === 'itineraire' ? 'active' : ''}`}
         >
           <Navigation size={20} />
           Itinéraire
@@ -201,19 +170,10 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
             </div>
 
             {/* QUALITY SLIDER */}
-            <div style={{ marginBottom: '16px' }}>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
-                fontWeight: 600,
-                color: 'var(--gris-fonce)'
-              }}>
-                Qualité de la route :
-                {qualite.icon}
-                {qualite.label}
+            <div className="slider-group">
+              <label className="slider-label">
+                <span>Qualité de la route :</span>
+                <span>{qualite.icon} {qualite.label}</span>
               </label>
 
               <input
@@ -222,22 +182,10 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
                 max="100"
                 value={qualiteValue}
                 onChange={(e) => setQualiteValue(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  cursor: 'pointer',
-                  height: '6px',
-                  borderRadius: '3px',
-                  background: 'linear-gradient(to right, #dc2626, #f59e0b, #10b981)'
-                }}
+                className="slider"
               />
 
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '4px',
-                fontSize: '0.75rem',
-                color: 'var(--gris)'
-              }}>
+              <div className="slider-values">
                 <span>Mauvaise</span>
                 <span>Moyenne</span>
                 <span>Bonne</span>
@@ -245,51 +193,30 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
             </div>
 
             {/* CHECKBOX */}
-            <div style={{
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px',
-              background: estBloquee ? '#fee2e2' : 'var(--gris-clair)',
-              borderRadius: '6px'
-            }}>
+            <div className={`route-action-banner ${estBloquee ? 'route-bloquee' : ''}`}>
               <input
                 type="checkbox"
                 checked={estBloquee}
                 onChange={(e) => setEstBloquee(e.target.checked)}
+                className="checkbox"
               />
 
-              <label style={{
-                cursor: 'pointer',
-                fontWeight: 500
-              }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <label>
+                <span className="route-action-label">
                   <AlertTriangle size={16} /> Route bloquée
                 </span>
               </label>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button type="submit" className="bouton-principal">
+            <div className="form-buttons">
+              <button type="submit" className="btn btn-primary">
                 {routeEnEdition ? 'Modifier la Route' : 'Ajouter la Route'}
               </button>
               {routeEnEdition && (
                 <button 
                   type="button" 
                   onClick={annulerEdition}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    backgroundColor: '#f3f4f6',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e5e7eb'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                  className="btn btn-secondary"
                 >
                   Annuler
                 </button>
@@ -302,98 +229,55 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
         
             {/* --- SECTION 1 : ROUTES ACTIVES --- */}
             <div className="liste-routes">
-              <h3 className="flex items-center gap-2 mb-4" style={{ color: '#2e7d32' }}>
-                <CheckCircle size={20} /> 
+              <h3 className="section-subtitle section-subtitle-success">
+                <CheckCircle size={20} />
                 <span>Routes Actives ({routes.filter(r => !r.estBloquee).length})</span>
               </h3>
               
-              <div className="grille-cartes" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+              <div className="routes-card-grid">
                 {routes.filter(route => !route.estBloquee).map((route) => (
-                  <div key={route.id} className="carte-route" style={{
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    background: 'white', borderRadius: '12px', padding: '16px', 
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', border: '1px solid #e5e7eb', height: '100%',
-                    position: 'relative'
-                  }}>
-                    {/* Icône Eye en haut à droite */}
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
+                  <div key={route.id} className="carte-route">
+                    <div className="carte-route-buttons">
                       <button
                         onClick={() => demarrerEdition(route)}
-                        style={{
-                          background: '#dbeafe',
-                          color: '#0c4a6e',
-                          border: 'none',
-                          borderRadius: '6px',
-                          padding: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.target.style.background = '#7c3aed'}
-                        onMouseLeave={(e) => e.target.style.background = '#8b5cf6'}
+                        className="route-card-button edit"
                         title="Modifier la route"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => gererSelectionRoute(route)}
-                        style={{
-                          background: '#9ca3af',
-                          border: 'none',
-                          borderRadius: '6px',
-                          padding: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'background 0.2s',
-                          color: 'white'
-                        }}
-                        onMouseEnter={(e) => e.target.style.background = '#1d4ed8'}
-                        onMouseLeave={(e) => e.target.style.background = '#2563eb'}
+                        className="route-card-button view"
                         title="Voir l'itinéraire"
                       >
                         <Eye size={18} />
                       </button>
                     </div>
 
-                    <div className="route-info">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontWeight: '600', color: '#111827', paddingRight: '40px' }}>
-                        <MapPin size={16} className="text-green-600" />
-                        <div style={{ fontSize: '0.9rem', lineHeight: '1.25rem' }}>
-                          {obtenirNomVillage(route.villageDepart_id)} 
-                          <ArrowRight size={14} style={{ margin: '0 4px', color: '#9ca3af' }} />
-                          {obtenirNomVillage(route.village_arrivee_id)}
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', color: '#4b5563' }}>
-                          <strong>{route.distance?.toFixed(1)}</strong> km
-                        </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', color: '#2563eb', fontWeight: '500' }}>
-                          <Clock size={14} /> {formaterDuree(route.dureeMinutes)}
-                        </span>
-                        <span style={{
-                          fontSize: '0.75rem', padding: '2px 8px', borderRadius: '9999px',
-                          backgroundColor: route.qualiteRoute === 'BONNE' ? '#dcfce7' : '#fef3c7',
-                          color: route.qualiteRoute === 'BONNE' ? '#166534' : '#92400e'
-                        }}>
-                          {route.qualiteRoute}
-                        </span>
+                    <div className="route-summary">
+                      <MapPin size={16} />
+                      <div className="route-text">
+                        {obtenirNomVillage(route.villageDepart_id)}
+                        <ArrowRight size={14} className="text-muted" />
+                        {obtenirNomVillage(route.village_arrivee_id)}
                       </div>
                     </div>
-                    
+
+                    <div className="route-details">
+                      <span>
+                        <strong>{route.distance?.toFixed(1)}</strong> km
+                      </span>
+                      <span>
+                        <Clock size={14} /> {formaterDuree(route.dureeMinutes)}
+                      </span>
+                      <span className={`route-quality ${route.qualiteRoute === 'BONNE' ? 'route-quality-good' : route.qualiteRoute === 'MOYENNE' ? 'route-quality-medium' : 'route-quality-bad'}`}>
+                        {route.qualiteRoute}
+                      </span>
+                    </div>
+
                     <button 
                       onClick={() => onBloquerRoute(route.id, true)}
-                      style={{
-                        width: '100%', padding: '8px', borderRadius: '6px', 
-                        backgroundColor: '#ef4444', color: 'white', border: 'none',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        fontWeight: '500', cursor: 'pointer', transition: 'background 0.2s'
-                      }}
+                      className="btn-route-block"
                     >
                       <AlertTriangle size={16} /> Bloquer la route
                     </button>
@@ -404,110 +288,45 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
 
             {/* --- SECTION 2 : ROUTES BLOQUÉES --- */}
             {routes.some(r => r.estBloquee) && (
-              <div className="liste-routes bloquees mt-10 opacity-75">
-                <h3 className="flex items-center gap-2 mb-4" style={{ color: '#d32f2f' }}>
-                  <AlertTriangle size={20} /> 
+              <div className="liste-routes bloquees">
+                <h3 className="section-subtitle section-subtitle-danger">
+                  <AlertTriangle size={20} />
                   <span>Routes Interrompues ({routes.filter(r => r.estBloquee).length})</span>
                 </h3>
                 
-                {/* Conteneur commun pour les deux sections */}
-                <div className="grille-cartes" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                  gap: '20px'
-                }}>
+                <div className="routes-card-grid">
                   {routes.filter(r => r.estBloquee).map((route) => (
-                    <div key={route.id} className="carte-route bloquee" style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      minHeight: '200px',
-                      backgroundColor: '#fef2f2',
-                      borderLeft: '5px solid #dc2626',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      position: 'relative'
-                    }}>
-                      {/* Icône Eye en haut à droite */}
-                      <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
+                    <div key={route.id} className="carte-route bloquee">
+                      <div className="carte-route-buttons">
                         <button
                           onClick={() => demarrerEdition(route)}
-                          style={{
-                            background: '#dbeafe',
-                            color: '#0c4a6e',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '8px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.target.style.background = '#9370db'}
-                          onMouseLeave={(e) => e.target.style.background = '#a78bfa'}
+                          className="route-card-button edit"
                           title="Modifier la route"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => gererSelectionRoute(route)}
-                          style={{
-                            background: '#9ca3af',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '8px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'background 0.2s',
-                            color: 'white'
-                          }}
-                          onMouseEnter={(e) => e.target.style.background = '#6b7280'}
-                          onMouseLeave={(e) => e.target.style.background = '#9ca3af'}
+                          className="route-card-button view"
                           title="Voir l'itinéraire"
                         >
                           <Eye size={18} />
                         </button>
                       </div>
 
-                      <div className="route-info">
-                        <h4 style={{ 
-                          textDecoration: 'line-through', 
-                          color: '#9ca3af',
-                          fontSize: '0.95rem',
-                          marginBottom: '8px',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          paddingRight: '40px'
-                        }}>
+                      <div className="route-summary">
+                        <MapPin size={16} />
+                        <div className="route-text blocked">
                           {obtenirNomVillage(route.villageDepart_id)} → {obtenirNomVillage(route.village_arrivee_id)}
-                        </h4>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#dc2626', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                          <AlertTriangle size={14} /> ACCÈS INTERROMPU
                         </div>
+                      </div>
+                      <div className="route-details blocked-status">
+                        <AlertTriangle size={14} /> ACCÈS INTERROMPU
                       </div>
 
                       <button 
                         onClick={() => onBloquerRoute(route.id, false)}
-                        style={{
-                          marginTop: 'auto',
-                          backgroundColor: '#059669',
-                          color: 'white',
-                          padding: '10px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
-                        }}
+                        className="btn-route-reactiver"
                       >
                         <CheckCircle size={18} /> Réactiver la voie
                       </button>
@@ -526,29 +345,12 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
       )}
 
       {vueActive === 'itineraire' && !routeSelectionnee && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          color: '#9ca3af',
-          gap: '16px'
-        }}>
+        <div className="vue-itineraire-empty">
           <Navigation size={48} />
-          <p style={{ fontSize: '1.1rem', fontWeight: '500' }}>Sélectionnez une route pour voir son itinéraire</p>
+          <p>Sélectionnez une route pour voir son itinéraire</p>
           <button
             onClick={() => setVueActive('gestion')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              marginTop: '8px'
-            }}
+            className="btn-return-gestion"
           >
             Retour à la gestion
           </button>
@@ -595,8 +397,8 @@ function VueItineraire({ route, villages, obtenirNomVillage, obtenirVillageCompl
   ];
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '600px', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
-      <MapContainer center={centerMap} zoom={13} style={{ width: '100%', height: '100%' }}>
+    <div className="vue-itineraire-container">
+      <MapContainer center={centerMap} zoom={13} className="vue-itineraire-map">
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -613,54 +415,33 @@ function VueItineraire({ route, villages, obtenirNomVillage, obtenirVillageCompl
       </MapContainer>
 
       {/* Panneau flottant avec informations */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-        maxWidth: '350px',
-        zIndex: 1000,
-        backdropFilter: 'blur(10px)',
-        border: '1px solid #e5e7eb'
-      }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', fontWeight: '700', color: '#111827' }}>
-          {obtenirNomVillage(route.villageDepart_id)} → {obtenirNomVillage(route.village_arrivee_id)}
-        </h3>
+      <div className="vue-itineraire-panel">
+        <h3>{obtenirNomVillage(route.villageDepart_id)} → {obtenirNomVillage(route.village_arrivee_id)}</h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Distance */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+        <div className="vue-itineraire-details">
+          <div className="info-row">
             <MapPin size={20} color="#2E7D32" />
             <div>
-              <div style={{ fontSize: '0.85rem', color: '#6b7280', fontWeight: '500' }}>Distance</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#111827' }}>{route.distance?.toFixed(1)} km</div>
+              <span>Distance</span>
+              <span>{route.distance?.toFixed(1)} km</span>
             </div>
           </div>
 
-          {/* Durée */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+          <div className="info-row">
             <Clock size={20} color="#2563eb" />
             <div>
-              <div style={{ fontSize: '0.85rem', color: '#6b7280', fontWeight: '500' }}>Durée estimée</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#111827' }}>{formaterDuree(route.dureeMinutes)}</div>
+              <span>Durée estimée</span>
+              <span>{formaterDuree(route.dureeMinutes)}</span>
             </div>
           </div>
 
-          {/* Qualité */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
+          <div className="info-row">
             <CheckCircle size={20} color={route.qualiteRoute === 'BONNE' ? '#2E7D32' : '#F9A825'} />
             <div>
-              <div style={{ fontSize: '0.85rem', color: '#6b7280', fontWeight: '500' }}>Qualité</div>
-              <div style={{
-                fontSize: '1.1rem',
-                fontWeight: '700',
-                color: route.qualiteRoute === 'BONNE' ? '#2E7D32' : route.qualiteRoute === 'MOYENNE' ? '#F9A825' : '#dc2626'
-              }}>
+              <span>Qualité</span>
+              <span className={route.qualiteRoute === 'BONNE' ? 'quality-good' : route.qualiteRoute === 'MOYENNE' ? 'quality-medium' : 'quality-bad'}>
                 {route.qualiteRoute}
-              </div>
+              </span>
             </div>
           </div>
         </div>

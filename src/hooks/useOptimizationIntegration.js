@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useOptimizationStorage } from '../hooks/useOptimizationStorage';
 
 /**
@@ -21,7 +22,7 @@ export function useOptimizationIntegration() {
    * @param {Object} apiResponse - Réponse de /api/optimisations/multi-camions (peut être le DTO directement ou enveloppé)
    * @param {Number} distanceBaseline - Distance de base pour comparaison
    */
-  const processOptimizationResult = (apiResponse, distanceBaseline = 0) => {
+  const processOptimizationResult = useCallback((apiResponse, distanceBaseline = 0) => {
     if (!apiResponse) {
       console.error('Réponse d\'optimisation invalide');
       return null;
@@ -88,7 +89,7 @@ export function useOptimizationIntegration() {
     addOptimization(optimizationRecord);
 
     return optimizationRecord;
-  };
+  }, [addOptimization]);
 
   return { processOptimizationResult, TOUR_COLORS };
 }

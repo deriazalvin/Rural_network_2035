@@ -1,0 +1,9 @@
+/* ============================================
+   INDEX - TOUS LES DARK MODES
+   Importe tous les fichiers dark mode
+   ============================================ */
+
+@import './gestion-villages.css';
+@import './gestion-routes.css';
+@import './optimisation-tournees.css';
+@import './gestion-camions.css';

@@ -1,0 +1,145 @@
+/* ============================================
+   DARK MODE - OPTIMISATION TOURNEES
+   Styles sombres pour le composant OptimisationTournees
+   ============================================ */
+
+.optimisation-tournees {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.optimisation-tournees .card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.optimisation-tournees .section-header {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+
+.optimisation-tournees .form-group label {
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .form-group input,
+.optimisation-tournees .form-group select,
+.optimisation-tournees .form-group textarea {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .form-group input:focus,
+.optimisation-tournees .form-group select:focus,
+.optimisation-tournees .form-group textarea:focus {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.optimisation-tournees .form-group input::placeholder,
+.optimisation-tournees .form-group textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.optimisation-tournees .checkbox {
+  border-color: var(--border-color);
+}
+
+.optimisation-tournees .checkbox:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.optimisation-tournees .checkbox:checked + label {
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.optimisation-tournees .btn-primary:hover {
+  background-color: var(--color-primary-light);
+}
+
+.optimisation-tournees .btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.optimisation-tournees .btn-validate {
+  background-color: var(--color-success);
+  color: #ffffff;
+}
+
+.optimisation-tournees .btn-validate:hover {
+  background-color: #16a34a;
+}
+
+.optimisation-tournees .loading-state {
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+}
+
+.optimisation-tournees .spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--color-primary);
+}
+
+.optimisation-tournees .resultat-zone {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.optimisation-tournees .resultat-item {
+  background-color: var(--bg-secondary);
+  border-left-color: var(--color-primary);
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .error-message {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.optimisation-tournees .success-message {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.optimisation-tournees .warning-message {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.optimisation-tournees .stat-box {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.optimisation-tournees .stat-box .value {
+  color: var(--color-primary);
+}
+
+.optimisation-tournees .stat-box .label {
+  color: var(--text-secondary);
+}
+
+.optimisation-tournees .empty-state {
+  color: var(--text-secondary);
+  background-color: var(--bg-card);
+}

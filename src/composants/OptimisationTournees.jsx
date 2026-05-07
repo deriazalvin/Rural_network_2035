@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save } from 'lucide-react';
 import { TableauBordNew } from './tableau-bord/TableauBordNew';
 import { useOptimizationIntegration } from '../hooks/useOptimizationIntegration';
+import '../styles/optimisation-tournees.css';
 
 /**
  * Composant OptimisationTournees
@@ -20,6 +21,10 @@ export function OptimisationTournees({
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
   const { processOptimizationResult } = useOptimizationIntegration();
+
+  // Memoize empty routes array to prevent unnecessary re-renders
+  const emptyRoutes = useMemo(() => [], []);
+  const emptyOptimisations = useMemo(() => [], []);
 
   useEffect(() => {
     setDepotSelectionne(depot);
@@ -99,40 +104,19 @@ export function OptimisationTournees({
   // Si résultat disponible, afficher le tableau de bord
   if (resultatOptimisation) {
     return (
-      <div className="section-carte">
+      <div className="optimisation-tournees-container section-carte">
         <TableauBordNew 
           villages={villages}
-          routes={[]}
+          routes={emptyRoutes}
+          optimisations={emptyOptimisations}
           resultatsOptimisation={resultatOptimisation}
           onOptimizationSelect={onOptimiser}
         />
         
         <button
           onClick={() => onValidation(resultatOptimisation)}
-          style={{
-            width: '100%',
-            marginTop: '24px',
-            padding: '12px',
-            background: '#2d5016',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#4a7c2c';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#2d5016';
-            e.currentTarget.style.transform = 'none';
-          }}
+          className="btn btn-validate"
+          style={{ width: '100%', marginTop: '24px' }}
         >
           <Save size={16} />
           Valider cette Optimisation
@@ -143,25 +127,16 @@ export function OptimisationTournees({
 
   // Écran initial: sélection du dépôt et des camions
   return (
-    <div className="section-carte">
-      <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Zap size={26} color="#2d5016" />
+    <div className="optimisation-tournees-container section-carte">
+      <h2 className="optimisation-tournees-title">
+        <Zap size={26} />
         Optimisation des Tournées
       </h2>
 
       {erreur && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '12px',
-          padding: '12px',
-          background: '#fee2e2',
-          borderLeft: '4px solid #dc2626',
-          borderRadius: '4px',
-          marginBottom: '16px'
-        }}>
-          <AlertCircle size={18} color="#dc2626" style={{ marginTop: '2px' }} />
-          <span style={{ color: '#991b1b', fontSize: '0.9rem' }}>{erreur}</span>
+        <div className="error-message">
+          <AlertCircle size={18} />
+          <span>{erreur}</span>
         </div>
       )}
 

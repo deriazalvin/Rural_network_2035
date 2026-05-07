@@ -1,0 +1,146 @@
+/* ============================================
+   DARK MODE - GESTION ROUTES
+   Styles sombres pour le composant GestionRoutes
+   ============================================ */
+
+.gestion-routes {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.gestion-routes .card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.gestion-routes .form-group label {
+  color: var(--text-primary);
+}
+
+.gestion-routes .form-group input,
+.gestion-routes .form-group select,
+.gestion-routes .form-group textarea {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.gestion-routes .form-group input:focus,
+.gestion-routes .form-group select:focus,
+.gestion-routes .form-group textarea:focus {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.gestion-routes .form-group input::placeholder,
+.gestion-routes .form-group textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.gestion-routes .slider {
+  background-color: var(--bg-tertiary);
+}
+
+.gestion-routes .slider::-webkit-slider-thumb {
+  background-color: var(--color-primary);
+}
+
+.gestion-routes .slider::-moz-range-thumb {
+  background-color: var(--color-primary);
+}
+
+.gestion-routes .slider-label {
+  color: var(--text-secondary);
+}
+
+.gestion-routes .qualite-badge {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.gestion-routes .qualite-badge.bonne {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+}
+
+.gestion-routes .qualite-badge.moyenne {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: var(--color-warning);
+}
+
+.gestion-routes .qualite-badge.mauvaise {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+.gestion-routes .btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.gestion-routes .btn-primary:hover {
+  background-color: var(--color-primary-light);
+}
+
+.gestion-routes .btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.gestion-routes .btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.gestion-routes .btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.gestion-routes .btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.gestion-routes .table {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.gestion-routes .table th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.gestion-routes .table td {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.gestion-routes .table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.gestion-routes .route-status {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-left: 3px solid var(--color-primary);
+}
+
+.gestion-routes .route-status.bloquee {
+  border-left-color: var(--color-danger);
+}
+
+.gestion-routes .empty-state {
+  color: var(--text-secondary);
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.gestion-routes .loading-spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--color-primary);
+}

@@ -1,0 +1,506 @@
+/* ============================================
+   ULTRA DARK MODE - GESTION VILLAGES
+   Premium / Elegant / Modern UI
+   ============================================ */
+
+.gestion-villages {
+
+  /* =========================
+     DARK COLORS
+     ========================= */
+
+  --dark-bg: #020617;
+  --dark-surface: #0f172a;
+  --dark-surface-light: #162033;
+  --dark-card: rgba(15, 23, 42, 0.82);
+
+  --dark-border: rgba(255,255,255,0.07);
+  --dark-border-hover: rgba(34,197,94,0.25);
+
+  --dark-text-primary: #f8fafc;
+  --dark-text-secondary: #cbd5e1;
+  --dark-text-muted: #94a3b8;
+
+  --dark-primary: #22c55e;
+  --dark-primary-hover: #16a34a;
+
+  --dark-danger: #ef4444;
+  --dark-warning: #f59e0b;
+  --dark-info: #3b82f6;
+
+  position: relative;
+
+  min-height: 100vh;
+
+  color: var(--dark-text-primary);
+
+  background:
+    radial-gradient(circle at top left, rgba(34,197,94,0.08), transparent 25%),
+    radial-gradient(circle at bottom right, rgba(59,130,246,0.08), transparent 25%),
+    linear-gradient(
+      135deg,
+      #020617 0%,
+      #0f172a 45%,
+      #111827 100%
+    );
+
+  overflow: hidden;
+}
+
+/* ============================================
+   BACKGROUND GLOW
+   ============================================ */
+
+.gestion-villages::before {
+  content: "";
+
+  position: absolute;
+
+  width: 450px;
+  height: 450px;
+
+  top: -180px;
+  right: -120px;
+
+  background:
+    rgba(34,197,94,0.08);
+
+  filter: blur(120px);
+
+  pointer-events: none;
+}
+
+.gestion-villages::after {
+  content: "";
+
+  position: absolute;
+
+  width: 380px;
+  height: 380px;
+
+  bottom: -150px;
+  left: -120px;
+
+  background:
+    rgba(59,130,246,0.08);
+
+  filter: blur(120px);
+
+  pointer-events: none;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.gestion-villages .card,
+.gestion-villages .stat-card,
+.gestion-villages .empty-state,
+.gestion-villages .table {
+
+  background:
+    var(--dark-card);
+
+  backdrop-filter:
+    blur(16px);
+
+  border:
+    1px solid var(--dark-border);
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.gestion-villages .card:hover,
+.gestion-villages .stat-card:hover {
+
+  transform:
+    translateY(-5px);
+
+  border-color:
+    var(--dark-border-hover);
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.45),
+    0 0 20px rgba(34,197,94,0.08);
+}
+
+/* ============================================
+   LABELS
+   ============================================ */
+
+.gestion-villages .form-group label {
+
+  color:
+    var(--dark-text-secondary);
+
+  font-weight: 600;
+
+  margin-bottom: 0.55rem;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+.gestion-villages .form-group input,
+.gestion-villages .form-group textarea,
+.gestion-villages .form-group select {
+
+  width: 100%;
+
+  padding: 1rem 1.1rem;
+
+  background:
+    rgba(30,41,59,0.72);
+
+  border:
+    1px solid rgba(255,255,255,0.06);
+
+  border-radius: 18px;
+
+  color:
+    var(--dark-text-primary);
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    transform 0.2s ease;
+}
+
+.gestion-villages .form-group input::placeholder,
+.gestion-villages .form-group textarea::placeholder {
+
+  color:
+    #64748b;
+}
+
+.gestion-villages .form-group input:hover,
+.gestion-villages .form-group textarea:hover,
+.gestion-villages .form-group select:hover {
+
+  background:
+    rgba(51,65,85,0.78);
+}
+
+.gestion-villages .form-group input:focus,
+.gestion-villages .form-group textarea:focus,
+.gestion-villages .form-group select:focus {
+
+  outline: none;
+
+  background:
+    rgba(51,65,85,0.9);
+
+  border-color:
+    rgba(34,197,94,0.5);
+
+  box-shadow:
+    0 0 0 4px rgba(34,197,94,0.12),
+    0 0 20px rgba(34,197,94,0.08);
+
+  transform:
+    translateY(-1px);
+
+  color:
+    white;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.gestion-villages .btn-primary {
+
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #16a34a
+    );
+
+  color: white;
+
+  border: none;
+
+  box-shadow:
+    0 10px 25px rgba(34,197,94,0.22);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+.gestion-villages .btn-primary:hover {
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 15px 30px rgba(34,197,94,0.32);
+
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #15803d
+    );
+}
+
+.gestion-villages .btn-secondary {
+
+  background:
+    rgba(30,41,59,0.82);
+
+  border:
+    1px solid rgba(255,255,255,0.06);
+
+  color:
+    var(--dark-text-primary);
+
+  backdrop-filter:
+    blur(10px);
+
+  transition:
+    all 0.25s ease;
+}
+
+.gestion-villages .btn-secondary:hover {
+
+  background:
+    rgba(51,65,85,0.9);
+
+  border-color:
+    rgba(255,255,255,0.12);
+
+  transform:
+    translateY(-2px);
+}
+
+.gestion-villages .btn-danger {
+
+  background:
+    linear-gradient(
+      135deg,
+      #ef4444,
+      #dc2626
+    );
+
+  color:
+    white;
+
+  border: none;
+
+  box-shadow:
+    0 10px 25px rgba(239,68,68,0.22);
+}
+
+.gestion-villages .btn-danger:hover {
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 15px 30px rgba(239,68,68,0.3);
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
+
+.gestion-villages .table {
+
+  overflow: hidden;
+
+  border-collapse: collapse;
+}
+
+.gestion-villages .table th {
+
+  background:
+    rgba(30,41,59,0.9);
+
+  color:
+    white;
+
+  border-color:
+    rgba(255,255,255,0.06);
+
+  font-weight: 700;
+
+  padding: 1rem;
+}
+
+.gestion-villages .table td {
+
+  padding: 1rem;
+
+  color:
+    var(--dark-text-secondary);
+
+  border-color:
+    rgba(255,255,255,0.04);
+}
+
+.gestion-villages .table tbody tr {
+
+  transition:
+    background 0.25s ease;
+}
+
+.gestion-villages .table tbody tr:hover {
+
+  background:
+    rgba(30,41,59,0.45);
+}
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+
+.gestion-villages .stat-card {
+
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15,23,42,0.95),
+      rgba(30,41,59,0.85)
+    );
+}
+
+.gestion-villages .stat-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(34,197,94,0.08),
+      transparent 40%
+    );
+
+  pointer-events: none;
+}
+
+.gestion-villages .stat-card .stat-value {
+
+  color:
+    var(--dark-primary);
+
+  font-size: 2rem;
+
+  font-weight: 800;
+}
+
+.gestion-villages .stat-card .stat-label {
+
+  color:
+    var(--dark-text-muted);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.05em;
+
+  font-size: 0.8rem;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+
+.gestion-villages .empty-state {
+
+  text-align: center;
+
+  color:
+    var(--dark-text-muted);
+
+  border:
+    1px dashed rgba(255,255,255,0.08);
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.gestion-villages .loading-spinner {
+
+  border:
+    3px solid rgba(255,255,255,0.08);
+
+  border-top-color:
+    var(--dark-primary);
+
+  border-radius: 50%;
+
+  animation:
+    spin 1s linear infinite;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+.gestion-villages ::-webkit-scrollbar {
+  width: 10px;
+}
+
+.gestion-villages ::-webkit-scrollbar-track {
+
+  background:
+    #0f172a;
+}
+
+.gestion-villages ::-webkit-scrollbar-thumb {
+
+  background:
+    #334155;
+
+  border-radius: 999px;
+}
+
+.gestion-villages ::-webkit-scrollbar-thumb:hover {
+
+  background:
+    #475569;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+
+  .gestion-villages {
+
+    padding: 1rem;
+  }
+
+  .gestion-villages .card,
+  .gestion-villages .stat-card {
+
+    border-radius: 20px;
+  }
+
+  .gestion-villages .table {
+
+    font-size: 0.9rem;
+  }
+}

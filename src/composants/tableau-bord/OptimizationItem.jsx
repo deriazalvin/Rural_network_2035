@@ -5,55 +5,62 @@ import '../../styles/tableau-bord.css';
 export function TourItem({ tour, tourIdx, optId }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Support both old and new tour data structures
+  const tourName = tour.name || `Tournée ${tourIdx + 1}`;
+  const tourColor = tour.color || '#22c55e';
+  const tourDistance = tour.distance || tour.distanceTotale || 0;
+  const tourLoad = tour.load || tour.chargeTotale || 0;
+  const tourSteps = tour.steps || tour.etapes || [];
+
   return (
-    <div 
+    <div
       className={`tb-tour-item ${isExpanded ? 'expanded' : ''}`}
       id={`tour-${optId}-${tourIdx}`}
     >
-      <div 
+      <div
         className="tb-tour-header"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div 
-          className="w-3 h-3 rounded-full flex-shrink-0" 
-          style={{ 
-            background: tour.color,
-            boxShadow: `0 0 8px ${tour.color}40`
+        <div
+          className="w-3 h-3 rounded-full flex-shrink-0"
+          style={{
+            background: tourColor,
+            boxShadow: `0 0 8px ${tourColor}40`
           }}
         ></div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-            {tour.name}
+            {tourName}
           </p>
           <p className="text-[10px] font-medium" style={{ color: 'var(--text-tertiary)' }}>
-            {tour.distance} km - {tour.load.toLocaleString('fr-FR')} kg
+            {tourDistance.toFixed(1)} km - {tourLoad.toLocaleString('fr-FR')} kg
           </p>
         </div>
         <ChevronDown size={14} className="tb-tour-chevron" style={{ color: 'var(--text-tertiary)' }} />
       </div>
-      
+
       <div className="tb-tour-steps">
-        {tour.steps && tour.steps.map((step, stepIdx) => (
+        {tourSteps.map((step, stepIdx) => (
           <div key={stepIdx} className="tb-step-item">
-            <div 
+            <div
               className="tb-step-num"
-              style={{ background: tour.color }}
+              style={{ background: tourColor }}
             >
-              {step.num}
+              {stepIdx + 1}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                {step.village}
+                {step.village || step.nomVillage || `Étape ${stepIdx + 1}`}
               </p>
             </div>
-            <span 
+            <span
               className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md"
-              style={{ 
+              style={{
                 background: 'var(--border-subtle)',
                 color: 'var(--text-secondary)'
               }}
             >
-              {step.production.toLocaleString('fr-FR')} kg
+              {(step.production || step.productionCollectee || 0).toLocaleString('fr-FR')} kg
             </span>
           </div>
         ))}
@@ -71,11 +78,14 @@ export function OptimizationItem({ opt, optIdx, onToggle }) {
     onToggle?.(opt.id, newState);
   };
 
-  const date = new Date(opt.timestamp || opt.date);
+  const date = new Date(opt.timestamp || opt.dateHeure || opt.date);
   const dateStr = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-  const unservedWarning = opt.unserved && opt.unserved.length > 0 ? (
+  const tours = opt.toursList || opt.tournees || [];
+  const unserved = opt.unserved || opt.villagesNonDesservis || [];
+
+  const unservedWarning = unserved.length > 0 ? (
     <div 
       className="tb-warning-box"
     >
@@ -196,7 +206,7 @@ export function OptimizationItem({ opt, optIdx, onToggle }) {
               style={{ background: 'var(--bg)', border: '1px solid var(--border-subtle)' }}
             >
               <p className="font-mono font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-                {opt.toursList ? opt.toursList.length : 0}
+                {tours.length}
               </p>
               <p className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'var(--text-tertiary)' }}>
                 Tournées

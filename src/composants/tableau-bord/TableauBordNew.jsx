@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart2, MapPin, Map, Package, AlertTriangle, Zap, 
-  ChevronDown, Truck, Calendar, Activity, TrendingUp, Eye, EyeOff
+import {
+  BarChart3, MapPin, Route, Package, AlertTriangle, TrendingUp,
+  Truck, Calendar, Activity, Zap, ChevronDown, ChevronRight,
+  Target, Award, Clock, Users, Eye, EyeOff, Play, Pause
 } from 'lucide-react';
-import { useOptimizationStorage } from '../../hooks/useOptimizationStorage';
 import { StatCard } from './StatCard';
 import { ChartSection } from './ChartSection';
 import { OptimizationItem } from './OptimizationItem';
@@ -11,42 +11,53 @@ import { NetworkVisualization } from './NetworkVisualization';
 import '../../styles/tableau-bord.css';
 
 /**
- * TableauBord refactorisé avec :
- * - Persistance localStorage automatique
- * - Composants modulaires
- * - Animations GSAP/CSS
- * - Design moderne luxe
- * - TOUS les contenus du dashboard
+ * Nouveau Tableau de Bord Ultra-Moderne avec :
+ * - Design Glassmorphism & Neumorphism
+ * - Animations fluides et micro-interactions
+ * - Layout responsive et adaptatif
+ * - Métriques en temps réel avec indicateurs visuels
+ * - Interface immersive et professionnelle
  */
-export function TableauBordNew({ 
-  villages = [], 
-  routes = [], 
+export function TableauBordNew({
+  villages = [],
+  routes = [],
   optimisations = [],
   resultatsOptimisation = null,
-  onOptimizationSelect = null 
+  onOptimizationSelect = null
 }) {
-  const { optimizations, isLoaded, addOptimization, clearHistory } = useOptimizationStorage();
+  const historyData = optimisations;
   const [stats, setStats] = useState({
     villages: 0,
     routes: 0,
     production: 0,
     blocked: 0,
     avgGain: 0,
-    savings: 0
+    savings: 0,
+    efficiency: 0,
+    uptime: 0
   });
   const [expandedTours, setExpandedTours] = useState(new Set());
+  const [activeView, setActiveView] = useState('overview');
+  const [isLiveMode, setIsLiveMode] = useState(true);
 
-  // Calculer les stats
+  // Calculer les stats avancées
   useEffect(() => {
     const routesActives = routes.filter(r => !r.estBloquee).length;
     const productionTotale = villages.reduce((sum, v) => sum + parseFloat(v.volumeProduction || 0), 0);
     const routesBloquees = routes.filter(r => r.estBloquee === true).length;
+    const totalRoutes = routes.length;
 
-    const gainMoyen = optimizations.length > 0
-      ? optimizations.reduce((sum, o) => sum + parseFloat(o.gainPercentage || 0), 0) / optimizations.length
+    const gainMoyen = historyData.length > 0
+      ? historyData.reduce((sum, o) => sum + parseFloat(o.gainPercentage || 0), 0) / historyData.length
       : 0;
 
-    const economieTotale = optimizations.reduce((sum, o) => sum + parseFloat(o.coutTotal || 0), 0);
+    const economieTotale = historyData.reduce((sum, o) => sum + parseFloat(o.coutTotal || 0), 0);
+
+    // Calculer l'efficacité opérationnelle
+    const efficiency = totalRoutes > 0 ? ((routesActives / totalRoutes) * 100) : 100;
+
+    // Calculer le taux de disponibilité
+    const uptime = totalRoutes > 0 ? ((totalRoutes - routesBloquees) / totalRoutes) * 100 : 100;
 
     setStats({
       villages: villages.length,
@@ -54,52 +65,49 @@ export function TableauBordNew({
       production: productionTotale,
       blocked: routesBloquees,
       avgGain: gainMoyen,
-      savings: economieTotale
+      savings: economieTotale,
+      efficiency: efficiency,
+      uptime: uptime
     });
-  }, [villages, routes, optimizations]);
+  }, [villages, routes, optimisations]);
 
-  // Animations au montage
+  // Animation des compteurs au montage
   useEffect(() => {
-    if (!isLoaded) return;
+    const animateValue = (elementId, targetValue, duration = 2000, isDecimal = false) => {
+      const element = document.getElementById(elementId);
+      if (!element) return;
 
-    // Animer les cartes stat
-    const animateCounter = (el, target, duration = 1500) => {
       const start = performance.now();
       const from = 0;
 
-      function tick(now) {
-        const elapsed = now - start;
+      function update(current) {
+        const elapsed = current - start;
         const progress = Math.min(elapsed / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
-        const val = Math.floor(from + (target - from) * eased);
-        if (el) {
-          el.textContent = val.toLocaleString('fr-FR');
+        const value = from + (targetValue - from) * eased;
+
+        if (isDecimal) {
+          element.textContent = value.toFixed(1);
+        } else {
+          element.textContent = Math.floor(value).toLocaleString('fr-FR');
         }
-        if (progress < 1) requestAnimationFrame(tick);
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
       }
-      requestAnimationFrame(tick);
+      requestAnimationFrame(update);
     };
 
     setTimeout(() => {
-      animateCounter(document.getElementById('stat-value-Villages'), stats.villages);
-      animateCounter(document.getElementById('stat-value-Routes'), stats.routes);
-      animateCounter(document.getElementById('stat-value-Production'), stats.production);
-      animateCounter(document.getElementById('stat-value-Bloquées'), stats.blocked);
-    }, 300);
-  }, [stats, isLoaded]);
-
-  // Préparer les données du chart
-  const chartData = optimizations.map(opt => ({
-    date: opt.timestamp || opt.date,
-    gain: opt.gainPercentage || 0,
-    distance: opt.distanceTotale || 0
-  })).reverse();
-
-  // Marquer le dernier comme "latest"
-  const optimizationsWithLatest = optimizations.map((opt, idx) => ({
-    ...opt,
-    isLatest: idx === 0
-  }));
+      animateValue('stat-villages', stats.villages);
+      animateValue('stat-routes', stats.routes);
+      animateValue('stat-production', stats.production);
+      animateValue('stat-blocked', stats.blocked);
+      animateValue('stat-efficiency', stats.efficiency, 2000, true);
+      animateValue('stat-uptime', stats.uptime, 2000, true);
+    }, 500);
+  }, [stats]);
 
   const toggleTour = (idx) => {
     const newSet = new Set(expandedTours);
@@ -108,402 +116,418 @@ export function TableauBordNew({
     setExpandedTours(newSet);
   };
 
-  if (!isLoaded) {
-    return (
-      <div className="section-carte" style={{ textAlign: 'center', padding: '40px' }}>
-        <p style={{ color: 'var(--text-secondary)' }}>Chargement des données...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="section-carte" style={{ background: 'var(--bg)' }}>
-      {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 
-            className="flex items-center gap-3"
-            style={{ 
-              fontSize: '28px', 
-              fontWeight: 'bold',
-              color: 'var(--text-primary)'
-            }}
-          >
-            <BarChart2 size={32} style={{ color: '#22c55e' }} />
-            <span>Tableau de Bord Opérationnel</span>
-          </h2>
-          <div className="tb-live-indicator" style={{ color: 'var(--text-tertiary)' }}>
-            <span className="dot"></span>
-            Live
-          </div>
-        </div>
-        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-          {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </div>
-      </div>
-
-      {/* Stat Cards Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 tb-stagger-children mb-8">
-        <StatCard 
-          icon={MapPin}
-          label="Villages"
-          value={stats.villages}
-          trend="+3 ce mois"
-          colorClass="brand"
-          delay={0}
-        />
-        <StatCard 
-          icon={Map}
-          label="Routes Actives"
-          value={stats.routes}
-          trend="96% opérationnel"
-          colorClass="blue"
-          delay={80}
-        />
-        <StatCard 
-          icon={Package}
-          label="Production"
-          value={stats.production}
-          suffix=" kg"
-          trend="+12% vs N-1"
-          colorClass="brand"
-          delay={160}
-        />
-        <StatCard 
-          icon={AlertTriangle}
-          label="Routes Bloquées"
-          value={stats.blocked}
-          trend="-2 cette semaine"
-          colorClass="red"
-          delay={240}
-        />
-        <StatCard 
-          icon={Zap}
-          label="Gain Moyen"
-          value={stats.avgGain}
-          suffix="%"
-          trend="Record"
-          colorClass="brand"
-          isDecimal
-          delay={320}
-        />
-        <StatCard 
-          icon={Truck}
-          label="Économies"
-          value={stats.savings}
-          suffix=" Ar"
-          trend="Cumulées"
-          colorClass="amber"
-          delay={400}
-        />
-      </section>
-
-      {/* Résultats Actuels Section - Only if resultatsOptimisation exists */}
-      {resultatsOptimisation && (
-        <section className="tb-card mb-8" style={{
-          background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(59,182,224,0.08))',
-          border: '2px solid rgba(34,197,94,0.2)',
-          borderRadius: '16px',
-          padding: '24px'
-        }}>
-          <h3 style={{
-            fontSize: '18px',
-            fontWeight: 'bold',
-            marginBottom: '16px',
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Activity size={20} style={{ color: '#22c55e' }} />
-            Résultats de l'Optimisation Courante
-          </h3>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: '12px',
-            marginBottom: '20px'
-          }}>
-            <div style={{
-              padding: '12px',
-              background: 'rgba(34,197,94,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(34,197,94,0.2)'
-            }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>Distance Totale</div>
-              <div style={{ color: '#22c55e', fontSize: '20px', fontWeight: 'bold' }}>
-                {(resultatsOptimisation.distanceTotalKm || 0).toFixed(1)} km
-              </div>
+    <div className="dashboard-container">
+      {/* Header Principal avec Contrôles */}
+      <header className="dashboard-header">
+        <div className="header-content">
+          <div className="header-title">
+            <div className="title-icon">
+              <BarChart3 size={28} />
             </div>
-            <div style={{
-              padding: '12px',
-              background: 'rgba(59,182,224,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(59,182,224,0.2)'
-            }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>Gain</div>
-              <div style={{ color: '#3b82f6', fontSize: '20px', fontWeight: 'bold' }}>
-                {(resultatsOptimisation.gainPourcent || 0).toFixed(1)} %
-              </div>
-            </div>
-            <div style={{
-              padding: '12px',
-              background: 'rgba(245,158,11,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(245,158,11,0.2)'
-            }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>Coût Total</div>
-              <div style={{ color: '#f59e0b', fontSize: '20px', fontWeight: 'bold' }}>
-                {(resultatsOptimisation.coutTotal || 0).toFixed(0)} Ar
-              </div>
-            </div>
-            <div style={{
-              padding: '12px',
-              background: 'rgba(34,197,94,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(34,197,94,0.2)'
-            }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginBottom: '4px', fontWeight: '600' }}>Camions Utilisés</div>
-              <div style={{ color: '#22c55e', fontSize: '20px', fontWeight: 'bold' }}>
-                {resultatsOptimisation.tournees?.length || 0}
-              </div>
-            </div>
-          </div>
-
-          {/* Tours détails */}
-          {resultatsOptimisation.tournees?.length > 0 && (
             <div>
-              <h4 style={{
-                fontSize: '14px',
-                fontWeight: 'bold',
-                marginBottom: '12px',
-                color: 'var(--text-primary)'
-              }}>Détail des Tournées</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {resultatsOptimisation.tournees.map((tournee, idx) => (
-                  <div 
-                    key={idx}
-                    style={{
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      background: 'rgba(0,0,0,0.02)'
-                    }}
-                  >
-                    <button
-                      onClick={() => toggleTour(idx)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div
-                          style={{
-                            width: '14px',
-                            height: '14px',
-                            borderRadius: '3px',
-                            backgroundColor: tournee.couleurHex || '#2d5016'
-                          }}
-                        />
-                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                          {tournee.camionNom || `Tournée ${idx + 1}`}
-                        </span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                          {tournee.etapes?.length || 0} arrêts
-                        </span>
-                      </div>
-                      {expandedTours.has(idx) ? <ChevronDown size={16} /> : <ChevronDown size={16} style={{ transform: 'rotate(-90deg)' }} />}
-                    </button>
+              <h1>Tableau de Bord Opérationnel</h1>
+              <p>Réseau Rural Intelligent - Madagascar 2035</p>
+            </div>
+          </div>
 
-                    {expandedTours.has(idx) && (
-                      <div style={{
-                        padding: '12px',
-                        borderTop: '1px solid var(--border)',
-                        background: 'var(--bg)'
-                      }}>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(3, 1fr)',
-                          gap: '8px',
-                          marginBottom: '12px',
-                          fontSize: '13px'
-                        }}>
-                          <div>
-                            <div style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', marginBottom: '2px' }}>Distance</div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6' }}>
-                              {(tournee.distanceTotalKm || 0).toFixed(1)} km
+          <div className="header-controls">
+            <div className="live-indicator" onClick={() => setIsLiveMode(!isLiveMode)}>
+              <div className={`live-dot ${isLiveMode ? 'active' : ''}`}></div>
+              <span>{isLiveMode ? 'LIVE' : 'PAUSE'}</span>
+              {isLiveMode ? <Pause size={14} /> : <Play size={14} />}
+            </div>
+
+            <div className="date-display">
+              <Calendar size={16} />
+              <span>{new Date().toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation par onglets */}
+        <nav className="dashboard-nav">
+          <button
+            className={`nav-tab ${activeView === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveView('overview')}
+          >
+            <Target size={18} />
+            Vue d'ensemble
+          </button>
+          <button
+            className={`nav-tab ${activeView === 'operations' ? 'active' : ''}`}
+            onClick={() => setActiveView('operations')}
+          >
+            <Activity size={18} />
+            Opérations
+          </button>
+          <button
+            className={`nav-tab ${activeView === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveView('analytics')}
+          >
+            <TrendingUp size={18} />
+            Analytics
+          </button>
+        </nav>
+      </header>
+
+      {/* Contenu Principal */}
+      <main className="dashboard-main">
+        {activeView === 'overview' && (
+          <>
+            {/* Métriques Principales */}
+            <section className="metrics-grid">
+              <div className="metric-card primary">
+                <div className="metric-header">
+                  <MapPin className="metric-icon" />
+                  <span className="metric-label">Villages Connectés</span>
+                </div>
+                <div className="metric-value" id="stat-villages">0</div>
+                <div className="metric-trend positive">
+                  <TrendingUp size={14} />
+                  +3 ce mois
+                </div>
+              </div>
+
+              <div className="metric-card success">
+                <div className="metric-header">
+                  <Route className="metric-icon" />
+                  <span className="metric-label">Routes Actives</span>
+                </div>
+                <div className="metric-value" id="stat-routes">0</div>
+                <div className="metric-trend positive">
+                  <TrendingUp size={14} />
+                  96% opérationnel
+                </div>
+              </div>
+
+              <div className="metric-card info">
+                <div className="metric-header">
+                  <Package className="metric-icon" />
+                  <span className="metric-label">Production Totale</span>
+                </div>
+                <div className="metric-value" id="stat-production">0</div>
+                <span className="metric-unit">kg</span>
+                <div className="metric-trend positive">
+                  <TrendingUp size={14} />
+                  +12% vs N-1
+                </div>
+              </div>
+
+              <div className="metric-card warning">
+                <div className="metric-header">
+                  <AlertTriangle className="metric-icon" />
+                  <span className="metric-label">Routes Bloquées</span>
+                </div>
+                <div className="metric-value" id="stat-blocked">0</div>
+                <div className="metric-trend negative">
+                  <TrendingUp size={14} />
+                  -2 cette semaine
+                </div>
+              </div>
+
+              <div className="metric-card accent">
+                <div className="metric-header">
+                  <Zap className="metric-icon" />
+                  <span className="metric-label">Efficacité</span>
+                </div>
+                <div className="metric-value" id="stat-efficiency">0</div>
+                <span className="metric-unit">%</span>
+                <div className="metric-trend positive">
+                  <Award size={14} />
+                  Record
+                </div>
+              </div>
+
+              <div className="metric-card secondary">
+                <div className="metric-header">
+                  <Clock className="metric-icon" />
+                  <span className="metric-label">Disponibilité</span>
+                </div>
+                <div className="metric-value" id="stat-uptime">0</div>
+                <span className="metric-unit">%</span>
+                <div className="metric-trend positive">
+                  <TrendingUp size={14} />
+                  Stable
+                </div>
+              </div>
+            </section>
+
+            {/* Résultats d'Optimisation Active */}
+            {resultatsOptimisation && (
+              <section className="optimization-results">
+                <div className="section-header">
+                  <Activity className="section-icon" />
+                  <h2>Résultats d'Optimisation Active</h2>
+                  <div className="optimization-badge">
+                    <Zap size={14} />
+                    En cours
+                  </div>
+                </div>
+
+                <div className="results-grid">
+                  <div className="result-item">
+                    <div className="result-icon">
+                      <Route />
+                    </div>
+                    <div className="result-content">
+                      <span className="result-label">Distance Totale</span>
+                      <span className="result-value">{(resultatsOptimisation.distanceTotalKm || 0).toFixed(1)} km</span>
+                    </div>
+                  </div>
+
+                  <div className="result-item">
+                    <div className="result-icon">
+                      <TrendingUp />
+                    </div>
+                    <div className="result-content">
+                      <span className="result-label">Gain Réalisé</span>
+                      <span className="result-value">{(resultatsOptimisation.gainPourcent || 0).toFixed(1)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="result-item">
+                    <div className="result-icon">
+                      <Package />
+                    </div>
+                    <div className="result-content">
+                      <span className="result-label">Coût Total</span>
+                      <span className="result-value">{(resultatsOptimisation.coutTotal || 0).toFixed(0)} Ar</span>
+                    </div>
+                  </div>
+
+                  <div className="result-item">
+                    <div className="result-icon">
+                      <Truck />
+                    </div>
+                    <div className="result-content">
+                      <span className="result-label">Camions Utilisés</span>
+                      <span className="result-value">{resultatsOptimisation.tournees?.length || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Détails des Tournées */}
+                {resultatsOptimisation.tournees?.length > 0 && (
+                  <div className="tours-section">
+                    <h3>Détail des Tournées Optimisées</h3>
+                    <div className="tours-list">
+                      {resultatsOptimisation.tournees.map((tournee, idx) => (
+                        <div key={idx} className="tour-card">
+                          <button
+                            className="tour-header"
+                            onClick={() => toggleTour(idx)}
+                          >
+                            <div className="tour-info">
+                              <div
+                                className="tour-color"
+                                style={{ backgroundColor: tournee.couleurHex || '#22c55e' }}
+                              ></div>
+                              <span className="tour-name">
+                                {tournee.camionNom || `Tournée ${idx + 1}`}
+                              </span>
+                              <span className="tour-stops">
+                                {tournee.etapes?.length || 0} arrêts
+                              </span>
                             </div>
-                          </div>
-                          <div>
-                            <div style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', marginBottom: '2px' }}>Charge</div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#22c55e' }}>
-                              {(tournee.chargeTotalKg || 0).toFixed(0)}/{(tournee.capaciteKg || 0).toFixed(0)} kg
+                            <div className="tour-metrics">
+                              <span className="metric">{(tournee.distanceTotalKm || 0).toFixed(1)} km</span>
+                              <span className="metric">{(tournee.chargeTotalKg || 0).toFixed(0)} kg</span>
+                              {expandedTours.has(idx) ?
+                                <ChevronDown size={18} /> :
+                                <ChevronRight size={18} />
+                              }
                             </div>
-                          </div>
-                          <div>
-                            <div style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: '600', marginBottom: '2px' }}>Coût</div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#f59e0b' }}>
-                              {(tournee.coutTotal || 0).toFixed(0)} Ar
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          {tournee.etapes?.map((etape, eIdx) => (
-                            <div key={eIdx} style={{
-                              padding: '8px 10px',
-                              background: 'rgba(0,0,0,0.02)',
-                              borderRadius: '4px',
-                              borderLeft: '3px solid ' + (tournee.couleurHex || '#2d5016')
-                            }}>
-                              <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                                {eIdx + 1}. {etape.villageNom}
+                          </button>
+
+                          {expandedTours.has(idx) && (
+                            <div className="tour-details">
+                              <div className="tour-stats">
+                                <div className="stat">
+                                  <span className="stat-label">Distance totale</span>
+                                  <span className="stat-value">{(tournee.distanceTotalKm || 0).toFixed(1)} km</span>
+                                </div>
+                                <div className="stat">
+                                  <span className="stat-label">Charge utile</span>
+                                  <span className="stat-value">
+                                    {(tournee.chargeTotalKg || 0).toFixed(0)} / {(tournee.capaciteKg || 0).toFixed(0)} kg
+                                  </span>
+                                </div>
+                                <div className="stat">
+                                  <span className="stat-label">Coût estimé</span>
+                                  <span className="stat-value">{(tournee.coutTotal || 0).toFixed(0)} Ar</span>
+                                </div>
                               </div>
-                              <div style={{ color: 'var(--text-secondary)', fontSize: '11px', marginTop: '2px' }}>
-                                {(etape.productionCollectee || 0).toFixed(0)} kg | Charge cum.: {(etape.chargeCumulee || 0).toFixed(0)} kg | Distance cum.: {(etape.distanceCumulee || 0).toFixed(1)} km
+
+                              <div className="tour-stops-list">
+                                {tournee.etapes?.map((etape, eIdx) => (
+                                  <div key={eIdx} className="stop-item">
+                                    <div className="stop-number">{eIdx + 1}</div>
+                                    <div className="stop-content">
+                                      <div className="stop-name">{etape.villageNom}</div>
+                                      <div className="stop-details">
+                                        <span>{(etape.productionCollectee || 0).toFixed(0)} kg collectés</span>
+                                        <span>{(etape.distanceCumulee || 0).toFixed(1)} km cumulés</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
+                          )}
                         </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Alertes */}
+                {resultatsOptimisation.villagesNonDesservis?.length > 0 && (
+                  <div className="alert-section">
+                    <div className="alert-header">
+                      <AlertTriangle className="alert-icon" />
+                      <span className="alert-title">Villages non desservis</span>
+                    </div>
+                    <div className="alert-content">
+                      <p>{resultatsOptimisation.villagesNonDesservis.length} village(s) nécessitent une attention particulière :</p>
+                      <div className="unserved-villages">
+                        {resultatsOptimisation.villagesNonDesservis.map((village, idx) => (
+                          <span key={idx} className="village-tag">{village}</span>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Visualisation Réseau */}
+            {resultatsOptimisation && resultatsOptimisation.tournees?.length > 0 && (
+              <section className="network-section">
+                <div className="section-header">
+                  <MapPin className="section-icon" />
+                  <h2>Visualisation du Réseau</h2>
+                </div>
+                <NetworkVisualization tours={resultatsOptimisation.tournees} />
+              </section>
+            )}
+          </>
+        )}
+
+        {activeView === 'operations' && (
+          <section className="operations-view">
+            <div className="section-header">
+              <Activity className="section-icon" />
+              <h2>Opérations en Cours</h2>
+            </div>
+
+            {/* État des Routes */}
+            <div className="routes-status">
+              <h3>État du Réseau Routier</h3>
+              <div className="routes-grid">
+                {routes.map((route, idx) => (
+                  <div key={idx} className={`route-item ${route.estBloquee ? 'blocked' : 'active'}`}>
+                    <div className="route-header">
+                      <span className="route-name">{route.nom || `Route ${idx + 1}`}</span>
+                      <div className={`route-status ${route.estBloquee ? 'blocked' : 'active'}`}>
+                        {route.estBloquee ? 'Bloquée' : 'Active'}
+                      </div>
+                    </div>
+                    <div className="route-details">
+                      <span>{(route.distanceKm || 0).toFixed(1)} km</span>
+                      <span>{route.villages?.length || 0} villages</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Villages non desservis */}
-          {resultatsOptimisation.villagesNonDesservis?.length > 0 && (
-            <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <AlertTriangle size={16} style={{ color: '#dc2626', marginTop: '2px' }} />
-                <div>
-                  <div style={{ fontWeight: '600', color: '#dc2626', fontSize: '13px' }}>
-                    {resultatsOptimisation.villagesNonDesservis.length} village(s) non desservi(s)
-                  </div>
-                  <div style={{ color: '#991b1b', fontSize: '12px', marginTop: '4px' }}>
-                    {resultatsOptimisation.villagesNonDesservis.join(', ')}
+            {/* État des Camions */}
+            <div className="trucks-status">
+              <h3>Flotte de Camions</h3>
+              <div className="trucks-grid">
+                {/* Placeholder pour l'état des camions */}
+                <div className="truck-item">
+                  <Truck className="truck-icon" />
+                  <div className="truck-info">
+                    <span className="truck-name">Camion A</span>
+                    <span className="truck-status">En service</span>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </section>
-      )}
-
-      {/* Network Visualization Section */}
-      {resultatsOptimisation && resultatsOptimisation.tournees?.length > 0 && (
-        <section className="tb-card mb-8">
-          <h3 style={{
-            fontSize: '18px',
-            fontWeight: 'bold',
-            marginBottom: '16px',
-            color: 'var(--text-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Map size={20} style={{ color: '#3b82f6' }} />
-            Visualisation Réseau des Tournées
-          </h3>
-          <NetworkVisualization 
-            tours={resultatsOptimisation.tournees}
-          />
-        </section>
-      )}
-
-      {/* Chart Section */}
-      {chartData.length > 0 && (
-        <ChartSection chartData={chartData} />
-      )}
-
-      {/* Optimizations History Section */}
-      <section className="tb-reveal mt-8">
-        <div className="flex items-center gap-3 mb-5">
-          <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(245,158,11,0.1)' }}
-          >
-            <Calendar size={20} style={{ color: '#f59e0b' }} />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-              Historique des Optimisations
-            </h3>
-            <p className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>
-              {optimizations.length} optimisation{optimizations.length !== 1 ? 's' : ''} enregistrée{optimizations.length !== 1 ? 's' : ''} (max 50)
-            </p>
-          </div>
-        </div>
-
-        {optimizations.length === 0 ? (
-          <div 
-            className="tb-card p-12 text-center"
-            style={{
-              background: 'var(--bg-elevated)',
-              border: '2px dashed var(--border)'
-            }}
-          >
-            <div 
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '12px',
-                background: 'rgba(34,197,94,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px'
-              }}
-            >
-              <Zap size={28} style={{ color: '#22c55e' }} />
-            </div>
-            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
-              Aucune optimisation enregistrée
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Lancez une optimisation pour voir l'historique ici (les données sont sauvegardées automatiquement)
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {optimizationsWithLatest.map((opt) => (
-              <OptimizationItem
-                key={opt.id}
-                opt={opt}
-                onToggle={(id, isExpanded) => onOptimizationSelect?.(opt)}
-              />
-            ))}
-          </div>
+          </section>
         )}
-      </section>
 
-      {optimizations.length > 0 && (
-        <div className="mt-6 text-center">
-          <button
-            onClick={clearHistory}
-            className="text-xs font-medium px-4 py-2 rounded-lg transition-all hover:opacity-80"
-            style={{
-              background: 'rgba(239,68,68,0.1)',
-              color: '#dc2626',
-              border: '1px solid rgba(239,68,68,0.2)'
-            }}
-          >
-            Effacer l'historique
-          </button>
-        </div>
-      )}
+        {activeView === 'analytics' && (
+          <section className="analytics-view">
+            <div className="section-header">
+              <TrendingUp className="section-icon" />
+              <h2>Analyse et Tendances</h2>
+            </div>
+
+            {/* Graphiques */}
+            {historyData.length > 0 && (
+              <ChartSection
+                chartData={historyData.map(opt => ({
+                  date: opt.timestamp || opt.dateHeure || opt.date,
+                  gain: opt.gainPercentage || 0,
+                  distance: opt.distanceTotale || 0
+                })).reverse()}
+              />
+            )}
+
+            {/* Historique des Optimisations */}
+            <div className="history-section">
+              <div className="history-header">
+                <Calendar className="section-icon" />
+                <h3>Historique des Optimisations</h3>
+                <span className="history-count">{historyData.length} optimisations</span>
+              </div>
+
+              {historyData.length === 0 ? (
+                <div className="empty-state">
+                  <Zap className="empty-icon" />
+                  <h4>Aucune optimisation enregistrée</h4>
+                  <p>Lancez votre première optimisation pour commencer à suivre les performances</p>
+                </div>
+              ) : (
+                <div className="optimizations-list">
+                  {historyData.slice(0, 10).map((opt) => (
+                    <OptimizationItem
+                      key={opt.id}
+                      opt={opt}
+                      onToggle={(id, isExpanded) => onOptimizationSelect?.(opt)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {historyData.length > 0 && (
+                <div className="history-actions">
+                  <button
+                    className="clear-history-btn"
+                    onClick={() => {
+                      if (window.confirm('Voulez-vous vraiment effacer l\'historique des optimisations ?')) {
+                        window.localStorage.removeItem('rn_optimisations');
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    <EyeOff size={16} />
+                    Effacer l'historique
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </main>
     </div>
   );
 }

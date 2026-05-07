@@ -1,0 +1,184 @@
+/* ============================================
+   DARK MODE - GESTION CAMIONS (FLOTTE)
+   Styles sombres pour le composant GestionCamions
+   ============================================ */
+
+.gestion-camions {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.gestion-camions .card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.gestion-camions .section-header {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-color);
+}
+
+.gestion-camions .form-group label {
+  color: var(--text-primary);
+}
+
+.gestion-camions .form-group input,
+.gestion-camions .form-group select,
+.gestion-camions .form-group textarea {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.gestion-camions .form-group input:focus,
+.gestion-camions .form-group select:focus,
+.gestion-camions .form-group textarea:focus {
+  background-color: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+
+.gestion-camions .form-group input::placeholder,
+.gestion-camions .form-group textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.gestion-camions .btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.gestion-camions .btn-primary:hover {
+  background-color: var(--color-primary-light);
+}
+
+.gestion-camions .btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.gestion-camions .btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.gestion-camions .btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.gestion-camions .btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.gestion-camions .table {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .table th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .table td {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.gestion-camions .status-badge {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.gestion-camions .status-badge.disponible {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+}
+
+.gestion-camions .status-badge.en-mission {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: var(--color-info);
+}
+
+.gestion-camions .status-badge.maintenance {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: var(--color-warning);
+}
+
+.gestion-camions .status-badge.retraite {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+.gestion-camions .camion-card {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.gestion-camions .camion-card:hover {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  box-shadow: var(--shadow-lg);
+}
+
+.gestion-camions .camion-header {
+  border-bottom-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.gestion-camions .camion-spec {
+  color: var(--text-secondary);
+}
+
+.gestion-camions .spec-label {
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+.gestion-camions .spec-value {
+  color: var(--text-primary);
+}
+
+.gestion-camions .capacite-bar {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .capacite-fill {
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+}
+
+.gestion-camions .empty-state {
+  color: var(--text-secondary);
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .loading-spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--color-primary);
+}
+
+.gestion-camions .action-buttons {
+  gap: var(--space-md);
+}
+
+.gestion-camions .action-btn {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.gestion-camions .action-btn:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--color-primary);
+}

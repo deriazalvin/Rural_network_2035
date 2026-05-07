@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Trash2, Edit2, Plus, AlertCircle } from 'lucide-react';
-import { Card, Button, Input, Modal, Alert, Badge, Table } from './ui/index.js';
+import '../styles/gestion-camions.css';
 
 /**
  * Composant GestionCamions - Refactorisé et modulaire
@@ -151,69 +151,34 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
   };
 
   return (
-    <div className="section-carte">
-      <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Truck size={26} color="#2d5016" />
+    <div className="gestion-camions-container section-carte">
+      <h2 className="gestion-camions-title">
+        <Truck size={26} />
         Gestion de la Flotte
       </h2>
 
       {/* === MINI STATISTIQUES === */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '12px',
-        marginBottom: '24px'
-      }}>
-        <div style={{
-          padding: '16px',
-          background: '#f3f4f6',
-          borderRadius: '8px',
-          border: '2px solid #e8dfc8'
-        }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>Total Camions</div>
-          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2d5016' }}>{camions.length}</div>
+      <div className="camions-stats">
+        <div className="stat-card">
+          <div className="stat-label">Total Camions</div>
+          <div className="stat-value">{camions.length}</div>
         </div>
-
-        <div style={{
-          padding: '16px',
-          background: '#f3f4f6',
-          borderRadius: '8px',
-          border: '2px solid #e8dfc8'
-        }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>Disponibles</div>
-          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#6b9d4a' }}>
-            {camions.filter(c => c.etat === 'DISPONIBLE').length}
-          </div>
+        <div className="stat-card">
+          <div className="stat-label">Disponibles</div>
+          <div className="stat-value">{camions.filter(c => c.etat === 'DISPONIBLE').length}</div>
         </div>
-
-        <div style={{
-          padding: '16px',
-          background: '#f3f4f6',
-          borderRadius: '8px',
-          border: '2px solid #e8dfc8'
-        }}>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>Capacité Totale</div>
-          <div style={{ fontSize: '2rem', fontWeight: '700', color: '#2563eb' }}>
-            {(camions.reduce((sum, c) => sum + (c.capaciteKg || 0), 0) / 1000).toFixed(1)} <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>t</span>
-          </div>
+        <div className="stat-card">
+          <div className="stat-label">Capacité Totale</div>
+          <div className="stat-value">{(camions.reduce((sum, c) => sum + (c.capaciteKg || 0), 0) / 1000).toFixed(1)}<span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}> t</span></div>
         </div>
       </div>
 
       {/* === FORMULAIRE === */}
       <form onSubmit={gererSoumission} className="formulaire">
         {erreur && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '12px',
-            padding: '12px',
-            background: '#fee2e2',
-            borderLeft: '4px solid #dc2626',
-            borderRadius: '4px',
-            marginBottom: '16px'
-          }}>
-            <AlertCircle size={18} color="#dc2626" style={{ marginTop: '2px' }} />
-            <span style={{ color: '#991b1b', fontSize: '0.9rem' }}>{erreur}</span>
+          <div className="error-message">
+            <AlertCircle size={18} />
+            <span>{erreur}</span>
           </div>
         )}
 
@@ -248,7 +213,7 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
             )}
           </select>
         </div>
-        <button type="submit" disabled={chargement} className="bouton-principal">
+        <button type="submit" disabled={chargement} className="btn btn-primary">
           {chargement ? 'Ajout en cours...' : 'Ajouter un Camion'}
         </button>
       </form>
