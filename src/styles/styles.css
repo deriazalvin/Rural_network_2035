@@ -52,6 +52,8 @@ body {
   border-radius: 12px;
   margin-bottom: 30px;
   box-shadow: var(--ombre-forte);
+  position: relative;
+  z-index: 1;
 }
 
 .entete-content {
@@ -666,6 +668,9 @@ body {
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
+  position: sticky;
+  top: 12px;
+  z-index: 100;
 }
 
 .nav-list {
@@ -833,15 +838,15 @@ body {
 
 /* ======= DARK MODE ======= */
 [data-theme='dark'] {
-  --vert-principal: #1a2d0a;
-  --vert-secondaire: #2d4717;
-  --vert-clair: #3d5c27;
-  --beige: #0f0f0f;
-  --beige-fonce: #1a1a1a;
-  --gris-clair: #1f1f1f;
-  --gris: #a0a0a0;
-  --gris-fonce: #e0e0e0;
-  --blanc: #f0f0f0;
+  --vert-principal: #34d399;
+  --vert-secondaire: #10b981;
+  --vert-clair: #6ee7b7;
+  --beige: #0f172a;
+  --beige-fonce: #1e293b;
+  --gris-clair: #334155;
+  --gris: #94a3b8;
+  --gris-fonce: #f8fafc;
+  --blanc: #f8fafc;
   --ombre: 0 2px 8px rgba(0, 0, 0, 0.3);
   --ombre-forte: 0 4px 16px rgba(0, 0, 0, 0.5);
   --glass-bg: rgba(0, 0, 0, 0.25);
@@ -849,7 +854,7 @@ body {
 }
 
 [data-theme='dark'] body {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: var(--gris-fonce);
 }
 
@@ -858,8 +863,12 @@ body {
 }
 
 [data-theme='dark'] .navbar {
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: rgba(15, 23, 42, 0.6) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .text {
+  color: var(--gris-fonce);
 }
 
 [data-theme='dark'] .nav-item {
@@ -868,18 +877,23 @@ body {
 
 [data-theme='dark'] .nav-item:hover .text,
 [data-theme='dark'] .nav-item.active .text {
-  color: #00d4ff;
+  color: #34d399;
 }
 
 [data-theme='dark'] .nav-item:hover .icon i,
 [data-theme='dark'] .nav-item.active .icon i {
-  color: #00d4ff;
+  color: #34d399;
+}
+
+[data-theme='dark'] .section-carte h2 {
+  color: var(--vert-principal);
+  border-bottom-color: rgba(52, 211, 153, 0.3);
 }
 
 [data-theme='dark'] .carte,
 [data-theme='dark'] .carte-route,
 [data-theme='dark'] .modal-content {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--gris-fonce);
 }
@@ -887,42 +901,42 @@ body {
 [data-theme='dark'] .form-group input,
 [data-theme='dark'] .form-group select,
 [data-theme='dark'] .form-group textarea {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--gris-fonce);
 }
 
 [data-theme='dark'] .form-group input::placeholder,
 [data-theme='dark'] .form-group textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(148, 163, 184, 0.6);
 }
 
 [data-theme='dark'] .form-group input:focus,
 [data-theme='dark'] .form-group select:focus,
 [data-theme='dark'] .form-group textarea:focus {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(0, 212, 255, 0.5);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 [data-theme='dark'] .btn-principal {
-  background: linear-gradient(135deg, #00d4ff 0%, #0088cc 100%);
-  color: #000;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
 }
 
 [data-theme='dark'] .btn-principal:hover {
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 [data-theme='dark'] .btn-secondaire {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(0, 212, 255, 0.5);
-  color: #00d4ff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
 }
 
 [data-theme='dark'] .btn-secondaire:hover {
-  background: rgba(0, 212, 255, 0.1);
-  border-color: #00d4ff;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
 }
 
 [data-theme='dark'] .statut-connexion-glass {
@@ -930,11 +944,11 @@ body {
 }
 
 [data-theme='dark'] .table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] .table tbody tr:hover {
-  background: rgba(0, 212, 255, 0.05);
+  background: rgba(16, 185, 129, 0.05);
 }
 
 [data-theme='dark'] table {
@@ -942,32 +956,32 @@ body {
 }
 
 [data-theme='dark'] th {
-  background: rgba(0, 0, 0, 0.3);
-  color: #00d4ff;
-  border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+  background: rgba(15, 23, 42, 0.6);
+  color: #10b981;
+  border-bottom: 2px solid rgba(16, 185, 129, 0.3);
 }
 
 [data-theme='dark'] .badge {
-  background: rgba(0, 212, 255, 0.1);
-  color: #00d4ff;
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 [data-theme='dark'] .alert {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 [data-theme='dark'] .alert-info {
-  background: rgba(0, 150, 200, 0.1);
-  border-color: rgba(0, 212, 255, 0.3);
-  color: #00d4ff;
+  background: rgba(5, 150, 105, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
 }
 
 [data-theme='dark'] .alert-success {
-  background: rgba(75, 222, 76, 0.1);
-  border-color: rgba(75, 222, 76, 0.3);
-  color: #4bde4c;
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
 }
 
 [data-theme='dark'] .alert-warning {
@@ -987,8 +1001,8 @@ body {
 }
 
 [data-theme='dark'] .stat-card {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 212, 255, 0.05) 100%);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 [data-theme='dark'] .stat-card-title {
@@ -996,9 +1010,218 @@ body {
 }
 
 [data-theme='dark'] .stat-card-value {
-  color: #00d4ff;
+  color: #10b981;
 }
 
 [data-theme='dark'] .stat-card-trend {
-  color: rgba(0, 212, 255, 0.8);
+  color: rgba(16, 185, 129, 0.8);
+}
+
+[data-theme='dark'] .section-carte {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .navigation {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============ OPTIMISATION TOURNEES ============ */
+.optimisation-select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 2px solid var(--vert-principal);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+[data-theme='dark'] .optimisation-select {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--gris-fonce);
+}
+
+.optimisation-alert {
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.optimisation-alert-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.optimisation-camion-card {
+  padding: 12px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.optimisation-camion-card:hover {
+  transform: scale(1.02);
+}
+
+.optimisation-camion-card.selected {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: var(--color-primary);
+}
+
+[data-theme='dark'] .optimisation-camion-card {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .optimisation-camion-card.selected {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+}
+
+.optimisation-camion-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .optimisation-camion-header {
+  color: var(--gris-fonce);
+}
+
+.optimisation-camion-capacity {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+[data-theme='dark'] .optimisation-camion-capacity {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .bouton-principal {
+  background: #10b981;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .bouton-principal:hover {
+  background: #059669;
+}
+
+[data-theme='dark'] .bouton-principal:disabled {
+  background: #475569;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .carte-village,
+[data-theme='dark'] .carte-route {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .carte-village h4,
+[data-theme='dark'] .carte-route h4 {
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .detail-village {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .btn {
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #f8fafc;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+}
+
+[data-theme='dark'] .btn-primary:hover {
+  box-shadow: 0 14px 30px rgba(16, 185, 129, 0.35);
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: rgba(30, 41, 59, 0.9);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.9);
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .btn-danger {
+  background: rgba(239, 68, 68, 0.8);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+[data-theme='dark'] .btn-danger:hover {
+  background: rgba(239, 68, 68, 1);
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .navigation {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .navigation .nav-link,
+[data-theme='dark'] .navigation button {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .navigation .nav-link:hover,
+[data-theme='dark'] .navigation button:hover {
+  color: #34d399;
+}
+
+[data-theme='dark'] .section-carte {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .section-carte h3 {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .champ-saisie {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .champ-saisie:focus {
+  border-color: #34d399;
+}
+
+[data-theme='dark'] .gris-fonce,
+[data-theme='dark'] .texte-vide {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .carte-village h4,
+[data-theme='dark'] .carte-route h4 {
+  color: #f8fafc;
 }

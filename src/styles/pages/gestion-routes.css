@@ -428,14 +428,28 @@
 }
 
 .btn-route-block {
-  background-color: var(--color-danger);
-  color: #ffffff;
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-route-block:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-route-reactiver {
   margin-top: auto;
-  background-color: var(--color-success);
-  color: #ffffff;
+  background-color: rgba(34, 197, 94, 0.08);
+  color: #22c55e;
+  border: 1.5px solid rgba(34, 197, 94, 0.3);
+}
+
+.btn-route-reactiver:hover {
+  background-color: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
 }
 
 .btn-return-gestion {

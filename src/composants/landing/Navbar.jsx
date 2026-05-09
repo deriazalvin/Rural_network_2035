@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Menu, X, Sun, Moon, ChevronUp } from 'lucide-react';
-import LogoRN from './LogoRN';
+import LogoRN from '../common/LogoRN';
 
 /**
  * Composant Navbar - Barre de navigation principale

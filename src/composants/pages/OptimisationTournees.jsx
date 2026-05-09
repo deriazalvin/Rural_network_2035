@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save } from 'lucide-react';
-import { TableauBordNew } from './tableau-bord/TableauBordNew';
-import { useOptimizationIntegration } from '../hooks/useOptimizationIntegration';
-import '../styles/optimisation-tournees.css';
+import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info } from 'lucide-react';
+import { TableauBordNew } from '../dashboard/TableauBordNew';
+import { useOptimizationIntegration } from '../../hooks/useOptimizationIntegration';
+import '../../styles/pages/optimisation-tournees.css';
 
 /**
  * Composant OptimisationTournees
@@ -150,19 +150,7 @@ export function OptimisationTournees({
               const selectedVillage = villages.find(v => v.id === selectedId);
               setDepotSelectionne(selectedVillage);
             }}
-            style={{
-              width: '100%',
-              padding: '12px',
-              marginTop: '8px',
-              borderRadius: '8px',
-              border: '2px solid #2d5016',
-              fontSize: '0.95rem',
-              fontWeight: '500',
-              color: '#2d5016',
-              backgroundColor: '#f3f4f6',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
+            className="optimisation-select"
           >
             <option value="">Choisir un dépôt...</option>
             {villages.map((village) => (
@@ -172,15 +160,9 @@ export function OptimisationTournees({
             ))}
           </select>
         ) : (
-          <div style={{
-            padding: '12px',
-            background: '#fee2e2',
-            border: '2px solid #dc2626',
-            borderRadius: '8px',
-            marginTop: '8px',
-            color: '#991b1b'
-          }}>
-            ⚠️ Aucun village disponible. Créez des villages pour choisir un dépôt.
+          <div className="optimisation-alert optimisation-alert-error">
+            <AlertTriangle size={16} />
+            <span>Aucun village disponible. Créez des villages pour choisir un dépôt.</span>
           </div>
         )}
       </div>
@@ -189,15 +171,9 @@ export function OptimisationTournees({
         <h3>Sélectionner les Camions</h3>
         
         {camionsDisponibles.length === 0 ? (
-          <div style={{
-            padding: '12px',
-            background: '#fee2e2',
-            border: '2px solid #dc2626',
-            borderRadius: '8px',
-            marginTop: '8px',
-            color: '#991b1b'
-          }}>
-            ⚠️ Aucun camion disponible. Créez des camions et assurez-vous qu'ils sont en état "Disponible".
+          <div className="optimisation-alert optimisation-alert-error">
+            <AlertTriangle size={16} />
+            <span>Aucun camion disponible. Créez des camions et assurez-vous qu'ils sont en état "Disponible".</span>
           </div>
         ) : (
           <div style={{
@@ -210,24 +186,11 @@ export function OptimisationTournees({
               <div
                 key={camion.id}
                 onClick={() => toggleCamion(camion.id)}
-                style={{
-                  padding: '12px',
-                  background: camionsSelectiones.has(camion.id) ? '#dbeafe' : '#f3f4f6',
-                  border: `2px solid ${camionsSelectiones.has(camion.id) ? '#2563eb' : '#e8dfc8'}`,
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
+                className={`optimisation-camion-card ${camionsSelectiones.has(camion.id) ? 'selected' : ''}`}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
               >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: '600',
-                  color: '#2d5016'
-                }}>
+                <div className="optimisation-camion-header">
                   <input
                     type="checkbox"
                     checked={camionsSelectiones.has(camion.id)}
@@ -237,7 +200,7 @@ export function OptimisationTournees({
                   <Truck size={16} />
                   {camion.nom}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
+                <div className="optimisation-camion-capacity">
                   Capacité: {(camion.capaciteKg || 0).toLocaleString('fr-FR')} kg
                 </div>
                 <div style={{
@@ -272,14 +235,14 @@ export function OptimisationTournees({
       <div style={{
         marginTop: '24px',
         padding: '12px',
-        background: '#dbeafe',
-        border: '2px solid #2563eb',
+        background: 'rgba(59, 130, 246, 0.12)',
+        border: '2px solid rgba(59, 130, 246, 0.4)',
         borderRadius: '8px'
       }}>
-        <div style={{ fontSize: '0.9rem', color: '#0c4a6e', fontWeight: '600' }}>
-          ℹ️ Optimisation en version bêta
+        <div style={{ fontSize: '0.9rem', color: '#60a5fa', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Info size={16} /> Optimisation en version bêta
         </div>
-        <div style={{ fontSize: '0.85rem', color: '#1e40af', marginTop: '4px' }}>
+        <div style={{ fontSize: '0.85rem', color: '#93c5fd', marginTop: '4px' }}>
           Cette interface teste l'intégration de l'algorithme greedy multi-camions. Certaines fonctionnalités peuvent être en développement.
         </div>
       </div>

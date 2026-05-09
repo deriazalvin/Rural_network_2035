@@ -7,29 +7,36 @@ import { Network, AlertCircle } from 'lucide-react';
  */
 export function NetworkVisualization({ tours = [] }) {
   const canvasRef = useRef(null);
-  const tooltipRef = useRef(null);
 
   useEffect(() => {
     if (!canvasRef.current || !tours || tours.length === 0) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    const isDark = document.documentElement.classList?.contains('dark');
+    const dpr = window.devicePixelRatio || 1;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    // Dimensions fixes du canvas en CSS
+    const cssWidth = canvas.offsetWidth;
+    const cssHeight = 300;
+    canvas.style.height = cssHeight + 'px';
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+
+    ctx.scale(dpr, dpr);
+
+    const width = cssWidth;
+    const height = cssHeight;
     const padding = 40;
     const graphWidth = width - 2 * padding;
     const graphHeight = height - 2 * padding;
 
-    // Fond
-    ctx.fillStyle = 'rgba(0,0,0,0)';
+    // Fond explicite
+    ctx.fillStyle = isDark ? '#1e293b' : '#f1f5f9';
     ctx.fillRect(0, 0, width, height);
 
-    // Grid subtil
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
+    // Grid subtil adapté au thème
+    ctx.strokeStyle = isDark ? 'rgba(148,163,184,0.1)' : 'rgba(148,163,184,0.2)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 10; i++) {
       const x = padding + (i / 10) * graphWidth;
@@ -67,7 +74,7 @@ export function NetworkVisualization({ tours = [] }) {
 
     // Dessiner les lignes vers le centre
     nodes.forEach(node => {
-      ctx.strokeStyle = node.color + '40'; // Avec transparence
+      ctx.strokeStyle = isDark ? node.color + '50' : node.color + '30';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(depotX, depotY);
@@ -81,7 +88,7 @@ export function NetworkVisualization({ tours = [] }) {
           const progress = i / (step + 1);
           const stepX = depotX + (node.x - depotX) * progress;
           const stepY = depotY + (node.y - depotY) * progress;
-          ctx.fillStyle = node.color + '60';
+          ctx.fillStyle = isDark ? node.color + '70' : node.color + '50';
           ctx.beginPath();
           ctx.arc(stepX, stepY, 3, 0, Math.PI * 2);
           ctx.fill();
@@ -92,7 +99,7 @@ export function NetworkVisualization({ tours = [] }) {
     // Dessiner les nœuds (tournées)
     nodes.forEach(node => {
       // Ombre
-      ctx.shadowColor = node.color + '40';
+      ctx.shadowColor = isDark ? node.color + '60' : node.color + '30';
       ctx.shadowBlur = 20;
       ctx.fillStyle = node.color;
       ctx.beginPath();
@@ -100,35 +107,44 @@ export function NetworkVisualization({ tours = [] }) {
       ctx.fill();
       ctx.shadowColor = 'transparent';
 
-      // Cercle intérieur blanc
-      ctx.fillStyle = 'white';
+      // Cercle intérieur
+      ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
       ctx.beginPath();
       ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Icône de trajet
+      // Numéro de trajet
       ctx.fillStyle = node.color;
-      ctx.font = 'bold 8px Arial';
+      ctx.font = 'bold 9px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${node.idx + 1}`, node.x, node.y);
     });
 
-    // Dépôt (centre)
-    ctx.fillStyle = 'rgba(45, 80, 22, 0.1)';
+    // Dépôt (centre) - remplace l'emoji par un cercle stylisé
+    const depotBg = isDark ? 'rgba(52,211,153,0.15)' : 'rgba(34,197,94,0.1)';
+    ctx.fillStyle = depotBg;
     ctx.beginPath();
-    ctx.arc(depotX, depotY, 20, 0, Math.PI * 2);
+    ctx.arc(depotX, depotY, 22, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = '#2d5016';
+    ctx.strokeStyle = isDark ? '#34d399' : '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(depotX, depotY, 22, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = isDark ? '#34d399' : '#22c55e';
     ctx.font = 'bold 11px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('📦', depotX, depotY);
+    ctx.fillText('D', depotX, depotY);
 
-    // Labels
+    // Labels adaptés au thème
+    const labelColor = isDark ? 'rgba(226,232,240,0.8)' : 'rgba(15,23,42,0.7)';
+    const distLabelColor = isDark ? 'rgba(226,232,240,0.6)' : 'rgba(15,23,42,0.5)';
     nodes.forEach(node => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = labelColor;
       ctx.font = '10px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
@@ -137,7 +153,7 @@ export function NetworkVisualization({ tours = [] }) {
 
       // Distance sous le label
       if (node.tour.distance) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillStyle = distLabelColor;
         ctx.font = '9px Arial';
         ctx.fillText(`${node.tour.distance.toFixed(1)}km`, node.x, node.y + 32);
       }
@@ -180,9 +196,8 @@ export function NetworkVisualization({ tours = [] }) {
         ref={canvasRef}
         style={{
           width: '100%',
-          height: 'auto',
-          minHeight: '200px',
-          background: 'rgba(0,0,0,0.01)',
+          height: '300px',
+          background: 'transparent',
           borderRadius: '12px',
           border: '1px solid var(--border)',
           display: 'block'

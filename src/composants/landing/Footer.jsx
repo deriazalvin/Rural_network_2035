@@ -1,6 +1,6 @@
 import React from 'react';
 import { Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
-import LogoRN from './LogoRN';
+import LogoRN from '../common/LogoRN';
 
 /**
  * Composant Footer - Pied de page avec liens et informations

@@ -3,7 +3,7 @@ import { Map, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Clock, ArrowRight, MapPin, Eye, Navigation, Edit } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import '../styles/gestion-routes.css';
+import '../../styles/pages/gestion-routes.css';
 import polyline from 'polyline';
 import 'leaflet/dist/leaflet.css';
 
@@ -96,12 +96,12 @@ export function GestionRoutes({ villages, routes, onAjouterRoute, onModifierRout
   // fonction propre (label + icône)
   const getQualite = (value) => {
     if (value <= 33) {
-      return { label: "Mauvaise", icon: <XCircle size={18} color="#D32F2F" /> };
+      return { label: "Mauvaise", icon: <XCircle size={18} color="#f87171" /> };
     }
     if (value >= 66) {
-      return { label: "Bonne", icon: <CheckCircle size={18} color="#2E7D32" /> };
+      return { label: "Bonne", icon: <CheckCircle size={18} color="#4ade80" /> };
     }
-    return { label: "Moyenne", icon: <AlertTriangle size={18} color="#F9A825" /> };
+    return { label: "Moyenne", icon: <AlertTriangle size={18} color="#fbbf24" /> };
   };
 
   const qualite = getQualite(qualiteValue);

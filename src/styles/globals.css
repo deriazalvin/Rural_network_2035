@@ -45,47 +45,47 @@
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #1c1c1e;
-  --card-foreground: #ffffff;
-  --popover: #1c1c1e;
-  --popover-foreground: #ffffff;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
   --primary: #10b981;
   --primary-foreground: #ffffff;
-  --secondary: #1c1c1e;
-  --secondary-foreground: #ffffff;
-  --muted: #2c2c2e;
-  --muted-foreground: #8e8e93;
-  --accent: #2c2c2e;
-  --accent-foreground: #ffffff;
-  --destructive: #ff453a;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.08);
-  --input: #1c1c1e;
+  --input: #1e293b;
   --ring: #10b981;
 }
 
 /* Support for data-theme attribute */
 [data-theme="dark"] {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #1c1c1e;
-  --card-foreground: #ffffff;
-  --popover: #1c1c1e;
-  --popover-foreground: #ffffff;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
   --primary: #10b981;
   --primary-foreground: #ffffff;
-  --secondary: #1c1c1e;
-  --secondary-foreground: #ffffff;
-  --muted: #2c2c2e;
-  --muted-foreground: #8e8e93;
-  --accent: #2c2c2e;
-  --accent-foreground: #ffffff;
-  --destructive: #ff453a;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: rgba(255, 255, 255, 0.08);
-  --input: #1c1c1e;
+  --input: #1e293b;
   --ring: #10b981;
 }
 
@@ -156,14 +156,31 @@
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
   }
-  
+
+  .dark ::-webkit-scrollbar-thumb,
+  [data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover,
+  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
   /* Selection */
   ::selection {
     background: rgba(5, 150, 105, 0.2);
+    color: inherit;
+  }
+
+  .dark ::selection,
+  [data-theme="dark"] ::selection {
+    background: rgba(16, 185, 129, 0.3);
     color: inherit;
   }
 

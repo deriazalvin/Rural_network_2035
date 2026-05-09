@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Trash2, Edit2, Plus, AlertCircle } from 'lucide-react';
-import '../styles/gestion-camions.css';
+import '../../styles/pages/gestion-camions.css';
 
 /**
  * Composant GestionCamions - Refactorisé et modulaire
@@ -8,15 +8,15 @@ import '../styles/gestion-camions.css';
  */
 export default function GestionCamions({ camions = [], onModifierCamions }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formulaire, setFormulaire] = useState({ nom: '', capaciteKg: '', couleurHex: '#00d4ff' });
+  const [formulaire, setFormulaire] = useState({ nom: '', capaciteKg: '', couleurHex: '#10b981' });
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
   const [camionEnEdition, setCamionEnEdition] = useState(null);
 
   const couleursDisponibles = [
-    { label: 'Cyan', valeur: '#00d4ff' },
+    { label: 'Green', valeur: '#10b981' },
     { label: 'Purple', valeur: '#7c3aed' },
-    { label: 'Green', valeur: '#4ade80' },
+    { label: 'Light Green', valeur: '#4ade80' },
     { label: 'Orange', valeur: '#fb923c' },
     { label: 'Red', valeur: '#ef4444' }
   ];
@@ -252,23 +252,24 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
                   width: '24px',
                   height: '24px',
                   borderRadius: '50%',
-                  border: '2px solid #e8dfc8',
+                  border: '2px solid var(--border-color)',
                   backgroundColor: camion.couleurHex || '#2d5016'
                 }}
               />
-              <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>Couleur: {camion.couleurHex}</span>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Couleur: {camion.couleurHex}</span>
             </div>
 
             <select
               value={camion.etat || 'DISPONIBLE'}
               onChange={(e) => gererChangementEtat(camion.id, e.target.value)}
+              className="camion-etat-select"
               style={{
                 width: '100%',
                 marginTop: '12px',
                 padding: '8px',
                 border: `2px solid ${getEtatStyle(camion.etat)}`,
                 borderRadius: '6px',
-                background: '#f3f4f6',
+                background: 'var(--bg-card)',
                 color: getEtatStyle(camion.etat),
                 fontWeight: '600',
                 cursor: 'pointer'
@@ -282,7 +283,7 @@ export default function GestionCamions({ camions = [], onModifierCamions }) {
             <div style={{
               marginTop: '12px',
               padding: '8px',
-              background: '#f9fafb',
+              background: 'var(--bg-card)',
               borderRadius: '4px',
               textAlign: 'center',
               fontSize: '0.85rem',

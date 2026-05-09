@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import LandingPage from './LandingPage.jsx';
+import LandingPage from '../pages/LandingPage.jsx';
 import DemoPage from './DemoPage.jsx';
 import AuthForm from './AuthForm.jsx';
 

@@ -8,6 +8,7 @@ import { StatCard } from './StatCard';
 import { ChartSection } from './ChartSection';
 import { OptimizationItem } from './OptimizationItem';
 import { NetworkVisualization } from './NetworkVisualization';
+import DemoPage from '../common/DemoPage';
 import '../../styles/tableau-bord.css';
 
 /**
@@ -115,6 +116,10 @@ export function TableauBordNew({
     else newSet.add(idx);
     setExpandedTours(newSet);
   };
+
+  if (!isLiveMode) {
+    return <DemoPage onBack={() => setIsLiveMode(true)} />;
+  }
 
   return (
     <div className="dashboard-container">

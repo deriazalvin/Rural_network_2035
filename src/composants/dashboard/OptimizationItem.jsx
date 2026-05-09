@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Truck, AlertTriangle } from 'lucide-react';
+import { ChevronDown, Truck, AlertTriangle, Star, Calendar } from 'lucide-react';
 import '../../styles/tableau-bord.css';
 
 export function TourItem({ tour, tourIdx, optId }) {
@@ -112,9 +112,9 @@ export function OptimizationItem({ opt, optIdx, onToggle }) {
           }}
         >
           {opt.isLatest ? (
-            <span style={{ color: '#22c55e', fontSize: '18px' }}>⭐</span>
+            <Star size={18} style={{ color: '#22c55e' }} />
           ) : (
-            <span style={{ color: 'var(--text-tertiary)', fontSize: '18px' }}>📅</span>
+            <Calendar size={18} style={{ color: 'var(--text-tertiary)' }} />
           )}
         </div>
 
@@ -124,8 +124,8 @@ export function OptimizationItem({ opt, optIdx, onToggle }) {
               {dateStr}
             </p>
             {opt.isLatest && (
-              <span className="tb-badge" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
-                ⭐ Plus récent
+              <span className="tb-badge" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Star size={12} /> Plus récent
               </span>
             )}
           </div>

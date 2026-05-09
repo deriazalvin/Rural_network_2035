@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import LogoRN from './LogoRN';
+import LogoRN from '../common/LogoRN';
 
 /**
  * Composant Loader - Écran de chargement avec animation

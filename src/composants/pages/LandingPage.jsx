@@ -1,38 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './landing/Navbar';
-import HeroSection from './landing/HeroSection';
-import MarketingStrip from './landing/MarketingStrip';
-import FeaturesSection from './landing/FeaturesSection';
-import PromoBanner from './landing/PromoBanner';
-import ShowcaseSection from './landing/ShowcaseSection';
-import HowItWorks from './landing/HowItWorks';
-import StatsSection from './landing/StatsSection';
-import MapPreview from './landing/MapPreview';
-import TestimonialsSection from './landing/TestimonialsSection';
-import CTASection from './landing/CTASection';
-import Footer from './landing/Footer';
-import Loader from './landing/Loader';
-import BackToTop from './landing/BackToTop';
-import NotificationPopup from './landing/NotificationPopup';
-import GlowCursor from './landing/GlowCursor';
-import useScrollAnimation from './landing/useScrollAnimation';
-import '../styles/landing.css';
+import Navbar from '../landing/Navbar';
+import HeroSection from '../landing/HeroSection';
+import MarketingStrip from '../landing/MarketingStrip';
+import FeaturesSection from '../landing/FeaturesSection';
+import PromoBanner from '../landing/PromoBanner';
+import ShowcaseSection from '../landing/ShowcaseSection';
+import HowItWorks from '../landing/HowItWorks';
+import StatsSection from '../landing/StatsSection';
+import MapPreview from '../landing/MapPreview';
+import TestimonialsSection from '../landing/TestimonialsSection';
+import CTASection from '../landing/CTASection';
+import Footer from '../landing/Footer';
+import Loader from '../landing/Loader';
+import BackToTop from '../landing/BackToTop';
+import NotificationPopup from '../landing/NotificationPopup';
+import GlowCursor from '../landing/GlowCursor';
+import useScrollAnimation from '../landing/useScrollAnimation';
+import { useTheme } from '../../contexts/ThemeContext';
+import '../../styles/pages/landing.css';
 
 /**
  * Page d'accueil principale - Landing Page
  * Regroupe tous les composants pour la page d'accueil avec animations
  */
 const LandingPage = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [loaded, setLoaded] = useState(false);
 
   // Utiliser le hook d'animation
   useScrollAnimation();
-
-  // Appliquer le thème
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
 
   // Re-observer les éléments après le chargement
   useEffect(() => {
@@ -65,7 +61,7 @@ const LandingPage = () => {
       <GlowCursor />
 
       {/* Barre de navigation */}
-      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
+      <Navbar darkMode={darkMode} setDarkMode={toggleDarkMode} />
 
       {/* Main content */}
       <main>

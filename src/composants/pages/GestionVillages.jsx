@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { MapPin, BarChart2, Clock, Trash2, Edit } from 'lucide-react';
-import NominatimService from '../services/NominatimService';
+import NominatimService from '../../services/NominatimService';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import '../styles/gestion-villages.css';
+import '../../styles/pages/gestion-villages.css';
 
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
@@ -27,9 +27,9 @@ export function GestionVillages({ villages, onAjouterVillage, onModifierVillage,
   const debounceTimer = useRef(null);
 
   const getBadgeColor = (volume) => {
-    if (volume >= 500) return { bg: '#dcfce7', color: '#166534', label: 'Élevée', tone: 'eleve' };
-    if (volume >= 100) return { bg: '#dbeafe', color: '#0c4a6e', label: 'Moyenne', tone: 'moyen' };
-    return { bg: '#f3f4f6', color: '#374151', label: 'Faible', tone: 'faible' };
+    if (volume >= 500) return { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: 'Élevée', tone: 'eleve' };
+    if (volume >= 100) return { bg: 'rgba(16, 185, 129, 0.1)', color: '#34d399', label: 'Moyenne', tone: 'moyen' };
+    return { bg: 'rgba(16, 185, 129, 0.08)', color: '#6ee7b7', label: 'Faible', tone: 'faible' };
   };
 
   const villagesFiltres = villages.filter((village) => {

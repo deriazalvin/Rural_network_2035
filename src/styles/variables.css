@@ -72,31 +72,31 @@
 :root.dark,
 [data-theme="dark"] {
   /* === COULEURS PRIMAIRES === */
-  --color-primary: #4ade80;
-  --color-primary-light: #86efac;
-  --color-primary-dark: #22c55e;
-  
+  --color-primary: #10b981;
+  --color-primary-light: #34d399;
+  --color-primary-dark: #059669;
+
   /* === COULEURS DE FOND === */
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --bg-tertiary: #1f2937;
-  --bg-card: #1a1f2e;
-  
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+
   /* === COULEURS DE TEXTE === */
-  --text-primary: #f1f5f9;
+  --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-tertiary: #94a3b8;
-  
+
   /* === COULEURS D'ACCENTS === */
   --color-success: #22c55e;
-  --color-warning: #facc15;
-  --color-danger: #ff6b6b;
-  --color-info: #60a5fa;
-  
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
   /* === COULEURS DE BORDURES === */
-  --border-color: #2d3748;
-  --border-color-light: #1f2937;
-  
+  --border-color: #334155;
+  --border-color-light: #1e293b;
+
   /* === OMBRES === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
