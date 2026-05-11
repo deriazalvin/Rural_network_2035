@@ -31,6 +31,7 @@ public class AuthentificationControleur {
             Map<String, Object> resp = new HashMap<>();
             resp.put("id", u.getId());
             resp.put("email", u.getEmail());
+            resp.put("nom", u.getNom());
             resp.put("token", u.getToken());
             return ResponseEntity.ok(resp);
         } catch (Exception e) {
@@ -47,6 +48,7 @@ public class AuthentificationControleur {
             Map<String, Object> resp = new HashMap<>();
             resp.put("id", u.getId());
             resp.put("email", u.getEmail());
+            resp.put("nom", u.getNom());
             resp.put("token", u.getToken());
             return ResponseEntity.ok(resp);
         } catch (Exception e) {

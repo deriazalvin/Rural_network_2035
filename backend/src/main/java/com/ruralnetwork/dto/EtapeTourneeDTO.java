@@ -7,31 +7,31 @@ import java.util.List;
  */
 public class EtapeTourneeDTO {
     private String villageId;
-    private String villageNom;
+    private String nom;
     private Double latitude;
     private Double longitude;
     private Double distanceCumulee;
     private Double chargeCumulee;
-    private Double productionCollectee;
+    private Double production;
 
     public EtapeTourneeDTO() {}
 
-    public EtapeTourneeDTO(String villageId, String villageNom, Double latitude, Double longitude,
-                           Double distanceCumulee, Double chargeCumulee, Double productionCollectee) {
+    public EtapeTourneeDTO(String villageId, String nom, Double latitude, Double longitude,
+                           Double distanceCumulee, Double chargeCumulee, Double production) {
         this.villageId = villageId;
-        this.villageNom = villageNom;
+        this.nom = nom;
         this.latitude = latitude;
         this.longitude = longitude;
         this.distanceCumulee = distanceCumulee;
         this.chargeCumulee = chargeCumulee;
-        this.productionCollectee = productionCollectee;
+        this.production = production;
     }
 
     public String getVillageId() { return villageId; }
     public void setVillageId(String villageId) { this.villageId = villageId; }
 
-    public String getVillageNom() { return villageNom; }
-    public void setVillageNom(String villageNom) { this.villageNom = villageNom; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
     public Double getLatitude() { return latitude; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }
@@ -45,6 +45,6 @@ public class EtapeTourneeDTO {
     public Double getChargeCumulee() { return chargeCumulee; }
     public void setChargeCumulee(Double chargeCumulee) { this.chargeCumulee = chargeCumulee; }
 
-    public Double getProductionCollectee() { return productionCollectee; }
-    public void setProductionCollectee(Double productionCollectee) { this.productionCollectee = productionCollectee; }
+    public Double getProduction() { return production; }
+    public void setProduction(Double production) { this.production = production; }
 }

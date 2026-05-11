@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class TourneeDTO {
     private String camionId;
-    private String camionNom;
+    private String nom;
     private String couleurHex;
     private Double distanceTotalKm;
     private Double chargeTotalKg;
@@ -17,10 +17,10 @@ public class TourneeDTO {
 
     public TourneeDTO() {}
 
-    public TourneeDTO(String camionId, String camionNom, String couleurHex, Double distanceTotalKm,
+    public TourneeDTO(String camionId, String nom, String couleurHex, Double distanceTotalKm,
                      Double chargeTotalKg, Double capaciteKg, Double coutTotal, List<EtapeTourneeDTO> etapes) {
         this.camionId = camionId;
-        this.camionNom = camionNom;
+        this.nom = nom;
         this.couleurHex = couleurHex;
         this.distanceTotalKm = distanceTotalKm;
         this.chargeTotalKg = chargeTotalKg;
@@ -32,8 +32,8 @@ public class TourneeDTO {
     public String getCamionId() { return camionId; }
     public void setCamionId(String camionId) { this.camionId = camionId; }
 
-    public String getCamionNom() { return camionNom; }
-    public void setCamionNom(String camionNom) { this.camionNom = camionNom; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
     public String getCouleurHex() { return couleurHex; }
     public void setCouleurHex(String couleurHex) { this.couleurHex = couleurHex; }

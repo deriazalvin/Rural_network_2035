@@ -27,6 +27,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        String msg = ex.getMessage();
+        if (msg != null && msg.toLowerCase().contains("authorization token")) {
+            return new ResponseEntity<>(
+                new ErrorResponse(msg, HttpStatus.UNAUTHORIZED.value()),
+                HttpStatus.UNAUTHORIZED
+            );
+        }
         return new ResponseEntity<>(
             new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()),
             HttpStatus.BAD_REQUEST
