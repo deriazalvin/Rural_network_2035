@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   BarChart3, MapPin, Route, Package, AlertTriangle, TrendingUp,
   Truck, Calendar, Activity, Zap, ChevronDown, ChevronRight,
-  Target, Award, Clock, Users, Eye, EyeOff, Play, Pause
+  Target, Award, Clock, Users, Eye, EyeOff, Play, Pause, Star
 } from 'lucide-react';
 import { StatCard } from './StatCard';
-import { ChartSection } from './ChartSection';
 import { OptimizationItem } from './OptimizationItem';
 import { NetworkVisualization } from './NetworkVisualization';
+import { GraphiqueSimple } from './GraphiqueSimple';
 import DemoPage from '../common/DemoPage';
 import '../../styles/tableau-bord.css';
 
@@ -27,7 +27,11 @@ export function TableauBordNew({
   onOptimizationSelect = null,
   onEffacerHistorique = null
 }) {
-  const historyData = optimisations || [];
+  // Utilise d'abord le résultat actuel, puis l'historique
+  const historyData = optimisations && optimisations.length > 0 
+    ? optimisations 
+    : [];
+  
   const [stats, setStats] = useState({
     villages: 0,
     routes: 0,
@@ -45,6 +49,12 @@ export function TableauBordNew({
 
   // Calculer les stats avancées
   useEffect(() => {
+    console.log('📈 TableauBordNew - Data received:', {
+      historyDataLength: historyData.length,
+      historyData: historyData,
+      resultatsOptimisation: resultatsOptimisation
+    });
+
     const routesActives = routes.filter(r => !r.estBloquee).length;
     const productionTotale = villages.reduce((sum, v) => sum + parseFloat(v.volumeProduction || 0), 0);
     const routesBloquees = routes.filter(r => r.estBloquee === true).length;
@@ -477,31 +487,147 @@ export function TableauBordNew({
             </div>
 
             {/* Graphiques */}
-            {historyData.length > 0 && (
-              <ChartSection
-                chartData={historyData.map(opt => ({
-                  date: opt.timestamp || opt.dateHeure || opt.date,
-                  gain: opt.gainPercentage || 0,
-                  distance: opt.distanceTotale || 0
-                })).reverse()}
-                onSelect={(idx) => setOptimSelectionnee(historyData[historyData.length - 1 - idx])}
-              />
-            )}
+            <GraphiqueSimple
+              donnees={historyData.length > 0 ? historyData.map(opt => ({
+                date: opt.timestamp || opt.dateHeure || opt.date,
+                gain: opt.gainPercentage || 0,
+                distance: opt.distanceTotale || 0,
+                cout: opt.coutTotal || 0
+              })).reverse() : []}
+              onSelect={(idx) => setOptimSelectionnee(historyData[historyData.length - 1 - idx])}
+            />
 
             {/* Détails de l'optimisation sélectionnée */}
-            {historyData.length > 0 && (
-              <div className="optim-detail-section" style={{ marginTop: '2rem' }}>
-                <div className="history-header">
-                  <Activity className="section-icon" />
-                  <h3>{optimSelectionnee ? 'Optimisation Sélectionnée' : 'Dernière Optimisation'}</h3>
+            {historyData.length > 0 && (() => {
+              const selectedOpt = optimSelectionnee || historyData[0];
+              const toursList = selectedOpt?.toursList || selectedOpt?.tournees || [];
+              const gainPct = selectedOpt?.gainPercentage || 0;
+              const distTot = selectedOpt?.distanceTotale || 0;
+              const coutTot = selectedOpt?.coutTotal || 0;
+              const unserved = selectedOpt?.unserved || selectedOpt?.villagesNonDesservis || [];
+              return (
+                <div className="optim-detail-section" style={{ marginTop: '2rem' }}>
+                  <div className="history-header">
+                    <Activity className="section-icon" />
+                    <h3 style={{ fontSize: '1.1rem' }}>
+                      {optimSelectionnee ? 'Optimisation Sélectionnée' : 'Dernière Optimisation'}
+                    </h3>
+                    {optimSelectionnee && (
+                      <span className="tb-badge" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        <Star size={12} /> Sélectionnée
+                      </span>
+                    )}
+                  </div>
+
+                  {/* KPIs */}
+                  <div className="charts-grid" style={{ marginBottom: '1rem' }}>
+                    <div className="chart-card" style={{ padding: '1rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.25rem' }}>Gain réalisé</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22c55e' }}>+{gainPct.toFixed(1)}%</p>
+                    </div>
+                    <div className="chart-card" style={{ padding: '1rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.25rem' }}>Distance totale</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f59e0b' }}>{distTot.toFixed(1)} km</p>
+                    </div>
+                    <div className="chart-card" style={{ padding: '1rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.25rem' }}>Coût total</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{coutTot.toLocaleString('fr-FR')} Ar</p>
+                    </div>
+                    <div className="chart-card" style={{ padding: '1rem' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.25rem' }}>Tournées</p>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{toursList.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Tournées et Grains réalisés */}
+                  {toursList.length > 0 && (
+                    <div className="chart-card" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                        <Truck size={18} style={{ color: 'var(--text-tertiary)' }} />
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                          Performances des Tournées et Grains réalisés
+                        </h4>
+                      </div>
+
+                      {toursList.map((tour, ti) => {
+                        const steps = tour.steps || tour.etapes || [];
+                        const totalGrains = steps.reduce((s, st) => s + (st.production || st.productionCollectee || 0), 0);
+                        return (
+                          <div key={ti} style={{
+                            border: '1px solid var(--border)',
+                            borderRadius: '12px',
+                            marginBottom: '0.75rem',
+                            overflow: 'hidden',
+                          }}>
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: '0.75rem',
+                              padding: '0.75rem 1rem',
+                              background: 'var(--bg)',
+                              borderBottom: '1px solid var(--border-subtle)',
+                            }}>
+                              <div style={{ width: 10, height: 10, borderRadius: '50%', background: tour.color || '#22c55e', flexShrink: 0 }} />
+                              <span style={{ flex: 1, fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                                {tour.name || `Tournée ${ti + 1}`}
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                {(tour.distance || tour.distanceTotale || 0).toFixed(1)} km
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: '#22c55e', fontWeight: 700 }}>
+                                {(tour.load || tour.chargeTotale || 0).toLocaleString('fr-FR')} kg
+                              </span>
+                            </div>
+
+                            {/* Steps/étapes - Grains collectés */}
+                            <div style={{ padding: '0.5rem 1rem' }}>
+                              {steps.map((step, si) => (
+                                <div key={si} style={{
+                                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                  padding: '0.4rem 0',
+                                  borderBottom: si < steps.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                                }}>
+                                  <div style={{
+                                    width: 22, height: 22, borderRadius: '50%',
+                                    background: tour.color || '#22c55e',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                  }}>
+                                    <span style={{ color: '#fff', fontSize: '0.65rem', fontWeight: 700 }}>{si + 1}</span>
+                                  </div>
+                                  <span style={{ flex: 1, fontSize: '0.8rem', color: 'var(--text-primary)' }}>
+                                    {step.village || step.nomVillage || `Étape ${si + 1}`}
+                                  </span>
+                                  <span style={{ fontSize: '0.8rem', color: '#22c55e', fontWeight: 700, fontFamily: 'monospace' }}>
+                                    {(step.production || step.productionCollectee || 0).toLocaleString('fr-FR')} kg
+                                  </span>
+                                </div>
+                              ))}
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.4rem', paddingTop: '0.4rem', borderTop: '1px solid var(--border)' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                                  Total grains : <strong style={{ color: '#22c55e' }}>{totalGrains.toLocaleString('fr-FR')} kg</strong>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Villages non desservis */}
+                  {unserved.length > 0 && (
+                    <div className="chart-card" style={{ padding: '1rem', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <AlertTriangle size={16} style={{ color: '#ef4444' }} />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ef4444' }}>Villages non desservis</span>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        {unserved.join(', ')}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <OptimizationItem
-                  opt={optimSelectionnee || historyData[0]}
-                  optIdx={0}
-                  onToggle={() => {}}
-                />
-              </div>
-            )}
+              );
+            })()}
 
             {/* Historique des Optimisations */}
             <div className="history-section">

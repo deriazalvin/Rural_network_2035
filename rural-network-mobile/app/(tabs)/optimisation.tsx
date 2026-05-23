@@ -37,7 +37,7 @@ export default function OptimisationScreen() {
   const { theme, mode, basculerTheme } = useTheme();
   const { deconnexion } = useAuth();
   const router = useRouter();
-  const { villages, camions, sauvegarderOptimisation } = useDonnees();
+  const { villages, camions, optimisations, sauvegarderOptimisation } = useDonnees();
 
   const handleDeconnexion = async () => {
     await deconnexion();
@@ -50,6 +50,9 @@ export default function OptimisationScreen() {
   const [resultat, setResultat] = useState<ResultatOptimisation | null>(null);
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [expandedTours, setExpandedTours] = useState<Set<number>>(new Set());
+  const [selectedHistoryIdx, setSelectedHistoryIdx] = useState<number>(-1);
+  const [showHistorique, setShowHistorique] = useState(false);
+  const [expandedHistTour, setExpandedHistTour] = useState<Set<string>>(new Set());
 
   const camionsDispo = camions.filter((c) => c.etat === 'DISPONIBLE');
 
@@ -340,6 +343,149 @@ export default function OptimisationScreen() {
               </Text>
             </Carte>
           </>
+        )}
+        {/* Historique des Optimisations */}
+        {optimisations.length > 0 && (
+          <Carte style={{ marginTop: ESPACEMENTS.xl }} ombre="sm">
+            <Pressable onPress={() => { setShowHistorique(!showHistorique); setSelectedHistoryIdx(-1); }} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm }}>
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COULEURS.emeraude }} />
+                <Text style={[styles.sectionTitle, { color: theme.texte, marginBottom: 0 }]}>
+                  Historique des Optimisations
+                </Text>
+                <Text style={{ fontSize: 11, color: theme.texteTertiaire, fontWeight: '600' }}>
+                  ({optimisations.length})
+                </Text>
+              </View>
+              {showHistorique ? <ChevronDown size={16} color={theme.texteTertiaire} /> : <ChevronRight size={16} color={theme.texteTertiaire} />}
+            </Pressable>
+
+            {showHistorique && (
+              <View style={{ marginTop: ESPACEMENTS.md }}>
+                {/* Barres de performance (gains) */}
+                <Text style={[styles.sectionTitle, { color: theme.texteSecondaire, fontSize: 12, marginBottom: ESPACEMENTS.sm }]}>
+                  Gains réalisés (%)
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: ESPACEMENTS.md }}>
+                  <View style={{ flexDirection: 'row', gap: ESPACEMENTS.sm, paddingBottom: ESPACEMENTS.sm }}>
+                    {[...optimisations].reverse().map((opt, idx) => {
+                      const realIdx = optimisations.length - 1 - idx;
+                      const isSelected = selectedHistoryIdx === realIdx;
+                      const gain = (opt as any).gainPourcent ?? (opt as any).gainPercentage ?? 0;
+                      return (
+                        <Pressable
+                          key={realIdx}
+                          onPress={() => setSelectedHistoryIdx(isSelected ? -1 : realIdx)}
+                          style={{
+                            alignItems: 'center',
+                            width: 60,
+                            opacity: isSelected ? 1 : 0.85,
+                          }}
+                        >
+                          <View style={{
+                            width: 40,
+                            height: 80,
+                            borderRadius: RAYONS.md,
+                            backgroundColor: theme.carte,
+                            borderWidth: isSelected ? 2 : 1,
+                            borderColor: isSelected ? COULEURS.emeraude : theme.bordure,
+                            justifyContent: 'flex-end',
+                            overflow: 'hidden',
+                            marginBottom: ESPACEMENTS.xs,
+                          }}>
+                            <View style={{
+                              height: `${Math.max(gain, 2)}%` as any,
+                              backgroundColor: isSelected ? COULEURS.emeraude : COULEURS.vertClair,
+                              borderRadius: 4,
+                              minHeight: 4,
+                            }} />
+                          </View>
+                          <Text style={{ fontSize: 9, color: isSelected ? theme.texte : theme.texteTertiaire, fontWeight: isSelected ? '700' : '500', textAlign: 'center' }}>
+                            {gain.toFixed(0)}%
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+
+                {/* Détails de l'optimisation sélectionnée */}
+                {selectedHistoryIdx >= 0 && selectedHistoryIdx < optimisations.length && (
+                  <View style={{ borderTopWidth: 1, borderTopColor: theme.bordure, paddingTop: ESPACEMENTS.md }}>
+                    <Text style={[styles.sectionTitle, { color: theme.texte, fontSize: 13, marginBottom: ESPACEMENTS.sm }]}>
+                      Détails de l'Optimisation
+                    </Text>
+
+                    {/* KPIs */}
+                    <View style={{ flexDirection: 'row', gap: ESPACEMENTS.sm, marginBottom: ESPACEMENTS.md }}>
+                      {[
+                        { label: 'Gain', value: `${(optimisations[selectedHistoryIdx].gainPourcent ?? 0).toFixed(1)}%`, color: COULEURS.emeraude },
+                        { label: 'Distance', value: `${(optimisations[selectedHistoryIdx].distanceTotalKm ?? 0).toFixed(1)} km`, color: COULEURS.bleu },
+                        { label: 'Coût', value: `${(optimisations[selectedHistoryIdx].coutTotal ?? 0).toFixed(0)} Ar`, color: COULEURS.ambre },
+                      ].map((kpi, ki) => (
+                        <View key={ki} style={{ flex: 1, backgroundColor: theme.carte, borderRadius: RAYONS.md, padding: ESPACEMENTS.sm, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 9, color: theme.texteTertiaire, fontWeight: '600', marginBottom: 2 }}>{kpi.label}</Text>
+                          <Text style={{ fontSize: 13, color: kpi.color, fontWeight: '800' }}>{kpi.value}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Tournées */}
+                    <Text style={[styles.sectionTitle, { color: theme.texteSecondaire, fontSize: 12, marginBottom: ESPACEMENTS.sm }]}>
+                      Tournées et Grains réalisés
+                    </Text>
+                    {(optimisations[selectedHistoryIdx].tournees ?? []).map((t, ti) => {
+                      const tKey = `${selectedHistoryIdx}-${ti}`;
+                      const isExpanded = expandedHistTour.has(tKey);
+                      return (
+                        <View key={ti} style={{ marginBottom: ESPACEMENTS.sm, backgroundColor: theme.carte, borderRadius: RAYONS.md, overflow: 'hidden' }}>
+                          <Pressable onPress={() => {
+                            const n = new Set(expandedHistTour);
+                            if (n.has(tKey)) n.delete(tKey); else n.add(tKey);
+                            setExpandedHistTour(n);
+                          }} style={{ flexDirection: 'row', alignItems: 'center', padding: ESPACEMENTS.sm, gap: ESPACEMENTS.sm }}>
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.couleurHex || COULEURS.emeraude }} />
+                            <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: theme.texte }}>
+                              {t.nom || t.camionNom || `Tournée ${ti + 1}`}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: theme.texteTertiaire, fontWeight: '600' }}>
+                              {(t.distanceTotalKm ?? 0).toFixed(1)} km
+                            </Text>
+                            <Text style={{ fontSize: 11, color: COULEURS.emeraude, fontWeight: '700' }}>
+                              {(t.chargeTotalKg ?? 0).toFixed(0)} kg
+                            </Text>
+                            {isExpanded ? <ChevronDown size={14} color={theme.texteTertiaire} /> : <ChevronRight size={14} color={theme.texteTertiaire} />}
+                          </Pressable>
+                          {isExpanded && (
+                            <View style={{ paddingHorizontal: ESPACEMENTS.sm, paddingBottom: ESPACEMENTS.sm, gap: 2 }}>
+                              {(t.etapes ?? []).map((e, ei) => (
+                                <View key={ei} style={{ flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm, paddingVertical: 3, paddingLeft: ESPACEMENTS.md }}>
+                                  <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: t.couleurHex || COULEURS.emeraude, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ color: '#fff', fontSize: 8, fontWeight: '700' }}>{ei + 1}</Text>
+                                  </View>
+                                  <Text style={{ flex: 1, fontSize: 12, color: theme.texte }}>{e.nom}</Text>
+                                  <Text style={{ fontSize: 11, color: theme.texteTertiaire }}>{(e.production ?? 0).toFixed(0)} kg</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
+
+                    {/* Villages non desservis */}
+                    {(optimisations[selectedHistoryIdx].villagesNonDesservis ?? []).length > 0 && (
+                      <View style={{ marginTop: ESPACEMENTS.sm, padding: ESPACEMENTS.sm, backgroundColor: COULEURS.rouge + '15', borderRadius: RAYONS.md }}>
+                        <Text style={{ fontSize: 11, color: COULEURS.rouge, fontWeight: '600' }}>
+                          ⚠ Villages non desservis : {(optimisations[selectedHistoryIdx].villagesNonDesservis ?? []).join(', ')}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+          </Carte>
         )}
       </ScrollView>
 

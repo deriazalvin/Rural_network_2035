@@ -1,16 +1,4 @@
-/**
- * Configuration API centralisée
- * Pointe vers le backend Spring Boot
- *
- * UTILISER LES VARIABLES D'ENVIRONNEMENT (.env.local) :
- * - EXPO_PUBLIC_API_HOST : '10.0.2.2' (émulateur) | 'IP.locale' | 'localhost'
- * - EXPO_PUBLIC_API_PORT : '8080'
- * - EXPO_PUBLIC_API_PROTOCOL : 'http' | 'https'
- *
- * Pour changer l'IP: modifie .env.local et redémarre Expo
- */
 
-// Charger config depuis env variables (avec fallback)
 const API_HOST = process.env.EXPO_PUBLIC_API_HOST || '192.168.88.30';
 const API_PORT = process.env.EXPO_PUBLIC_API_PORT || '8080';
 const API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || 'http';

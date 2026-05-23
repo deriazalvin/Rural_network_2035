@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info } from 'lucide-react';
 import { TableauBordNew } from '../dashboard/TableauBordNew';
 import { useOptimizationIntegration } from '../../hooks/useOptimizationIntegration';
+import { useOptimizationStorage } from '../../hooks/useOptimizationStorage';
 import '../../styles/pages/optimisation-tournees.css';
 
 /**
@@ -21,10 +22,10 @@ export function OptimisationTournees({
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
   const { processOptimizationResult } = useOptimizationIntegration();
+  const { optimizations, isLoaded } = useOptimizationStorage();
 
   // Memoize empty routes array to prevent unnecessary re-renders
   const emptyRoutes = useMemo(() => [], []);
-  const emptyOptimisations = useMemo(() => [], []);
 
   useEffect(() => {
     setDepotSelectionne(depot);
@@ -108,7 +109,7 @@ export function OptimisationTournees({
         <TableauBordNew 
           villages={villages}
           routes={emptyRoutes}
-          optimisations={emptyOptimisations}
+          optimisations={optimizations}
           resultatsOptimisation={resultatOptimisation}
           onOptimizationSelect={onOptimiser}
         />
