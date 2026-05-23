@@ -23,6 +23,7 @@ import {
   Zap,
   MapPin,
   Truck,
+  Cloud,
   AlertCircle,
   Info,
   ChevronDown,
@@ -324,6 +325,21 @@ export default function OptimisationScreen() {
               </View>
             )}
 
+            <Pressable
+              onPress={() => router.push('/(tabs)/meteo')}
+              style={({ pressed }) => [styles.meteoRappel, { opacity: pressed ? 0.8 : 1 }]}
+            >
+              <Cloud size={20} color={COULEURS.bleu} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.meteoRappelTitre, { color: COULEURS.bleu }]}>
+                  🌤 Avant de lancer l'optimisation
+                </Text>
+                <Text style={[styles.meteoRappelSous, { color: theme.texteTertiaire }]}>
+                  Pensez à vérifier la météo
+                </Text>
+              </View>
+            </Pressable>
+
             <Bouton
               titre="Lancer l'Optimisation"
               onPress={lancer}
@@ -545,4 +561,17 @@ const styles = StyleSheet.create({
   stopContent: { flex: 1 },
   stopName: { fontSize: 13, fontWeight: '500' },
   stopMeta: { fontSize: 11, marginTop: 1 },
+  meteoRappel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ESPACEMENTS.sm,
+    padding: ESPACEMENTS.md,
+    backgroundColor: COULEURS.bleu + '12',
+    borderWidth: 1.5,
+    borderColor: COULEURS.bleu + '40',
+    borderRadius: RAYONS.md,
+    marginTop: ESPACEMENTS.xl,
+  },
+  meteoRappelTitre: { fontSize: 13, fontWeight: '700' },
+  meteoRappelSous: { fontSize: 11, marginTop: 2 },
 });

@@ -11,6 +11,7 @@ import {
   Truck,
   Zap,
   Play,
+  Cloud,
 } from 'lucide-react-native';
 
 export default function TabLayout() {
@@ -62,6 +63,13 @@ export default function TabLayout() {
         options={{
           title: 'Flotte',
           tabBarIcon: ({ color, size }) => <Truck size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="meteo"
+        options={{
+          title: 'Météo',
+          tabBarIcon: ({ color, size }) => <Cloud size={size} color={color} />,
         }}
       />
       <Tabs.Screen

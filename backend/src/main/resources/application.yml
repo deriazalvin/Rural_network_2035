@@ -26,6 +26,10 @@ osrm:
   api:
     url: http://localhost:5000
 
+weather:
+  api:
+    key: 57f5f0cadb44eb75f8b25e368643cb0b
+
 logging:
   level:
     root: INFO

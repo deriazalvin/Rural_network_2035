@@ -129,7 +129,10 @@
       // Optimisation (délégation au backend)
       optimiserTournee(payload) { return this.request('/optimisations', { method: 'POST', body: JSON.stringify(payload) }); }
 
-    // Camions
+      // Météo
+      obtenirMeteo(lat, lon) { return this.request(`/meteo?lat=${lat}&lon=${lon}`); }
+
+      // Camions
     obtenirTousLesCamions() { return this.request('/camions'); }
     obtenirCamionParId(id) { return this.request(`/camions/${id}`); }
     ajouterCamion(c) { return this.request('/camions', { method: 'POST', body: JSON.stringify(c) }); }

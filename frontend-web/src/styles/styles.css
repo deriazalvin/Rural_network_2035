@@ -1225,3 +1225,71 @@ body {
 [data-theme='dark'] .carte-route h4 {
   color: #f8fafc;
 }
+
+/* ============ VUE MÉTÉO ============ */
+[data-theme='dark'] .vue-meteo-title {
+  color: var(--vert-principal);
+}
+
+[data-theme='dark'] .meteo-selecteur select {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .meteo-selecteur select:focus {
+  border-color: var(--vert-principal);
+}
+
+[data-theme='dark'] .meteo-principale {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .meteo-ville {
+  color: var(--vert-principal);
+}
+
+[data-theme='dark'] .meteo-temp-value {
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .meteo-detail-item {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme='dark'] .meteo-detail-value {
+  color: var(--gris-fonce);
+}
+
+[data-theme='dark'] .meteo-conseils {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+[data-theme='dark'] .conseil {
+  background: rgba(15, 23, 42, 0.4);
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .meteo-refresh-btn {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: var(--vert-clair);
+  color: var(--vert-principal);
+}
+
+[data-theme='dark'] .meteo-refresh-btn:hover {
+  background: var(--vert-principal);
+  color: #0f172a;
+}
+
+[data-theme='dark'] .meteo-position-btn {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .meteo-position-btn:hover {
+  background: #3b82f6;
+  color: white;
+}

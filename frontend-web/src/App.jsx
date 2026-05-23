@@ -4,6 +4,7 @@ import { stockageLocal, gestionSession } from './utils/stockageLocal.js';
 import { GestionVillages } from './composants/pages/GestionVillages.jsx';
 import { GestionRoutes } from './composants/pages/GestionRoutes.jsx';
 import { OptimisationTournees } from './composants/pages/OptimisationTournees.jsx';
+import { VueMeteo } from './composants/pages/VueMeteo.jsx';
 import { TableauBordNew } from './composants/dashboard/TableauBordNew';
 import { NotificationErreur } from './composants/common/NotificationErreur.jsx';
 import GestionCamions from './composants/pages/GestionCamions.jsx';
@@ -111,6 +112,14 @@ function App() {
     } catch (e) {
       // ignore
     }
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.tab) setOngletActif(e.detail.tab);
+    };
+    window.addEventListener('rn-navigate', handler);
+    return () => window.removeEventListener('rn-navigate', handler);
   }, []);
 
   const TOUR_COLORS = [
@@ -548,6 +557,7 @@ function App() {
             { id: 'villages', label: 'Villages', icon: 'fa-tree-city' },
             { id: 'routes', label: 'Routes', icon: 'fa-route' },
             { id: 'camions', label: 'Flotte', icon: 'fa-truck' },
+            { id: 'meteo', label: 'Météo', icon: 'fa-cloud-sun' },
             { id: 'optimisation', label: 'Calcul', icon: 'fa-gears' }
           ].map((item) => (
             <li 
@@ -654,6 +664,10 @@ function App() {
             camions={camions}
             onModifierCamions={mettreAJourCamions}
           />
+        )}
+
+        {ongletActif === 'meteo' && (
+          <VueMeteo villages={villages} />
         )}
 
         {ongletActif === 'optimisation' && (

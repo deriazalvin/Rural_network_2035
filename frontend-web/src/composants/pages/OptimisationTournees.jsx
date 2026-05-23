@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info } from 'lucide-react';
+import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info, CloudSun } from 'lucide-react';
 import { TableauBordNew } from '../dashboard/TableauBordNew';
 import { useOptimizationIntegration } from '../../hooks/useOptimizationIntegration';
 import { useOptimizationStorage } from '../../hooks/useOptimizationStorage';
+import { ServiceDonnees } from '../../services/ServiceDonnees';
 import '../../styles/pages/optimisation-tournees.css';
 
 /**
@@ -215,6 +216,34 @@ export function OptimisationTournees({
             ))}
           </div>
         )}
+      </div>
+
+      <div className="meteo-rappel" onClick={() => {
+        window.dispatchEvent(new CustomEvent('rn-navigate', { detail: { tab: 'meteo' } }));
+      }} style={{
+        marginBottom: '16px',
+        padding: '12px 16px',
+        background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(37,99,235,0.12))',
+        border: '2px solid rgba(59,130,246,0.3)',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        transition: 'all 0.2s',
+      }}
+        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(59,130,246,0.3)'}
+      >
+        <CloudSun size={22} color="#3b82f6" />
+        <div>
+          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#2563eb' }}>
+            🌤 Avant de lancer l'optimisation, pensez à vérifier la météo
+          </div>
+          <div style={{ fontSize: '0.8rem', color: '#60a5fa', marginTop: '2px' }}>
+            Cliquez ici pour voir les conditions météorologiques
+          </div>
+        </div>
       </div>
 
       <button

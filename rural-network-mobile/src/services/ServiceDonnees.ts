@@ -126,6 +126,11 @@ class ServiceDonnees {
     return this.request('/optimisations/historique', { method: 'DELETE' });
   }
 
+  // === MÉTÉO ===
+  obtenirMeteo(lat: number, lon: number): Promise<any> {
+    return this.request(`/meteo?lat=${lat}&lon=${lon}`);
+  }
+
   // === STOCKAGE LOCAL ===
   async sauvegarderCache<T>(cle: string, data: T) {
     await AsyncStorage.setItem(cle, JSON.stringify(data));
