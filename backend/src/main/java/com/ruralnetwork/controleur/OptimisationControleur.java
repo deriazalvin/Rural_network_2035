@@ -1,6 +1,7 @@
 package com.ruralnetwork.controleur;
 
 import com.ruralnetwork.depot.OptimisationHistoriqueDepot;
+import com.ruralnetwork.dto.OptimisationComparativeDTO;
 import com.ruralnetwork.dto.OptimisationResultatDTO;
 import com.ruralnetwork.dto.request.OptimisationRequestDTO;
 import com.ruralnetwork.entite.OptimisationHistorique;
@@ -127,6 +128,49 @@ public class OptimisationControleur {
         List<OptimisationHistorique> liste = optimisationHistoriqueDepot.findByUtilisateurIdOrderByDateCreationDesc(utilisateurId);
         optimisationHistoriqueDepot.deleteAll(liste);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Endpoint pour l'optimisation comparative (standard + avec météo).
+     * POST /api/optimisations/comparer-avec-meteo
+     *
+     * Body:
+     * {
+     *   "depotId": "id-du-depot",
+     *   "camionIds": ["id-camion-1", "id-camion-2"],
+     *   "prixCarburantKm": 0.15
+     * }
+     */
+    @PostMapping("/comparer-avec-meteo")
+    public ResponseEntity<?> comparerAvecMeteo(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody OptimisationRequestDTO request) {
+        try {
+            Long utilisateurId = tokenUtil.getUserIdFromAuthHeader(authHeader);
+            if (utilisateurId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Authentification requise pour l'optimisation comparative."));
+            }
+
+            String depotId = request.getDepotId();
+            List<String> camionIds = request.getCamionIds();
+            Double prixCarburantKm = request.getPrixCarburantKm();
+
+            if (depotId == null || depotId.isEmpty() || camionIds == null || camionIds.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Le dépôt et au moins un camion doivent être fournis."));
+            }
+
+            OptimisationComparativeDTO resultat = orchestrateurOptimisation.optimiserTourneesAvecMeteo(
+                    utilisateurId, depotId, camionIds, prixCarburantKm
+            );
+
+            return ResponseEntity.ok(resultat);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Erreur d'optimisation comparative : " + e.getMessage()));
+        }
     }
 
     /**

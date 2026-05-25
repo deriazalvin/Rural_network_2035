@@ -9,5 +9,7 @@ target/
 .idea/
 
 .env
+.env.local
+.env.*.local
 
 /dS_Store

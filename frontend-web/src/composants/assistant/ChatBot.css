@@ -117,14 +117,23 @@
   border-bottom-left-radius: 4px;
 }
 
-.dark-mode .chatbot-msg.ia {
+[data-theme="dark"] .chatbot-msg.ia {
   background: #374151;
   color: #f3f4f6;
 }
 
-.dark-mode .chatbot-panel {
+[data-theme="dark"] .chatbot-panel {
   background: #1f2937;
   border-color: rgba(34, 197, 94, 0.15);
+}
+
+[data-theme="dark"] .chatbot-msgs::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+[data-theme="dark"] .chatbot-msgs::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
 }
 
 .chatbot-input {
@@ -134,7 +143,7 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.dark-mode .chatbot-input {
+[data-theme="dark"] .chatbot-input {
   border-top-color: #374151;
 }
 
@@ -152,7 +161,7 @@
   border-color: #22c55e;
 }
 
-.dark-mode .chatbot-input input {
+[data-theme="dark"] .chatbot-input input {
   background: #374151;
   border-color: #4b5563;
   color: #f3f4f6;

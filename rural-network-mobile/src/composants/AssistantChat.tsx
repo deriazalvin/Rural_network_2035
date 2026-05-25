@@ -4,6 +4,8 @@ import {
   FlatList, StyleSheet, Dimensions, Animated, PanResponder, KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
 import { serviceDonnees } from '../services/ServiceDonnees';
+import { useTheme } from '../contextes/ContexteTheme';
+import { useI18n } from '../contextes/ContexteI18n';
 
 const { width: ECRAN_L, height: ECRAN_H } = Dimensions.get('window');
 const TAILLE_BULLE = 56;
@@ -30,6 +32,9 @@ function nettoyerTexte(texte: string): string {
 }
 
 export default function AssistantChat({ visible }: { visible: boolean }) {
+  const { mode, theme } = useTheme();
+  const { t } = useI18n();
+  const estSombre = mode === 'sombre';
   const posDepart = useRef({ x: 0, y: 0 });
   const ouvertRef = useRef(false);
   const [ouvert, setOuvert] = useState(false);
@@ -70,60 +75,62 @@ export default function AssistantChat({ visible }: { visible: boolean }) {
       const rep = await serviceDonnees.poserQuestionIA(q);
       setMessages(m => [...m, { role: 'ia', texte: rep.reponse || rep, heure: now() }]);
     } catch {
-      setMessages(m => [...m, { role: 'ia', texte: "Erreur: impossible de contacter l'assistant.", heure: now() }]);
+      setMessages(m => [...m, { role: 'ia', texte: t('chat.erreur'), heure: now() }]);
     }
     setCharge(false);
   }, [saisie]);
 
   if (!visible) return null;
 
+  const s = stylesDynamic(estSombre);
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {ouvert && (
         <Modal transparent animationType="slide" visible={ouvert} onRequestClose={() => setOuvert(false)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.overlay}>
-            <View style={[styles.panel, { maxHeight: ECRAN_H * 0.6 }]}>
-              <View style={styles.header}>
-                <Text style={styles.headerTitre}>Assistant RN</Text>
-                <TouchableOpacity onPress={() => setOuvert(false)} style={styles.btnFermer}>
-                  <Text style={styles.btnFermerTexte}>Fermer</Text>
+            <View style={[s.panel, { maxHeight: ECRAN_H * 0.6 }]}>
+              <View style={s.header}>
+                  <Text style={s.headerTitre}>{t('chat.titre')}</Text>
+                <TouchableOpacity onPress={() => setOuvert(false)} style={s.btnFermer}>
+                  <Text style={s.btnFermerTexte}>{t('chat.fermer')}</Text>
                 </TouchableOpacity>
               </View>
               <FlatList
                 data={messages}
                 keyExtractor={(_, i) => String(i)}
-                style={styles.liste}
-                contentContainerStyle={styles.listeContenu}
+                style={s.liste}
+                contentContainerStyle={s.listeContenu}
                 renderItem={({ item }) => (
-                    <View style={[styles.msg, item.role === 'user' ? styles.msgUser : styles.msgIA]}>
-                      <Text style={item.role === 'user' ? styles.msgUserTexte : styles.msgIATexte}>{item.role === 'ia' ? nettoyerTexte(item.texte) : item.texte}</Text>
-                    <Text style={styles.msgHeure}>{item.heure}</Text>
+                    <View style={[s.msg, item.role === 'user' ? s.msgUser : s.msgIA]}>
+                      <Text style={item.role === 'user' ? s.msgUserTexte : s.msgIATexte}>{item.role === 'ia' ? nettoyerTexte(item.texte) : item.texte}</Text>
+                    <Text style={s.msgHeure}>{item.heure}</Text>
                   </View>
                 )}
                 ListEmptyComponent={
-                  <View style={styles.msg} style={[styles.msg, styles.msgIA]}>
-                    <Text style={styles.msgIATexte}>Bonjour! Posez-moi une question sur vos donnees.</Text>
+                  <View style={[s.msg, s.msgIA]}>
+                    <Text style={s.msgIATexte}>{t('chat.bienvenue')}</Text>
                   </View>
                 }
               />
               {charge && (
-                <View style={[styles.msg, styles.msgIA]}>
+                <View style={[s.msg, s.msgIA]}>
                   <ActivityIndicator size="small" color="#22c55e" />
-                  <Text style={styles.msgIATexte}> Reflexion...</Text>
+                  <Text style={s.msgIATexte}> {t('chat.chargement')}</Text>
                 </View>
               )}
-              <View style={styles.inputCont}>
+              <View style={s.inputCont}>
                 <TextInput
-                  style={styles.input}
+                  style={s.input}
                   value={saisie}
                   onChangeText={setSaisie}
-                  placeholder="Posez votre question..."
-                  placeholderTextColor="#9ca3af"
+                  placeholder={t('chat.placeholder')}
+                  placeholderTextColor={estSombre ? '#6b7280' : '#9ca3af'}
                   onSubmitEditing={envoyer}
                   editable={!charge}
                 />
-                <TouchableOpacity onPress={envoyer} disabled={charge || !saisie.trim()} style={styles.btnEnvoyer}>
-                  <Text style={styles.btnEnvoyerTexte}>Envoyer</Text>
+                <TouchableOpacity onPress={envoyer} disabled={charge || !saisie.trim()} style={s.btnEnvoyer}>
+                  <Text style={s.btnEnvoyerTexte}>{t('chat.envoyer')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -152,84 +159,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  panel: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitre: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#16a34a',
-  },
-  btnFermer: {
-    padding: 4,
-  },
-  btnFermerTexte: {
-    color: '#6b7280',
-    fontWeight: '600',
-  },
-  liste: {
-    maxHeight: 300,
-  },
-  listeContenu: {
-    padding: 12,
-  },
-  msg: {
-    padding: 10,
-    borderRadius: 12,
-    marginBottom: 6,
-    maxWidth: '85%',
-  },
-  msgUser: {
-    backgroundColor: '#22c55e',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  msgIA: {
-    backgroundColor: '#f3f4f6',
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  msgUserTexte: { color: '#fff', fontSize: 14 },
-  msgIATexte: { color: '#1f2937', fontSize: 14, flexShrink: 1 },
-  msgHeure: { fontSize: 10, opacity: 0.6, marginTop: 4, textAlign: 'right' },
-  inputCont: {
-    flexDirection: 'row',
-    gap: 8,
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 10,
-    padding: 10,
-    fontSize: 14,
-  },
-  btnEnvoyer: {
-    backgroundColor: '#22c55e',
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    justifyContent: 'center',
-  },
-  btnEnvoyerTexte: {
-    color: '#fff',
-    fontWeight: '600',
-  },
   bulle: {
     position: 'absolute',
     width: TAILLE_BULLE,
@@ -253,5 +182,88 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 18,
+  },
+});
+
+const stylesDynamic = (estSombre: boolean) => StyleSheet.create({
+  panel: {
+    backgroundColor: estSombre ? '#1f2937' : '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: estSombre ? '#374151' : '#e5e7eb',
+  },
+  headerTitre: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: estSombre ? '#34d399' : '#16a34a',
+  },
+  btnFermer: {
+    padding: 4,
+  },
+  btnFermerTexte: {
+    color: estSombre ? '#9ca3af' : '#6b7280',
+    fontWeight: '600',
+  },
+  liste: {
+    maxHeight: 300,
+  },
+  listeContenu: {
+    padding: 12,
+  },
+  msg: {
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 6,
+    maxWidth: '85%',
+  },
+  msgUser: {
+    backgroundColor: '#22c55e',
+    alignSelf: 'flex-end',
+    borderBottomRightRadius: 4,
+  },
+  msgIA: {
+    backgroundColor: estSombre ? '#374151' : '#f3f4f6',
+    alignSelf: 'flex-start',
+    borderBottomLeftRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  msgUserTexte: { color: '#fff', fontSize: 14 },
+  msgIATexte: { color: estSombre ? '#f3f4f6' : '#1f2937', fontSize: 14, flexShrink: 1 },
+  msgHeure: { fontSize: 10, opacity: 0.6, marginTop: 4, textAlign: 'right' },
+  inputCont: {
+    flexDirection: 'row',
+    gap: 8,
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: estSombre ? '#374151' : '#e5e7eb',
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: estSombre ? '#4b5563' : '#d1d5db',
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 14,
+    color: estSombre ? '#f3f4f6' : '#1f2937',
+    backgroundColor: estSombre ? '#374151' : '#fff',
+  },
+  btnEnvoyer: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    justifyContent: 'center',
+  },
+  btnEnvoyerTexte: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

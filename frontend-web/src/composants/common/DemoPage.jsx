@@ -2,259 +2,240 @@ import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, BarChart3, MapPin, Route, Truck, Zap, ChevronRight,
   TrendingUp, Package, AlertTriangle, CheckCircle, RotateCcw,
-  Plus, ArrowRight, Target, Award, Clock, Activity, Calendar,
-  TrendingUp as Trend, Users, EyeOff
+  ArrowRight, Target, Award, Clock, Activity, Cloud, Thermometer,
+  Wind, Droplets, Bot, Sun, Moon, Users, Layers
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useI18n } from '../../contexts/I18nContext';
 import '../../styles/tableau-bord.css';
-import '../../styles/pages/gestion-villages.css';
-import '../../styles/pages/gestion-routes.css';
-import '../../styles/pages/optimisation-tournees.css';
 import '../../styles/globals.css';
 
-/**
- * DemoPage immersive — Simulation du réseau rural
- * Affichée depuis le dashboard en mode Pause
- */
+const VILLAGES = [
+  { id: 1, nom: 'Fianarantsoa', lat: -21.43, lon: 47.08, prod: 680, badge: 'Élevée' },
+  { id: 2, nom: 'Ambalavao', lat: -21.83, lon: 46.93, prod: 450, badge: 'Moyenne' },
+  { id: 3, nom: 'Manakara', lat: -22.13, lon: 48.00, prod: 320, badge: 'Moyenne' },
+  { id: 4, nom: 'Mananjary', lat: -21.22, lon: 48.35, prod: 520, badge: 'Élevée' },
+  { id: 5, nom: 'Ikongo', lat: -21.88, lon: 47.43, prod: 280, badge: 'Faible' },
+  { id: 6, nom: 'Vohipeno', lat: -22.35, lon: 47.83, prod: 190, badge: 'Faible' },
+];
+
+const ROUTES = [
+  { d: 'Fianarantsoa', a: 'Ambalavao', dist: 75, qual: 'BONNE', bloc: false },
+  { d: 'Fianarantsoa', a: 'Mananjary', dist: 95, qual: 'MOYENNE', bloc: false },
+  { d: 'Fianarantsoa', a: 'Manakara', dist: 85, qual: 'BONNE', bloc: false },
+  { d: 'Manakara', a: 'Vohipeno', dist: 45, qual: 'MAUVAISE', bloc: true },
+  { d: 'Ambalavao', a: 'Ikongo', dist: 55, qual: 'MOYENNE', bloc: false },
+];
+
+const CAMIONS = [
+  { nom: 'Camion A', cap: 5000, etat: 'DISPONIBLE' },
+  { nom: 'Camion B', cap: 3000, etat: 'DISPONIBLE' },
+  { nom: 'Camion C', cap: 2000, etat: 'EN_PANNE' },
+];
+
+const METEO = [
+  { ville: 'Fianarantsoa', temp: 28, ressenti: 31, desc: 'Ensoleillé', humidite: 45, vent: 12, icone: '☀️' },
+  { ville: 'Manakara', temp: 32, ressenti: 36, desc: 'Pluie légère', humidite: 78, vent: 8, icone: '🌦️' },
+];
+
+const OPTIM_RESULTS = {
+  standard: { dist: 285, gain: 32.1, cout: 228, essence: 228, temps: '5h05', camions: 2 },
+  weatherAdjusted: { dist: 312, gain: 27.4, cout: 250, essence: 250, temps: '5h40', camions: 2 },
+  naive: { dist: 420, cout: 336, essence: 336, temps: '7h30' },
+};
+
 export default function DemoPage({ onBack }) {
   const { darkMode } = useTheme();
-  const [demoStep, setDemoStep] = useState(0);
+  const { t } = useI18n();
+  const [etape, setEtape] = useState(0);
   const [toast, setToast] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const [animatedCount, setAnimatedCount] = useState({ villages: 0, routes: 0, production: 0, efficiency: 0, uptime: 0 });
-  const [typingField, setTypingField] = useState({ nom: '', lat: '', lon: '', prod: '' });
-  const [typingRoute, setTypingRoute] = useState({ depart: '', arrivee: '', dist: '' });
+  const [progres, setProgres] = useState(0);
+  const [counters, setCounters] = useState({ villages:0, routes:0, production:0, eff:0, uptime:0, gain:0, savings:0 });
+  const [typing, setTyping] = useState({ nom:'', lat:'', lon:'', prod:'' });
+  const [iaMsg, setIaMsg] = useState([]);
+  const [iaStep, setIaStep] = useState(0);
 
-  const steps = [
-    { label: 'Tableau de bord', icon: BarChart3 },
-    { label: 'Villages', icon: MapPin },
-    { label: 'Routes', icon: Route },
-    { label: 'Optimisation', icon: Zap },
-    { label: 'Résultats', icon: TrendingUp },
+  const ETAPES = [
+    { id:0, label:t('demo.dashboard'), icon:BarChart3 },
+    { id:1, label:t('demo.villages'), icon:MapPin },
+    { id:2, label:t('demo.routes'), icon:Route },
+    { id:3, label:'Camions', icon:Truck },
+    { id:4, label:t('nav.meteo'), icon:Cloud },
+    { id:5, label:t('demo.optimisation'), icon:Zap },
+    { id:6, label:t('demo.resultats'), icon:TrendingUp },
   ];
 
-  const villages = [
-    { id: 1, nom: 'Ambalavao', lat: -21.83, lon: 46.93, prod: 450 },
-    { id: 2, nom: 'Manakara', lat: -22.13, lon: 48.00, prod: 320 },
-    { id: 3, nom: 'Fianarantsoa', lat: -21.43, lon: 47.08, prod: 680 },
-    { id: 4, nom: 'Mananjary', lat: -21.22, lon: 48.35, prod: 520 },
-  ];
-  const routes = [
-    { id: 1, depart: 'Ambalavao', arrivee: 'Fianarantsoa', dist: 75, duree: '1h45', qualite: 'BONNE', bloquee: false },
-    { id: 2, depart: 'Fianarantsoa', arrivee: 'Mananjary', dist: 95, duree: '2h10', qualite: 'MOYENNE', bloquee: false },
-  ];
-
-  // Animate dashboard counters on mount
   useEffect(() => {
-    const targets = { villages: 3, routes: 1, production: 1450, efficiency: 87, uptime: 98 };
+    const targets = { villages:6, routes:5, production:2440, eff:87, uptime:98, gain:32, savings:108 };
     const duration = 1500;
     const start = Date.now();
     const tick = () => {
-      const elapsed = Date.now() - start;
-      const pct = Math.min(elapsed / duration, 1);
-      setAnimatedCount({
-        villages: Math.floor(targets.villages * pct),
-        routes: Math.floor(targets.routes * pct),
-        production: Math.floor(targets.production * pct),
-        efficiency: Math.floor(targets.efficiency * pct),
-        uptime: Math.floor(targets.uptime * pct),
+      const pct = Math.min((Date.now()-start)/duration, 1);
+      setCounters({
+        villages: Math.floor(targets.villages*pct),
+        routes: Math.floor(targets.routes*pct),
+        production: Math.floor(targets.production*pct),
+        eff: Math.floor(targets.eff*pct),
+        uptime: Math.floor(targets.uptime*pct),
+        gain: Math.floor(targets.gain*pct),
+        savings: Math.floor(targets.savings*pct),
       });
-      if (pct < 1) requestAnimationFrame(tick);
+      if (pct<1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
   }, []);
 
-  // Timeline automatique
   useEffect(() => {
-    const t = [];
-    t.push(setTimeout(() => { setDemoStep(1); typeVillageFields(); showToast('Nouveau village détecté : Mananjary', 'info'); }, 5000));
-    t.push(setTimeout(() => { setDemoStep(2); typeRouteFields(); showToast('Route Fianarantsoa → Mananjary ajoutée', 'success'); }, 11000));
-    t.push(setTimeout(() => { setDemoStep(3); runOptim(); }, 16000));
-    t.push(setTimeout(() => { setDemoStep(4); }, 24000));
-    return () => t.forEach(clearTimeout);
+    const to = [];
+    to.push(setTimeout(() => { setEtape(1); animerSaisie(); toastMsg('Création du village Ikongo (280 kg)','info'); }, 4000));
+    to.push(setTimeout(() => { setEtape(2); toastMsg('Route Ambalavao → Ikongo ajoutée (55 km)','success'); }, 9000));
+    to.push(setTimeout(() => { setEtape(3); toastMsg('Camion C marqué EN_PANNE','warning'); }, 13000));
+    to.push(setTimeout(() => { setEtape(4); toastMsg('Météo chargée pour 6 villages','info'); }, 17000));
+    to.push(setTimeout(() => { setEtape(5); animerOptim(); toastMsg('Lancement optimisation multi-camions...','info'); }, 21000));
+    to.push(setTimeout(() => { setEtape(6); animerIA(); toastMsg('Optimisation terminée ! Gain 32,1%','success'); }, 27000));
+    return () => to.forEach(clearTimeout);
   }, []);
 
-  function showToast(msg, type) { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); }
+  function toastMsg(msg, type) { setToast({msg,type}); setTimeout(()=>setToast(null),3000); }
 
-  function typeText(field, text, delay = 50) {
-    let i = 0;
+  function animerSaisie() {
+    setTyping({nom:'',lat:'',lon:'',prod:''});
+    setTimeout(()=>{ let i=0; const iv=setInterval(()=>{ i++; setTyping(p=>({...p,nom:'Ikongo'.slice(0,i)})); if(i>=6) clearInterval(iv); },60); },300);
+    setTimeout(()=>{ let i=0; const iv=setInterval(()=>{ i++; setTyping(p=>({...p,lat:'-21.880000'.slice(0,i)})); if(i>=10) clearInterval(iv); },40); },900);
+    setTimeout(()=>{ let i=0; const iv=setInterval(()=>{ i++; setTyping(p=>({...p,lon:'47.430000'.slice(0,i)})); if(i>=10) clearInterval(iv); },40); },1600);
+    setTimeout(()=>{ let i=0; const iv=setInterval(()=>{ i++; setTyping(p=>({...p,prod:'280'.slice(0,i)})); if(i>=3) clearInterval(iv); },80); },2200);
+  }
+
+  function animerOptim() {
+    setProgres(0);
+    const iv = setInterval(() => setProgres(p => { if(p>=100){clearInterval(iv);return 100;} return p+2; }), 60);
+  }
+
+  function animerIA() {
+    const msgs = [
+      { role:'user', txt:'Quel est le meilleur itinéraire pour collecter la production ?' },
+      { role:'ia', txt:'En optimisant avec vos 2 camions disponibles et un dépôt à Fianarantsoa, voici le plan optimal :\n- Camion A (5t) : Fianarantsoa → Ambalavao (450 kg) → Retour (165 km)\n- Camion B (3t) : Fianarantsoa → Mananjary (520 kg) → Manakara (320 kg) → Retour (120 km)\nGain total : 32,1% par rapport à la tournée naïve.' },
+      { role:'user', txt:'Et avec la météo ?' },
+      { role:'ia', txt:'La comparaison météo est disponible : avec les pluies à Manakara et la chaleur à Fianarantsoa, l\'optimisation ajustée donne 312 km (27,4% de gain). La version standard reste plus performante aujourd\'hui.' },
+    ];
+    let i=0;
     const iv = setInterval(() => {
-      i++;
-      setTypingField(prev => ({ ...prev, [field]: text.slice(0, i) }));
-      if (i >= text.length) clearInterval(iv);
-    }, delay);
-  }
-
-  function typeVillageFields() {
-    setTypingField({ nom: '', lat: '', lon: '', prod: '' });
-    setTimeout(() => typeText('nom', 'Mananjary', 60), 300);
-    setTimeout(() => typeText('lat', '-21.220000', 40), 900);
-    setTimeout(() => typeText('lon', '48.350000', 40), 1600);
-    setTimeout(() => typeText('prod', '520', 80), 2200);
-  }
-
-  function typeRouteFields() {
-    setTypingRoute({ depart: '', arrivee: '', dist: '' });
-    setTimeout(() => typeText('depart', 'Fianarantsoa', 60), 300);
-    setTimeout(() => typeText('arrivee', 'Mananjary', 60), 900);
-    setTimeout(() => typeText('dist', '95', 80), 1600);
-  }
-
-  function runOptim() {
-    setProgress(0);
-    const iv = setInterval(() => setProgress(p => { if (p >= 100) { clearInterval(iv); return 100; } return p + 2; }), 80);
+      if (i < msgs.length) {
+        setIaMsg(m => [...m, msgs[i]]);
+        setIaStep(i+1);
+        i++;
+      } else {
+        clearInterval(iv);
+      }
+    }, 2000);
   }
 
   function restart() {
-    setDemoStep(0); setProgress(0); setToast(null);
-    const t = [];
-    t.push(setTimeout(() => { setDemoStep(1); showToast('Nouveau village détecté : Mananjary', 'info'); }, 5000));
-    t.push(setTimeout(() => { setDemoStep(2); showToast('Route Fianarantsoa → Mananjary ajoutée', 'success'); }, 10000));
-    t.push(setTimeout(() => { setDemoStep(3); runOptim(); }, 15000));
-    t.push(setTimeout(() => { setDemoStep(4); }, 23000));
-    return () => t.forEach(clearTimeout);
+    setEtape(0); setProgres(0); setToast(null); setIaMsg([]); setIaStep(0);
   }
 
-  const chartData = [
-    { date: '2025-01-10', gain: 18, distance: 320 },
-    { date: '2025-02-15', gain: 24, distance: 290 },
-    { date: '2025-03-22', gain: 29, distance: 310 },
-    { date: '2025-04-05', gain: 32, distance: 285 },
-  ];
-
-  const getBadge = (p) => {
-    if (p >= 500) return { bg: 'rgba(16,185,129,0.15)', color: '#10b981', label: 'Élevée' };
-    if (p >= 100) return { bg: 'rgba(16,185,129,0.1)', color: '#34d399', label: 'Moyenne' };
-    return { bg: 'rgba(16,185,129,0.08)', color: '#6ee7b7', label: 'Faible' };
-  };
-
   return (
-    <div className="dashboard-container" style={{ minHeight: '100vh' }}>
-      {/* Toast */}
+    <div className="dashboard-container" style={{ minHeight:'100vh' }}>
       {toast && (
-        <div className="fixed top-4 right-4 z-[100]" style={{ animation: 'slideIn 0.3s ease' }}>
+        <div className="fixed top-4 right-4 z-[100]" style={{ animation:'slideIn 0.3s ease' }}>
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border ${
-            toast.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-700/50 dark:text-emerald-300'
-              : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-700/50 dark:text-blue-300'
+            toast.type==='success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-700/50 dark:text-emerald-300' :
+            toast.type==='warning' ? 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:border-amber-700/50 dark:text-amber-300' :
+            'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-700/50 dark:text-blue-300'
           }`}>
-            {toast.type === 'success' ? <CheckCircle size={18} /> : <Zap size={18} />}
+            {toast.type==='success' ? <CheckCircle size={18} /> : toast.type==='warning' ? <AlertTriangle size={18} /> : <Zap size={18} />}
             <span className="text-sm font-medium">{toast.msg}</span>
           </div>
         </div>
       )}
 
-      {/* Header identique au vrai dashboard */}
       <header className="dashboard-header">
         <div className="header-content">
           <div className="header-title">
-            <div className="title-icon">
-              <BarChart3 size={28} />
-            </div>
+            <div className="title-icon"><Layers size={28} /></div>
             <div>
-              <h1>Mode Démo — Simulation</h1>
-              <p>Réseau Rural Intelligent - Madagascar 2035</p>
+              <h1>{t('demo.titre')}</h1>
+              <p>Rural Network 2035 — Plateforme complète de pilotage</p>
             </div>
           </div>
           <div className="header-controls">
-            <button onClick={restart} className="live-indicator" style={{ background: 'rgba(59,130,246,0.1)', borderColor: 'rgba(59,130,246,0.2)', color: '#3b82f6' }}>
-              <RotateCcw size={14} /><span>Rejouer</span>
+            <button onClick={restart} className="live-indicator" style={{background:'rgba(59,130,246,0.1)',borderColor:'rgba(59,130,246,0.2)',color:'#3b82f6'}}>
+              <RotateCcw size={14} /><span>{t('demo.rejouer')}</span>
             </button>
-            <button onClick={onBack} className="live-indicator" style={{ background: 'rgba(34,197,94,0.1)', borderColor: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>
-              <ArrowLeft size={14} /><span>Retour au Live</span>
+            <button onClick={onBack} className="live-indicator" style={{background:'rgba(34,197,94,0.1)',borderColor:'rgba(34,197,94,0.2)',color:'#22c55e'}}>
+              <ArrowLeft size={14} /><span>{t('demo.retour')}</span>
             </button>
           </div>
         </div>
         <nav className="dashboard-nav">
-          {steps.map((s, i) => (
-            <button key={i} className={`nav-tab ${demoStep === i ? 'active' : ''}`} onClick={() => setDemoStep(i)}>
-              <s.icon size={16} />
-              <span>{s.label}</span>
+          {ETAPES.map((s,i) => (
+            <button key={i} className={`nav-tab ${etape===i?'active':''}`} onClick={()=>setEtape(i)}>
+              <s.icon size={16} /><span>{s.label}</span>
             </button>
           ))}
         </nav>
       </header>
 
-      {/* ========== ÉTAPE 0 : TABLEAU DE BORD ========== */}
-      {demoStep === 0 && (
-        <main className="dashboard-main" style={{ animation: 'tbFadeIn 0.5s ease' }}>
+      {/* ÉTAPE 0: TABLEAU DE BORD */}
+      {etape===0 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
           <section className="metrics-grid">
-            <div className="metric-card primary">
-              <div className="metric-header"><MapPin className="metric-icon" /><span className="metric-label">Villages Connectés</span></div>
-              <div className="metric-value">{animatedCount.villages}</div>
-              <div className="metric-trend positive"><Trend size={14} />+1 ce mois</div>
-            </div>
-            <div className="metric-card success">
-              <div className="metric-header"><Route className="metric-icon" /><span className="metric-label">Routes Actives</span></div>
-              <div className="metric-value">{animatedCount.routes}</div>
-              <div className="metric-trend positive"><Trend size={14} />100% opérationnel</div>
-            </div>
-            <div className="metric-card info">
-              <div className="metric-header"><Package className="metric-icon" /><span className="metric-label">Production Totale</span></div>
-              <div className="metric-value">{animatedCount.production.toLocaleString('fr-FR')}</div><span className="metric-unit">kg</span>
-              <div className="metric-trend positive"><Trend size={14} />+12% vs N-1</div>
-            </div>
-            <div className="metric-card warning">
-              <div className="metric-header"><AlertTriangle className="metric-icon" /><span className="metric-label">Routes Bloquées</span></div>
-              <div className="metric-value">0</div>
-              <div className="metric-trend positive"><Trend size={14} />-2 cette semaine</div>
-            </div>
-            <div className="metric-card accent">
-              <div className="metric-header"><Zap className="metric-icon" /><span className="metric-label">Efficacité</span></div>
-              <div className="metric-value">{animatedCount.efficiency}</div><span className="metric-unit">%</span>
-              <div className="metric-trend positive"><Award size={14} />Record</div>
-            </div>
-            <div className="metric-card secondary">
-              <div className="metric-header"><Clock className="metric-icon" /><span className="metric-label">Disponibilité</span></div>
-              <div className="metric-value">{animatedCount.uptime}</div><span className="metric-unit">%</span>
-              <div className="metric-trend positive"><Trend size={14} />Stable</div>
-            </div>
+            <div className="metric-card primary"><div className="metric-header"><MapPin className="metric-icon" /><span>Villages</span></div>
+              <div className="metric-value">{counters.villages}</div><div className="metric-trend positive"><TrendingUp size={14} />+2 ce mois</div></div>
+            <div className="metric-card success"><div className="metric-header"><Route className="metric-icon" /><span>Routes</span></div>
+              <div className="metric-value">{counters.routes}</div><div className="metric-trend positive"><TrendingUp size={14} />80% actives</div></div>
+            <div className="metric-card info"><div className="metric-header"><Package className="metric-icon" /><span>Production</span></div>
+              <div className="metric-value">{counters.production.toLocaleString('fr-FR')}<span className="metric-unit"> kg</span></div>
+              <div className="metric-trend positive"><TrendingUp size={14} />+12% vs N-1</div></div>
+            <div className="metric-card warning"><div className="metric-header"><AlertTriangle className="metric-icon" /><span>Routes Bloquées</span></div>
+              <div className="metric-value">1</div><div className="metric-trend positive"><TrendingUp size={14} />Vohipeno bloquée</div></div>
+            <div className="metric-card accent"><div className="metric-header"><Zap className="metric-icon" /><span>Efficacité</span></div>
+              <div className="metric-value">{counters.eff}<span className="metric-unit">%</span></div><div className="metric-trend positive"><Award size={14} />Record</div></div>
+            <div className="metric-card secondary"><div className="metric-header"><Clock className="metric-icon" /><span>Disponibilité</span></div>
+              <div className="metric-value">{counters.uptime}<span className="metric-unit">%</span></div><div className="metric-trend positive"><TrendingUp size={14} />Stable</div></div>
+            <div className="metric-card primary"><div className="metric-header"><TrendingUp className="metric-icon" /><span>Gain moyen</span></div>
+              <div className="metric-value">{counters.gain}<span className="metric-unit">%</span></div><div className="metric-trend positive"><Award size={14} />Optimisation</div></div>
+            <div className="metric-card success"><div className="metric-header"><Droplets className="metric-icon" /><span>Économie</span></div>
+              <div className="metric-value">{counters.savings}<span className="metric-unit"> L</span></div><div className="metric-trend positive"><TrendingUp size={14} />Carburant</div></div>
           </section>
 
-          {/* Chart + Map */}
           <div className="tb-grid-2 mt-6">
             <section className="tb-card p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.15)' }}>
-                  <Trend size={20} style={{ color: '#34d399' }} />
-                </div>
-                <div>
-                  <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Historique des Optimisations</h3>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Évolution des gains et distances</p>
-                </div>
-              </div>
-              <div className="flex gap-4 mb-4">
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-400" /><span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Gain (%)</span></div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /><span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Distance (km)</span></div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:'rgba(52,211,153,0.15)'}}>
+                  <TrendingUp size={20} style={{color:'#34d399'}} /></div>
+                <div><h3 className="font-bold" style={{color:'var(--text-primary)'}}>Historique des Optimisations</h3>
+                  <p className="text-xs" style={{color:'var(--text-tertiary)'}}>Évolution des gains sur 4 mois</p></div>
               </div>
               <div className="h-48 flex items-end gap-4 px-4">
-                {chartData.map((d, i) => (
+                {[
+                  {mois:'Jan',gain:18,dist:420},
+                  {mois:'Fév',gain:24,dist:380},
+                  {mois:'Mar',gain:29,dist:310},
+                  {mois:'Avr',gain:35,dist:275},
+                ].map((d,i)=>(
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex gap-1 items-end" style={{ height: 120 }}>
-                      <div className="flex-1 rounded-t-md" style={{ height: `${(d.gain / 40) * 100}%`, background: '#34d399' }} />
-                      <div className="flex-1 rounded-t-md" style={{ height: `${(d.distance / 400) * 100}%`, background: '#fbbf24' }} />
+                    <div className="w-full flex gap-1 items-end" style={{height:120}}>
+                      <div className="flex-1 rounded-t-md" style={{height:`${(d.gain/40)*100}%`,background:'#34d399'}} />
+                      <div className="flex-1 rounded-t-md" style={{height:`${(d.dist/500)*100}%`,background:'#fbbf24'}} />
                     </div>
-                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                    <span className="text-[10px]" style={{color:'var(--text-tertiary)'}}>{d.mois}</span>
                   </div>
                 ))}
               </div>
             </section>
 
-            {/* Carte simulée */}
             <section className="tb-card p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                  <MapPin size={20} style={{ color: '#3b82f6' }} />
-                </div>
-                <div>
-                  <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Carte du Réseau</h3>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>4 villages · 2 routes actives</p>
-                </div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:'rgba(59,130,246,0.15)'}}>
+                  <MapPin size={20} style={{color:'#3b82f6'}} /></div>
+                <div><h3 className="font-bold" style={{color:'var(--text-primary)'}}>Carte du Réseau</h3>
+                  <p className="text-xs" style={{color:'var(--text-tertiary)'}}>6 villages · 5 routes · 3 camions</p></div>
               </div>
-              <div className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border-subtle)', height: 260, background: '#e5e7eb' }}>
-                <iframe title="carte-demo" src="https://www.openstreetmap.org/export/embed.html?bbox=46.5%2C-22.5%2C48.5%2C-21.0&layer=mapnik&marker=-21.43%2C47.08" width="100%" height="100%" style={{ border: 0 }} />
+              <div className="relative rounded-xl overflow-hidden border" style={{borderColor:'var(--border-subtle)',height:260,background:'#e5e7eb'}}>
+                <iframe title="map" src="https://www.openstreetmap.org/export/embed.html?bbox=46.5%2C-22.5%2C48.5%2C-21.0&layer=mapnik" width="100%" height="100%" style={{border:0}} />
                 <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
-                  {villages.slice(0,3).map(v => (
+                  {VILLAGES.map(v => (
                     <span key={v.id} className="text-[10px] px-2 py-0.5 rounded-md bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 font-medium shadow-sm">{v.nom}</span>
                   ))}
                 </div>
@@ -264,276 +245,285 @@ export default function DemoPage({ onBack }) {
         </main>
       )}
 
-      {/* ========== ÉTAPE 1 : GESTION VILLAGES ========== */}
-      {demoStep === 1 && (
-        <main className="dashboard-main" style={{ animation: 'tbFadeIn 0.5s ease' }}>
-          <div className="gestion-villages-container section-carte">
-            <h2 className="gestion-villages-title"><MapPin size={26} />Gestion des Villages</h2>
-            <div className="gestion-stats">
-              <div className="stat-card"><div className="stat-label">Total Villages</div><div className="stat-value">4</div></div>
-              <div className="stat-card"><div className="stat-label">Production Totale</div><div className="stat-value">1,97 <span className="stat-unit">tonnes</span></div></div>
-              <div className="stat-card"><div className="stat-label">Moyenne/Village</div><div className="stat-value">492 <span className="stat-unit">kg</span></div></div>
+      {/* ÉTAPE 1: VILLAGES */}
+      {etape===1 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <div className="section-carte p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><MapPin size={26} />Gestion des Villages</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="stat-card"><div className="stat-label">Total Villages</div><div className="stat-value">{VILLAGES.length}</div></div>
+              <div className="stat-card"><div className="stat-label">Production Totale</div><div className="stat-value">2,44 <span className="stat-unit">tonnes</span></div></div>
+              <div className="stat-card"><div className="stat-label">Moyenne/Village</div><div className="stat-value">407 <span className="stat-unit">kg</span></div></div>
             </div>
 
-            <form className="formulaire" onSubmit={(e) => e.preventDefault()}>
+            <form className="formulaire mb-6" onSubmit={e=>e.preventDefault()}>
               <div className="grille-formulaire">
-                <input className="champ-saisie" value={typingField.nom} placeholder="Nom du village" readOnly />
-                <input className="champ-saisie" value={typingField.lat} placeholder="Latitude" readOnly />
-                <input className="champ-saisie" value={typingField.lon} placeholder="Longitude" readOnly />
-                <input className="champ-saisie" value={typingField.prod} placeholder="Production (kg)" readOnly />
-              </div>
-              <div className="form-buttons">
-                <button className={`btn btn-primary ${!typingField.prod ? 'opacity-50' : ''}`}>
-                  {typingField.prod ? 'Ajouter le Village' : 'Saisie en cours...'}
-                </button>
+                <input className="champ-saisie" value={typing.nom} placeholder="Nom du village" readOnly />
+                <input className="champ-saisie" value={typing.lat} placeholder="Latitude" readOnly />
+                <input className="champ-saisie" value={typing.lon} placeholder="Longitude" readOnly />
+                <input className="champ-saisie" value={typing.prod} placeholder="Production (kg)" readOnly />
               </div>
             </form>
 
-            <div className="liste-villages">
-              <div className="village-toolbar"><h3>Villages Enregistrés (4)</h3></div>
-              <div className="village-card-grid">
-                {villages.map((v) => {
-                  const b = getBadge(v.prod);
-                  return (
-                    <div key={v.id} className="carte-village">
-                      <div className="carte-entete"><h4>{v.nom}</h4></div>
-                      <div className="badge-row" style={{ background: b.bg, borderColor: b.color }}>
-                        <Trend size={16} color={b.color} />
-                        <span style={{ fontWeight: 600, color: b.color }}>{v.prod} kg</span>
-                        <span className="badge-pill" style={{ background: b.bg, color: b.color }}>{b.label}</span>
-                      </div>
-                      <p className="detail-village-secondaire">Lat: {v.lat.toFixed(4)}, Lon: {v.lon.toFixed(4)}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Carte village simulée */}
-            <div className="village-map-card mt-6" style={{ borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ height: 300, background: '#1f2937', position: 'relative' }}>
-                <iframe title="carte-villages" src="https://www.openstreetmap.org/export/embed.html?bbox=46.5%2C-22.5%2C48.5%2C-21.0&layer=mapnik" width="100%" height="100%" style={{ border: 0, filter: darkMode ? 'brightness(0.7) contrast(1.1)' : 'none' }} />
-                <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
-                  {villages.map(v => (
-                    <span key={v.id} className="text-[10px] px-2 py-1 rounded-md bg-white/90 dark:bg-gray-900/90 text-gray-700 dark:text-gray-200 font-medium shadow">{v.nom}</span>
-                  ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {VILLAGES.map(v => (
+                <div key={v.id} className="rounded-xl border p-4" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
+                  <h4 className="font-bold mb-2">{v.nom}</h4>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                      v.badge==='Élevée' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      v.badge==='Moyenne' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                      'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                    }`}>{v.prod} kg</span>
+                    <span className="text-xs opacity-60">{v.badge}</span>
+                  </div>
+                  <p className="text-xs opacity-50">Lat: {v.lat.toFixed(4)}, Lon: {v.lon.toFixed(4)}</p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </main>
       )}
 
-      {/* ========== ÉTAPE 2 : GESTION ROUTES ========== */}
-      {demoStep === 2 && (
-        <main className="dashboard-main" style={{ animation: 'tbFadeIn 0.5s ease' }}>
-          <div className="gestion-routes-container section-carte">
-            <h2 className="gestion-routes-title"><Route size={26} />Gestion des Routes</h2>
-            <div className="routes-stats">
-              <div className="stat-card"><div className="stat-label">Total Routes</div><div className="stat-value">2</div></div>
-              <div className="stat-card"><div className="stat-label">Distance Totale</div><div className="stat-value">170 <span className="stat-unit">km</span></div></div>
-              <div className="stat-card"><div className="stat-label">Routes Actives</div><div className="stat-value">2</div></div>
+      {/* ÉTAPE 2: ROUTES */}
+      {etape===2 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <div className="section-carte p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><Route size={26} />Gestion des Routes</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="stat-card"><div className="stat-label">Total Routes</div><div className="stat-value">{ROUTES.length}</div></div>
+              <div className="stat-card"><div className="stat-label">Distance Totale</div><div className="stat-value">355 <span className="stat-unit">km</span></div></div>
+              <div className="stat-card"><div className="stat-label">Routes Actives</div><div className="stat-value">4</div></div>
             </div>
 
-            <form className="formulaire" onSubmit={(e) => e.preventDefault()}>
-              <div className="grille-formulaire">
-                <select className="champ-saisie"><option>{typingRoute.depart || 'Départ...'}</option></select>
-                <select className="champ-saisie"><option>{typingRoute.arrivee || 'Arrivée...'}</option></select>
-                <input className="champ-saisie" value={typingRoute.dist} placeholder="Distance (km)" readOnly />
-              </div>
-              <div className="form-buttons">
-                <button className={`btn btn-primary ${!typingRoute.dist ? 'opacity-50' : ''}`}>
-                  {typingRoute.dist ? 'Ajouter la Route' : 'Saisie en cours...'}
-                </button>
-              </div>
-            </form>
-
-            <div className="gestion-flux-routes">
-              <div className="liste-routes">
-                <h3 className="section-subtitle section-subtitle-success"><CheckCircle size={20} /><span>Routes Actives (2)</span></h3>
-                <div className="routes-card-grid">
-                  {routes.map((r) => (
-                    <div key={r.id} className="carte-route">
-                      <div className="route-summary">
-                        <MapPin size={16} />
-                        <div className="route-text">{r.depart} <ArrowRight size={14} /> {r.arrivee}</div>
-                      </div>
-                      <div className="route-details">
-                        <span><strong>{r.dist}</strong> km</span>
-                        <span><Clock size={14} /> {r.duree}</span>
-                        <span className={`route-quality ${r.qualite === 'BONNE' ? 'route-quality-good' : 'route-quality-medium'}`}>{r.qualite}</span>
-                      </div>
-                    </div>
-                  ))}
+            <div className="space-y-3">
+              {ROUTES.map((r,i) => (
+                <div key={i} className="rounded-xl border p-4 flex items-center justify-between" style={{borderColor: r.bloc ? 'rgba(239,68,68,0.3)' : 'var(--border-subtle)', background: r.bloc ? 'rgba(239,68,68,0.05)' : 'var(--bg-card)'}}>
+                  <div className="flex items-center gap-3">
+                    <MapPin size={16} className="opacity-50" />
+                    <span className="font-medium">{r.d} <ArrowRight size={14} className="inline opacity-50" /> {r.a}</span>
+                    <span className="text-sm opacity-60">{r.dist} km</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                      r.qual==='BONNE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                      r.qual==='MOYENNE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>{r.qual}</span>
+                    {r.bloc && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">BLOQUÉE</span>}
+                    {!r.bloc && <CheckCircle size={16} className="text-green-500" />}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </main>
       )}
 
-      {/* ========== ÉTAPE 3 : OPTIMISATION ========== */}
-      {demoStep === 3 && (
-        <main className="dashboard-main" style={{ animation: 'tbFadeIn 0.5s ease' }}>
-          <div className="optimisation-tournees-container section-carte">
-            <h2 className="optimisation-tournees-title"><Zap size={26} />Optimisation des Tournées</h2>
-            <div className="optimisation-content">
-              <div className="form-section">
-                <h3 className="section-title"><Target size={20} />Paramètres</h3>
-                <div className="form-group">
-                  <label>Dépôt</label>
-                  <select className="champ-saisie"><option>Fianarantsoa</option></select>
-                </div>
-                <div className="form-group">
-                  <label>Camions disponibles</label>
-                  <div className="camion-list">
-                    {['Camion A (5t)', 'Camion B (3t)'].map((c, i) => (
-                      <div key={i} className="camion-item selected">
-                        <Truck size={18} />
-                        <span>{c}</span>
-                        <CheckCircle size={16} className="text-green-500" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <button className="btn btn-primary w-full mt-4" disabled={progress < 100}>
-                  {progress < 100 ? 'Optimisation en cours...' : 'Voir les résultats'}
-                </button>
-              </div>
+      {/* ÉTAPE 3: CAMIONS */}
+      {etape===3 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <div className="section-carte p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><Truck size={26} />Gestion des Camions</h2>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="stat-card"><div className="stat-label">Total Camions</div><div className="stat-value">{CAMIONS.length}</div></div>
+              <div className="stat-card"><div className="stat-label">Disponibles</div><div className="stat-value">2</div></div>
+              <div className="stat-card"><div className="stat-label">Capacité Totale</div><div className="stat-value">10 <span className="stat-unit">tonnes</span></div></div>
+            </div>
 
-              <div className="resultat-section">
-                <h3 className="section-title"><Activity size={20} />Progression</h3>
-                <div className="p-4 text-center">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(251,191,36,0.15)' }}>
-                    <Zap size={32} style={{ color: '#fbbf24' }} className={progress < 100 ? 'animate-spin' : ''} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {CAMIONS.map((c,i) => (
+                <div key={i} className="rounded-xl border p-4" style={{
+                  borderColor: c.etat==='DISPONIBLE' ? 'rgba(34,197,94,0.3)' :
+                    c.etat==='EN_PANNE' ? 'rgba(239,68,68,0.3)' : 'rgba(251,191,36,0.3)',
+                  background: 'var(--bg-card)'
+                }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-4 h-4 rounded-full" style={{background:['#22c55e','#3b82f6','#ef4444'][i]}} />
+                    <h4 className="font-bold">{c.nom}</h4>
                   </div>
-                  <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>Algorithme Dijkstra + contraintes de capacité</p>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                    <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#fbbf24,#f59e0b)' }} />
-                  </div>
-                  <p className="text-xs mt-2 font-mono">{progress}%</p>
-                  <div className="mt-4 space-y-2">
-                    {['Analyse des distances','Vérification capacités','Calcul optimal','Génération itinéraire'].map((l,i)=> (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${progress > (i+1)*25 ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{l}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-sm mb-2">Capacité: {(c.cap/1000).toFixed(1)} tonne(s)</p>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    c.etat==='DISPONIBLE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                    c.etat==='OCCUPE' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>{c.etat}</span>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </main>
       )}
 
-      {/* ========== ÉTAPE 4 : RÉSULTATS ========== */}
-      {demoStep === 4 && (
-        <main className="dashboard-main" style={{ animation: 'tbFadeIn 0.5s ease' }}>
-          <section className="optimization-results">
-            <div className="section-header">
-              <Activity className="section-icon" /><h2>Résultats d'Optimisation</h2>
-              <div className="optimization-badge"><Zap size={14} />Terminé</div>
-            </div>
-            <div className="results-grid">
-              <div className="result-item">
-                <div className="result-icon"><Route /></div>
-                <div className="result-content"><span className="result-label">Distance Totale</span><span className="result-value">285,0 km</span></div>
-              </div>
-              <div className="result-item">
-                <div className="result-icon"><Trend /></div>
-                <div className="result-content"><span className="result-label">Gain Réalisé</span><span className="result-value">32,1%</span></div>
-              </div>
-              <div className="result-item">
-                <div className="result-icon"><Package /></div>
-                <div className="result-content"><span className="result-label">Coût Total</span><span className="result-value">228 Ar</span></div>
-              </div>
-              <div className="result-item">
-                <div className="result-icon"><Truck /></div>
-                <div className="result-content"><span className="result-label">Camions Utilisés</span><span className="result-value">2</span></div>
-              </div>
-            </div>
-          </section>
-
-          {/* Comparaison */}
-          <section className="tb-card p-6 mt-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-50 dark:bg-green-900/30"><Trend size={20} className="text-green-600 dark:text-green-400" /></div>
-              <div>
-                <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Comparaison des tournées</h3>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Naïve vs Optimisée</p>
-              </div>
-            </div>
+      {/* ÉTAPE 4: MÉTÉO */}
+      {etape===4 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <div className="section-carte p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><Cloud size={26} />Météo des Villages</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-5 rounded-xl border" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)' }}>
-                <div className="flex items-center gap-2 mb-4"><AlertTriangle size={18} className="text-amber-500" /><h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Tournée Naïve</h4></div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Distance</span><span className="font-bold" style={{ color: 'var(--text-primary)' }}>420 km</span></div>
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Carburant</span><span className="font-bold" style={{ color: 'var(--text-primary)' }}>336 L</span></div>
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Durée</span><span className="font-bold" style={{ color: 'var(--text-primary)' }}>7h30</span></div>
+              {METEO.map((m,i) => (
+                <div key={i} className="rounded-xl border p-6" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold">{m.ville}</h3>
+                      <p className="text-sm opacity-60">{m.desc}</p>
+                    </div>
+                    <span className="text-4xl">{m.icone}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center"><Thermometer size={20} className="mx-auto mb-1 text-red-500" />
+                      <p className="text-2xl font-bold">{m.temp}°</p><p className="text-xs opacity-60">Ressenti {m.ressenti}°</p></div>
+                    <div className="text-center"><Droplets size={20} className="mx-auto mb-1 text-blue-500" />
+                      <p className="text-2xl font-bold">{m.humidite}%</p><p className="text-xs opacity-60">Humidité</p></div>
+                    <div className="text-center"><Wind size={20} className="mx-auto mb-1 text-cyan-500" />
+                      <p className="text-2xl font-bold">{m.vent}</p><p className="text-xs opacity-60">km/h</p></div>
+                  </div>
+                  <div className="mt-4 p-3 rounded-lg" style={{background:darkMode?'rgba(34,197,94,0.1)':'rgba(34,197,94,0.08)'}}>
+                    <p className="text-sm">
+                      {m.temp > 30 ? '⚠️ Chaleur élevée — risque de routes dégradées' :
+                       m.humidite > 70 ? '⚠️ Humidité élevée — visibilité réduite' : '✅ Conditions favorables pour le transport'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="p-5 rounded-xl border relative overflow-hidden" style={{ borderColor: 'rgba(52,211,153,0.3)', background: 'var(--bg-card)' }}>
-                <div className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-xs font-bold text-white" style={{ background: '#10b981' }}>GAGNANT</div>
-                <div className="flex items-center gap-2 mb-4"><CheckCircle size={18} className="text-green-500" /><h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Tournée Optimisée</h4></div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Distance</span><span className="font-bold text-green-500">285 km</span></div>
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Carburant</span><span className="font-bold text-green-500">228 L</span></div>
-                  <div className="flex justify-between text-sm"><span style={{ color: 'var(--text-secondary)' }}>Durée</span><span className="font-bold text-green-500">5h05</span></div>
-                </div>
-              </div>
+              ))}
             </div>
-            <div className="mt-6 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
-              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.15)' }}><Trend size={20} className="text-green-500" /></div><div><p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Gain</p><p className="text-xl font-bold text-green-500">32,1%</p></div></div>
-              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}><Package size={20} className="text-blue-500" /></div><div><p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Économie</p><p className="text-xl font-bold text-blue-500">108 L</p></div></div>
-              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)' }}><Truck size={20} className="text-amber-500" /></div><div><p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Temps gagné</p><p className="text-xl font-bold text-amber-500">2h25</p></div></div>
-            </div>
-          </section>
+          </div>
+        </main>
+      )}
 
-          {/* Détail des tournées */}
-          <section className="tb-card p-6 mt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                <Truck size={20} style={{ color: '#3b82f6' }} />
+      {/* ÉTAPE 5: OPTIMISATION */}
+      {etape===5 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <div className="section-carte p-6">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3"><Zap size={26} />Optimisation Multi-Camions</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-xl border p-6" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
+                <h3 className="font-bold mb-4 flex items-center gap-2"><Target size={20} />Paramètres</h3>
+                <div className="space-y-4">
+                  <div><label className="text-sm font-medium block mb-1">Dépôt</label>
+                    <select className="champ-saisie w-full"><option>Fianarantsoa</option></select></div>
+                  <div><label className="text-sm font-medium block mb-1">Camions disponibles</label>
+                    <div className="space-y-2">
+                      {['Camion A (5t)','Camion B (3t)'].map((c,i)=>(
+                        <div key={i} className="flex items-center gap-2 p-3 rounded-lg border" style={{borderColor:'rgba(34,197,94,0.3)',background:'rgba(34,197,94,0.05)'}}>
+                          <Truck size={18} /><span className="flex-1">{c}</span><CheckCircle size={16} className="text-green-500" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="btn btn-primary flex-1" disabled={progres<100}>Optimisation std</button>
+                    <button className="btn flex-1" style={{background:'rgba(59,130,246,0.1)',color:'#3b82f6',border:'1px solid rgba(59,130,246,0.2)'}} disabled={progres<100}>Avec météo</button>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Détail des Tournées Optimisées</h3>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>2 camions · 4 arrêts</p>
+
+              <div className="rounded-xl border p-6" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
+                <h3 className="font-bold mb-4 flex items-center gap-2"><Activity size={20} />Progression</h3>
+                <div className="text-center p-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{background:'rgba(251,191,36,0.15)'}}>
+                    <Zap size={32} style={{color:'#fbbf24'}} className={progres<100?'animate-spin':''} />
+                  </div>
+                  <p className="text-sm mb-4 opacity-60">Algorithme Greedy Nearest-Neighbor + Dijkstra</p>
+                  <div className="h-2 rounded-full overflow-hidden" style={{background:'var(--border-subtle)'}}>
+                    <div className="h-full rounded-full transition-all" style={{width:`${progres}%`,background:'linear-gradient(90deg,#22c55e,#16a34a)'}} />
+                  </div>
+                  <p className="text-xs mt-2 font-mono">{progres}%</p>
+                  <div className="mt-4 space-y-2">
+                    {['Calcul des distances (Dijkstra)','Vérification capacités','Construction tournées Greedy','Comparaison avec/sans météo'].map((l,i)=>(
+                      <div key={i} className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${progres>(i+1)*25?'bg-green-500':'bg-gray-300 dark:bg-gray-600'}`} />
+                        <span className="text-xs opacity-70">{l}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="space-y-4">
+          </div>
+        </main>
+      )}
+
+      {/* ÉTAPE 6: RÉSULTATS + IA */}
+      {etape===6 && (
+        <main className="dashboard-main" style={{animation:'tbFadeIn 0.5s ease'}}>
+          <section className="section-carte p-6 mb-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{background:'rgba(52,211,153,0.15)'}}>
+                <TrendingUp size={20} style={{color:'#34d399'}} /></div>
+              <div><h2 className="text-xl font-bold">Résultats d'Optimisation</h2>
+                <p className="text-xs opacity-60">Tournée multi-camions · Dépôt Fianarantsoa</p></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="p-5 rounded-xl border" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
+                <div className="flex items-center gap-2 mb-4"><AlertTriangle size={18} className="text-amber-500" /><h4 className="font-bold">Tournée Naïve</h4></div>
+                <div className="space-y-2">
+                  {Object.entries(OPTIM_RESULTS.naive).map(([k,v]) => (
+                    <div key={k} className="flex justify-between text-sm">
+                      <span className="opacity-60">{k==='dist'?'Distance':k==='cout'?'Coût':'Durée'}</span>
+                      <span className="font-bold">{v}{k==='dist'?' km':k==='cout'?' Ar':'h'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-5 rounded-xl border relative overflow-hidden" style={{borderColor:'rgba(52,211,153,0.3)',background:'var(--bg-card)'}}>
+                <div className="absolute top-0 right-0 px-3 py-1 rounded-bl-xl text-xs font-bold text-white" style={{background:'#10b981'}}>GAGNANT</div>
+                <div className="flex items-center gap-2 mb-4"><CheckCircle size={18} className="text-green-500" /><h4 className="font-bold">Tournée Optimisée (Standard)</h4></div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm"><span className="opacity-60">Distance</span><span className="font-bold text-green-500">{OPTIM_RESULTS.standard.dist} km</span></div>
+                  <div className="flex justify-between text-sm"><span className="opacity-60">Gain</span><span className="font-bold text-green-500">{OPTIM_RESULTS.standard.gain}%</span></div>
+                  <div className="flex justify-between text-sm"><span className="opacity-60">Carburant</span><span className="font-bold text-green-500">{OPTIM_RESULTS.standard.essence} L</span></div>
+                  <div className="flex justify-between text-sm"><span className="opacity-60">Camions</span><span className="font-bold text-green-500">{OPTIM_RESULTS.standard.camions}</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-xl border mb-6" style={{borderColor:'rgba(59,130,246,0.3)',background:'rgba(59,130,246,0.05)'}}>
+              <div className="flex items-center gap-2 mb-4"><Cloud size={18} className="text-blue-500" /><h4 className="font-bold">Avec Ajustement Météo</h4></div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm"><span className="opacity-60">Distance (ajustée)</span><span className="font-bold text-blue-500">{OPTIM_RESULTS.weatherAdjusted.dist} km</span></div>
+                <div className="flex justify-between text-sm"><span className="opacity-60">Gain</span><span className="font-bold text-blue-500">{OPTIM_RESULTS.weatherAdjusted.gain}%</span></div>
+                <div className="flex justify-between text-sm"><span className="opacity-60">Villages affectés</span><span className="font-bold">Manakara (pluie), Fianarantsoa (chaleur)</span></div>
+              </div>
+            </div>
+
+            {/* Détail des tournées */}
+            <div className="space-y-4 mb-6">
+              <h3 className="font-bold text-lg flex items-center gap-2"><Truck size={20} />Détail des Tournées</h3>
               {[
-                { nom: 'Camion A', capacite: '5 000', charge: '3 200', dist: '165,0', cout: '132', couleur: '#22c55e', etapes: [
-                  { nom: 'Dépôt — Fianarantsoa', collecte: 0, cumul: 0 },
-                  { nom: 'Ambalavao', collecte: 450, cumul: 75.0 },
-                  { nom: 'Retour Dépôt', collecte: 0, cumul: 165.0 }
+                { nom:'Camion A', cap:'5 000', charge:'3 200', dist:'165,0', cout:'132', couleur:'#22c55e', etapes:[
+                  {nom:'Dépôt → Fianarantsoa',coll:0,cumul:0},
+                  {nom:'Ambalavao',coll:450,cumul:75},
+                  {nom:'Retour Dépôt',coll:0,cumul:165},
                 ]},
-                { nom: 'Camion B', capacite: '3 000', charge: '2 000', dist: '120,0', cout: '96', couleur: '#3b82f6', etapes: [
-                  { nom: 'Dépôt — Fianarantsoa', collecte: 0, cumul: 0 },
-                  { nom: 'Mananjary', collecte: 520, cumul: 95.0 },
-                  { nom: 'Manakara', collecte: 320, cumul: 120.0 },
-                  { nom: 'Retour Dépôt', collecte: 0, cumul: 120.0 }
-                ]}
-              ].map((tournee, idx) => (
-                <div key={idx} className="rounded-xl border p-4" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card)' }}>
+                { nom:'Camion B', cap:'3 000', charge:'2 000', dist:'120,0', cout:'96', couleur:'#3b82f6', etapes:[
+                  {nom:'Dépôt → Fianarantsoa',coll:0,cumul:0},
+                  {nom:'Mananjary',coll:520,cumul:95},
+                  {nom:'Manakara',coll:320,cumul:120},
+                  {nom:'Retour Dépôt',coll:0,cumul:120},
+                ]},
+              ].map((t,i)=>(
+                <div key={i} className="rounded-xl border p-4" style={{borderColor:'var(--border-subtle)',background:'var(--bg-card)'}}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full" style={{ background: tournee.couleur }} />
-                      <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{tournee.nom}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--border-subtle)', color: 'var(--text-secondary)' }}>{tournee.etapes.length - 1} arrêts</span>
+                      <div className="w-3 h-3 rounded-full" style={{background:t.couleur}} />
+                      <span className="font-bold text-sm">{t.nom}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full" style={{background:'var(--border-subtle)',color:'var(--text-secondary)'}}>{t.etapes.length-1} arrêts</span>
                     </div>
-                    <div className="flex gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      <span><strong>{tournee.dist}</strong> km</span>
-                      <span><strong>{tournee.charge}</strong> / {tournee.capacite} kg</span>
+                    <div className="flex gap-3 text-xs opacity-60">
+                      <span><strong>{t.dist}</strong> km</span>
+                      <span><strong>{t.charge}</strong> / {t.cap} kg</span>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {tournee.etapes.map((etape, eIdx) => (
-                      <div key={eIdx} className="flex items-center gap-3 p-2 rounded-lg" style={{ background: eIdx === 0 || eIdx === tournee.etapes.length - 1 ? 'var(--border-subtle)' : 'transparent' }}>
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: tournee.couleur }}>{eIdx + 1}</div>
+                    {t.etapes.map((e,ei)=>(
+                      <div key={ei} className="flex items-center gap-3 p-2 rounded-lg" style={{background:ei===0||ei===t.etapes.length-1?'var(--border-subtle)':'transparent'}}>
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{background:t.couleur}}>{ei+1}</div>
                         <div className="flex-1">
-                          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{etape.nom}</div>
-                          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{etape.collecte > 0 ? `${etape.collecte} kg collectés` : 'Point de départ / retour'} · {etape.cumul.toFixed(1)} km cumulés</div>
+                          <div className="text-sm font-medium">{e.nom}</div>
+                          <div className="text-xs opacity-50">{e.coll>0?`${e.coll} kg collectés`:'Point de départ / retour'} · {e.cumul.toFixed(1)} km</div>
                         </div>
                       </div>
                     ))}
@@ -541,16 +531,44 @@ export default function DemoPage({ onBack }) {
                 </div>
               ))}
             </div>
+
+            {/* Assistant IA */}
+            <div className="rounded-xl border p-6" style={{borderColor:'rgba(34,197,94,0.2)',background:'var(--bg-card)'}}>
+              <div className="flex items-center gap-3 mb-4">
+                <Bot size={24} className="text-green-500" />
+                <div><h3 className="font-bold">Assistant IA</h3><p className="text-xs opacity-60">Posez des questions sur vos données</p></div>
+              </div>
+              <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                {iaMsg.map((m,i)=>(
+                  <div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                      m.role==='user' ? 'bg-green-500 text-white rounded-br-md' :
+                      'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-md'
+                    }`}>{m.txt.split('\n').map((l,li)=>(
+                      <p key={li}>{l}</p>
+                    ))}</div>
+                  </div>
+                ))}
+                {iaStep===0 && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[80%] p-3 rounded-xl text-sm bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-bl-md">
+                      En attente de votre question...
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input className="flex-1 champ-saisie" placeholder="Posez votre question..." disabled value="" />
+                <button className="px-4 py-2 rounded-xl bg-green-500 text-white text-sm font-bold">Envoyer</button>
+              </div>
+            </div>
           </section>
         </main>
       )}
 
       <style>{`
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes tbFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .camion-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem; }
-        .camion-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; }
-        .camion-item.selected { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+        @keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        @keyframes tbFadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
       `}</style>
     </div>
   );

@@ -4,11 +4,13 @@ import { motion } from 'framer-motion';
 import { ServiceDonnees } from '../../services/ServiceDonnees';
 import { gestionSession } from '../../utils/stockageLocal.js';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 const svc = new ServiceDonnees();
 
 export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
   const { darkMode } = useTheme();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [nom, setNom] = useState('');
@@ -105,7 +107,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
             className="text-xl font-bold uppercase tracking-widest"
             style={{ color: accentColor }}
           >
-            {mode === 'login' ? 'Connexion' : 'Inscription'}
+            {mode === 'login' ? t('auth.connexion') : t('auth.inscription')}
           </motion.h2>
 
           <motion.div
@@ -118,7 +120,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
             <form onSubmit={submit} className="flex flex-col items-center w-full gap-4">
               {mode === 'register' && (
                 <input
-                  placeholder="Nom d'utilisateur"
+                  placeholder={t('auth.nom')}
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   className="w-4/5 px-5 py-3 rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)] outline-none border border-transparent focus:border-[var(--color-primary)] transition-all"
@@ -127,7 +129,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
 
               <input
                 type="email"
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-4/5 px-5 py-3 rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)] outline-none border border-transparent focus:border-[var(--color-primary)] transition-all"
@@ -135,7 +137,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
 
               <input
                 type="password"
-                placeholder="Mot de passe"
+                placeholder={t('auth.motDePasse')}
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
                 className="w-4/5 px-5 py-3 rounded-full bg-[var(--bg-secondary)] text-[var(--text-primary)] outline-none border border-transparent focus:border-[var(--color-primary-light)] transition-all"
@@ -148,7 +150,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
                 className="w-3/5 py-3 mt-2 rounded-full font-bold uppercase tracking-tighter transition-all hover:scale-105 active:scale-95 shadow-lg" 
                 style={{ background: btnBg, color: '#f8fafc' }}
               >
-                {mode === 'login' ? 'Entrer' : 'Créer'}
+                {mode === 'login' ? t('auth.connexion') : t('auth.inscription')}
               </button>
 
               <div className="flex justify-between w-4/5 mt-4 px-2">
@@ -159,7 +161,7 @@ export default function AuthForm({ onLogin, mode: initialMode = 'login' }) {
                   className="text-[10px] font-bold hover:underline" 
                   style={{ color: 'var(--orange)' }}
                 >
-                  {mode === 'login' ? "S'inscrire" : 'Se connecter'}
+                  {mode === 'login' ? t('auth.inscription') : t('auth.connexion')}
                 </a>
               </div>
             </form>

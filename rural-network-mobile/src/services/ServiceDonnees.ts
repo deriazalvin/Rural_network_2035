@@ -128,6 +128,15 @@ class ServiceDonnees {
     return this.request('/optimisations/historique', { method: 'DELETE' });
   }
 
+  optimiserTourneesAvecMeteo(depotId: string, camionIds: string[], prixCarburantKm?: number): Promise<any> {
+    const body: any = { depotId, camionIds };
+    if (prixCarburantKm != null && prixCarburantKm > 0) body.prixCarburantKm = prixCarburantKm;
+    return this.request('/optimisations/comparer-avec-meteo', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
   // === MÉTÉO ===
   obtenirMeteo(lat: number, lon: number): Promise<any> {
     return this.request(`/meteo?lat=${lat}&lon=${lon}`);

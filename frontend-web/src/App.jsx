@@ -13,14 +13,16 @@ import PublicPages from './composants/common/PublicPages.jsx';
 import LogoRN from './composants/common/LogoRN.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/common/AuthForm.jsx';
-import { Circle, Sun, Moon } from "lucide-react";
+import { Circle, Sun, Moon, Globe } from "lucide-react";
 import { ChatBot } from './composants/assistant/ChatBot';
 import "leaflet/dist/leaflet.css";
 import { AlertCircle, XOctagon, MapPinOff, Activity } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext.jsx';
+import { useI18n } from './contexts/I18nContext.jsx';
 
 function App() {
   const { darkMode, toggleDarkMode } = useTheme();
+  const { t, langue, setLangue, LANGUES } = useI18n();
   const [ongletActif, setOngletActif] = useState('tableau-bord');
   const [villages, setVillages] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -505,8 +507,8 @@ function App() {
     return (
       <div className="app">
         <div className="entete">
-          <h1>Rural Network 2035</h1>
-          <p>Chargement en cours...</p>
+          <h1>{t('app.titre')}</h1>
+          <p>{t('commun.charger')}</p>
         </div>
       </div>
     );
@@ -539,8 +541,8 @@ function App() {
             <LogoRN size="lg" showText={true} />
           </div>
           <div className="entete-text">
-            <h1>Rural Network 2035</h1>
-            <p>Plateforme d'optimisation de la logistique agricole malagasy</p>
+            <h1>{t('app.titre')}</h1>
+            <p>{t('app.sousTitre')}</p>
           </div>
           {utilisateur && (
             <div className="entete-user" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(34,197,94,0.12)', padding: '0.35rem 0.9rem', borderRadius: '20px', border: '1px solid rgba(34,197,94,0.25)', color: '#16a34a', fontSize: '0.85rem', fontWeight: 700 }}>
@@ -554,12 +556,12 @@ function App() {
       <nav className="navbar">
         <ul className="nav-list">
           {[
-            { id: 'tableau-bord', label: 'Tableau', icon: 'fa-chart-line' },
-            { id: 'villages', label: 'Villages', icon: 'fa-tree-city' },
-            { id: 'routes', label: 'Routes', icon: 'fa-route' },
-            { id: 'camions', label: 'Flotte', icon: 'fa-truck' },
-            { id: 'meteo', label: 'Météo', icon: 'fa-cloud-sun' },
-            { id: 'optimisation', label: 'Calcul', icon: 'fa-gears' }
+            { id: 'tableau-bord', label: t('nav.tableau'), icon: 'fa-chart-line' },
+            { id: 'villages', label: t('nav.villages'), icon: 'fa-tree-city' },
+            { id: 'routes', label: t('nav.routes'), icon: 'fa-route' },
+            { id: 'camions', label: t('nav.flotte'), icon: 'fa-truck' },
+            { id: 'meteo', label: t('nav.meteo'), icon: 'fa-cloud-sun' },
+            { id: 'optimisation', label: t('nav.calcul'), icon: 'fa-gears' }
           ].map((item) => (
             <li 
               key={item.id} 
@@ -577,11 +579,22 @@ function App() {
         </ul>
 
         <ul className="nav-list" style={{ marginLeft: 8 }}>
+          {/* Bouton langue */}
+          <li className="nav-item" style={{ cursor: 'pointer', position: 'relative' }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); const lvs = { fr: 'en', en: 'mg', mg: 'fr' }; setLangue(lvs[langue]); }}>
+              <div className="nav-content">
+                <span className="text">{LANGUES[langue]}</span>
+                <span className="icon">
+                  <Globe size={18} color="#22c55e" />
+                </span>
+              </div>
+            </a>
+          </li>
           {/* Bouton toggle dark mode */}
           <li className="nav-item" onClick={toggleDarkMode} style={{ cursor: 'pointer' }}>
             <a href="#" onClick={(e) => e.preventDefault()}>
               <div className="nav-content">
-                <span className="text">{darkMode ? 'Clair' : 'Nuit'}</span>
+                <span className="text">{darkMode ? t('nav.clair') : t('nav.nuit')}</span>
                 <span className="icon">
                   {darkMode ? (
                     <Sun size={18} color="#f39c12" />
@@ -594,15 +607,15 @@ function App() {
           </li>
           
           <li className="nav-item" onClick={() => { 
-            if (window.confirm('Voulez-vous vraiment nettoyer toutes les données locales ? Cette action supprimera toutes vos données sauvegardées localement et rechargera les données depuis la base de données.')) {
+            if (window.confirm('Voulez-vous vraiment nettoyer toutes les données locales ?')) {
               gestionSession.nettoyerDonneesLocales();
               chargerDonnees();
-              alert('Données locales nettoyées. Les données de la base de données ont été rechargées.');
+              alert('Données locales nettoyées.');
             }
           }}>
             <a href="#" onClick={(e) => e.preventDefault()}>
               <div className="nav-content">
-                <span className="text">Nettoyer</span>
+                <span className="text">{t('nav.nettoyer')}</span>
                 <span className="icon"><i className="fa-solid fa-trash"></i></span>
               </div>
             </a>
@@ -610,7 +623,7 @@ function App() {
           <li className="nav-item logout" onClick={() => { logout(); }}>
             <a href="#" onClick={(e) => { e.preventDefault(); logout(); }}>
               <div className="nav-content">
-                <span className="text">Se déconnecter</span>
+                <span className="text">{t('nav.deconnexion')}</span>
                 <span className="icon"><i className="fa-solid fa-door-open"></i></span>
               </div>
             </a>

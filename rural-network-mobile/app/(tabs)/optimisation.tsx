@@ -33,7 +33,7 @@ import {
   Moon,
   LogOut,
 } from 'lucide-react-native';
-import type { Notification as NotificationType, ResultatOptimisation } from '../../src/types';
+import type { Notification as NotificationType, ResultatOptimisation, OptimisationComparative } from '../../src/types';
 
 export default function OptimisationScreen() {
   const { theme, mode, basculerTheme } = useTheme();
@@ -50,6 +50,9 @@ export default function OptimisationScreen() {
   const [chargement, setChargement] = useState(false);
   const [progres, setProgres] = useState(0);
   const [resultat, setResultat] = useState<ResultatOptimisation | null>(null);
+  const [modeComparatif, setModeComparatif] = useState(false);
+  const [resultatComparatif, setResultatComparatif] = useState<OptimisationComparative | null>(null);
+  const [resultatValideMobile, setResultatValideMobile] = useState<{resultat: ResultatOptimisation; label: string} | null>(null);
   const [notification, setNotification] = useState<NotificationType | null>(null);
   const [expandedTours, setExpandedTours] = useState<Set<number>>(new Set());
   const [selectedHistoryIdx, setSelectedHistoryIdx] = useState<number>(-1);
@@ -104,6 +107,41 @@ export default function OptimisationScreen() {
     }
   };
 
+  const lancerComparatif = async () => {
+    if (!depotId) {
+      setNotification({ type: 'avertissement', titre: 'Dépôt requis', message: 'Sélectionnez un dépôt' });
+      return;
+    }
+    if (camionsSel.size === 0) {
+      setNotification({ type: 'avertissement', titre: 'Camions requis', message: 'Sélectionnez au moins un camion' });
+      return;
+    }
+    setChargement(true);
+    setProgres(0);
+    setResultatComparatif(null);
+
+    let p = 0;
+    const interval = setInterval(() => {
+      p += Math.random() * 15;
+      if (p > 90) p = 90;
+      setProgres(p);
+    }, 400);
+
+    try {
+      const res = await serviceDonnees.optimiserTourneesAvecMeteo(depotId, Array.from(camionsSel), prixCamburant);
+      clearInterval(interval);
+      setProgres(100);
+      setResultatComparatif(res);
+      setModeComparatif(true);
+      setNotification({ type: 'succes', titre: 'Comparaison terminée', message: '2 tournées calculées (standard + météo)' });
+    } catch (err: any) {
+      clearInterval(interval);
+      setNotification({ type: 'erreur', titre: 'Erreur', message: err.message });
+    } finally {
+      setChargement(false);
+    }
+  };
+
   const rotation = useSharedValue(0);
   useEffect(() => {
     if (chargement) {
@@ -119,6 +157,23 @@ export default function OptimisationScreen() {
   const spinStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
+
+  const validerComparatifMobile = (type: 'standard' | 'meteo') => {
+    if (!resultatComparatif) return;
+    const resultat = type === 'standard' ? resultatComparatif.resultatStandard : resultatComparatif.resultatAvecMeteo;
+    const label = type === 'standard' ? 'Standard' : 'Avec ajustement météo';
+    setResultatValideMobile({ resultat, label });
+    setModeComparatif(false);
+    setResultat(resultat);
+    sauvegarderOptimisation(resultat);
+  };
+
+  const annulerComparatifMobile = () => {
+    setModeComparatif(false);
+    setResultatComparatif(null);
+    setResultatValideMobile(null);
+    setResultat(null);
+  };
 
   const toggleTour = (idx: number) => {
     setExpandedTours((prev) => {
@@ -149,7 +204,175 @@ export default function OptimisationScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {resultat ? (
+        {resultatValideMobile ? (
+          <>
+            <View style={[styles.resultBadge, { backgroundColor: COULEURS.emeraude + '20', borderColor: COULEURS.emeraude }]}>
+              <Text style={{ color: COULEURS.emeraude, fontWeight: '800', fontSize: 13 }}>
+                ✓ Validé ({resultatValideMobile.label})
+              </Text>
+            </View>
+            <Carte style={styles.resultCard} ombre="sm">
+              <View style={styles.resultHeader}>
+                <Zap size={20} color={COULEURS.emeraude} />
+                <Text style={[styles.resultTitle, { color: theme.texte }]}>
+                  Résultats d'Optimisation
+                </Text>
+              </View>
+              <View style={styles.resultGrid}>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatValideMobile.resultat.distanceTotalKm?.toFixed(1)} km
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
+                    {resultatValideMobile.resultat.gainPourcent?.toFixed(1)}%
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatValideMobile.resultat.coutTotal?.toFixed(0)} Ar
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatValideMobile.resultat.tournees?.length || 0}
+                  </Text>
+                </View>
+              </View>
+            </Carte>
+            <Bouton
+              titre="Nouvelle Optimisation Comparative"
+              onPress={annulerComparatifMobile}
+              variante="outline"
+              style={{ marginTop: ESPACEMENTS.lg }}
+            />
+          </>
+        ) : modeComparatif && resultatComparatif ? (
+          <>
+            <Text style={[styles.sectionTitle, { color: theme.texte, marginBottom: ESPACEMENTS.md }]}>
+              Optimisation Comparative
+            </Text>
+            <Text style={[styles.comparatifSubtitle, { color: theme.texteTertiaire }]}>
+              Choisissez la tournée à valider
+            </Text>
+
+            {resultatComparatif.villagesTouchesParMeteo?.length > 0 && (
+              <View style={[styles.meteoAlert, { backgroundColor: '#f59e0b20', borderColor: '#f59e0b' }]}>
+                <Cloud size={16} color="#f59e0b" />
+                <Text style={{ color: '#b45309', fontSize: 12, fontWeight: '600', flex: 1 }}>
+                  Météo défavorable sur : {resultatComparatif.villagesTouchesParMeteo.join(', ')}
+                </Text>
+              </View>
+            )}
+
+            {resultatComparatif.differenceDistance !== undefined && (
+              <View style={[styles.comparatifEcart, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
+                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>Écart distance</Text>
+                <Text style={[styles.ecartValue, { color: '#f59e0b' }]}>
+                  +{resultatComparatif.differenceDistance.toFixed(1)} km
+                </Text>
+                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>Écart coût</Text>
+                <Text style={[styles.ecartValue, { color: '#f59e0b' }]}>
+                  +{resultatComparatif.differenceCout.toFixed(0)} Ar
+                </Text>
+              </View>
+            )}
+
+            {/* Carte Standard */}
+            <Carte style={styles.comparatifCard} ombre="sm">
+              <View style={[styles.comparatifHeader, { borderBottomColor: theme.bordure }]}>
+                <Zap size={18} color="#3b82f6" />
+                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>Standard</Text>
+                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>Greedy classique</Text>
+              </View>
+              <View style={styles.resultGrid}>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatStandard.distanceTotalKm?.toFixed(1)} km
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
+                    {resultatComparatif.resultatStandard.gainPourcent?.toFixed(1)}%
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatStandard.coutTotal?.toFixed(0)} Ar
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatStandard.tournees?.length || 0}
+                  </Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => validerComparatifMobile('standard')}
+                style={[styles.validerBtn, { backgroundColor: '#3b82f6' }]}
+              >
+                <Text style={styles.validerBtnText}>✓ VALIDER (Standard)</Text>
+              </Pressable>
+            </Carte>
+
+            {/* Carte Météo */}
+            <Carte style={styles.comparatifCard} ombre="sm">
+              <View style={[styles.comparatifHeader, { borderBottomColor: theme.bordure }]}>
+                <Cloud size={18} color="#8b5cf6" />
+                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>Adaptée Météo</Text>
+                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>Avec pénalités météo</Text>
+              </View>
+              <View style={styles.resultGrid}>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatAvecMeteo.distanceTotalKm?.toFixed(1)} km
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
+                    {resultatComparatif.resultatAvecMeteo.gainPourcent?.toFixed(1)}%
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatAvecMeteo.coutTotal?.toFixed(0)} Ar
+                  </Text>
+                </View>
+                <View style={styles.resultItem}>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultValue, { color: theme.texte }]}>
+                    {resultatComparatif.resultatAvecMeteo.tournees?.length || 0}
+                  </Text>
+                </View>
+              </View>
+              <Pressable
+                onPress={() => validerComparatifMobile('meteo')}
+                style={[styles.validerBtn, { backgroundColor: '#8b5cf6' }]}
+              >
+                <Text style={styles.validerBtnText}>✓ VALIDER (Météo)</Text>
+              </Pressable>
+            </Carte>
+
+            <Bouton
+              titre="Retour"
+              onPress={annulerComparatifMobile}
+              variante="outline"
+              style={{ marginTop: ESPACEMENTS.md }}
+            />
+          </>
+        ) : resultat ? (
           <>
             <Carte style={styles.resultCard} ombre="sm">
               <View style={styles.resultHeader}>
@@ -363,6 +586,15 @@ export default function OptimisationScreen() {
               taille="lg"
               desactive={chargement || !depotId || camionsSel.size === 0}
               style={{ marginTop: ESPACEMENTS.xl }}
+            />
+
+            <Bouton
+              titre="Optimisation comparative (avec météo)"
+              onPress={lancerComparatif}
+              variante="primaire"
+              taille="lg"
+              desactive={chargement || !depotId || camionsSel.size === 0}
+              style={{ marginTop: ESPACEMENTS.md }}
             />
 
             <Carte style={styles.infoCard} ombre="sm">
@@ -601,4 +833,35 @@ const styles = StyleSheet.create({
     borderWidth: 1, fontSize: 15, fontWeight: '700', textAlign: 'center',
   },
   carburantUnite: { fontSize: 12, fontWeight: '600' },
+  resultBadge: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: ESPACEMENTS.sm, paddingHorizontal: ESPACEMENTS.lg,
+    borderRadius: 20, borderWidth: 1.5, marginBottom: ESPACEMENTS.md,
+  },
+  comparatifSubtitle: { fontSize: 13, marginBottom: ESPACEMENTS.lg },
+  meteoAlert: {
+    flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm,
+    padding: ESPACEMENTS.md, borderRadius: RAYONS.md, borderWidth: 1,
+    marginBottom: ESPACEMENTS.md,
+  },
+  comparatifEcart: {
+    flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.md,
+    padding: ESPACEMENTS.md, borderRadius: RAYONS.md, borderWidth: 1,
+    marginBottom: ESPACEMENTS.lg, flexWrap: 'wrap',
+  },
+  ecartLabel: { fontSize: 11, fontWeight: '600' },
+  ecartValue: { fontSize: 14, fontWeight: '800' },
+  comparatifCard: { padding: ESPACEMENTS.md, marginBottom: ESPACEMENTS.md },
+  comparatifHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm,
+    paddingBottom: ESPACEMENTS.sm, marginBottom: ESPACEMENTS.sm,
+    borderBottomWidth: 1, flexWrap: 'wrap',
+  },
+  comparatifTitle: { fontSize: 15, fontWeight: '700' },
+  comparatifSous: { fontSize: 11, marginLeft: 'auto' },
+  validerBtn: {
+    paddingVertical: ESPACEMENTS.md, borderRadius: RAYONS.md,
+    alignItems: 'center', justifyContent: 'center', marginTop: ESPACEMENTS.sm,
+  },
+  validerBtnText: { color: COULEURS.blanc, fontWeight: '800', fontSize: 14 },
 });

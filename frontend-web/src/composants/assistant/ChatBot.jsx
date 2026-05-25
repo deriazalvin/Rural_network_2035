@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useContext } from 'react';
 import { Bot, X, Send, ChevronDown } from 'lucide-react';
 import { ServiceDonnees } from '../../services/ServiceDonnees';
+import { ThemeContext } from '../../contexts/ThemeContext';
+import { I18nContext } from '../../contexts/I18nContext';
 import './ChatBot.css';
 
 function formaterTexte(texte) {
@@ -31,6 +33,8 @@ export function ChatBot({ utilisateur }) {
   const [messages, setMessages] = useState([]);
   const [saisie, setSaisie] = useState('');
   const [charge, setCharge] = useState(false);
+  const { darkMode } = useContext(ThemeContext);
+  const { t } = useContext(I18nContext);
   const [pos, setPos] = useState({ x: window.innerWidth - 90, y: window.innerHeight - 100 });
   const [drag, setDrag] = useState(false);
   const msgFin = useRef(null);
@@ -47,7 +51,7 @@ export function ChatBot({ utilisateur }) {
       const rep = await service.current.poserQuestionIA(q);
       setMessages(m => [...m, { role: 'ia', texte: rep.reponse || rep, heure: now() }]);
     } catch (e) {
-      setMessages(m => [...m, { role: 'ia', texte: 'Erreur: impossible de contacter l\'assistant.', heure: now() }]);
+      setMessages(m => [...m, { role: 'ia', texte: t('chat.erreur'), heure: now() }]);
     }
     setCharge(false);
   }, [saisie]);
@@ -75,18 +79,20 @@ export function ChatBot({ utilisateur }) {
 
   if (!utilisateur) return null;
 
+  const themeClass = darkMode ? 'dark' : '';
+
   return (
-    <div className="chatbot-wrapper">
+    <div className={`chatbot-wrapper ${themeClass}`} data-theme={darkMode ? 'dark' : 'light'}>
       {ouvert && (
         <div className="chatbot-panel" style={{ bottom: Math.min(80, window.innerHeight - pos.y - 60) + 20 + 'px' }}>
           <div className="chatbot-header">
             <Bot size={20} />
-            <span>Assistant RN</span>
+            <span>{t('chat.titre')}</span>
             <button className="chatbot-close" onClick={() => setOuvert(false)}><X size={18} /></button>
           </div>
           <div className="chatbot-msgs">
             {messages.length === 0 && (
-              <div className="chatbot-msg ia">Bonjour! Posez-moi une question sur vos donnees, la meteo, les routes, etc.</div>
+              <div className="chatbot-msg ia">{t('chat.messageBienvenue')}</div>
             )}
             {messages.map((m, i) => (
               <div key={i} className={`chatbot-msg ${m.role}`}>
@@ -94,7 +100,7 @@ export function ChatBot({ utilisateur }) {
                 <div className="chatbot-msg-heure">{m.heure}</div>
               </div>
             ))}
-            {charge && <div className="chatbot-msg ia">Reflexion en cours...</div>}
+            {charge && <div className="chatbot-msg ia">{t('chat.chargement')}</div>}
             <div ref={msgFin} />
           </div>
           <div className="chatbot-input">
@@ -102,7 +108,7 @@ export function ChatBot({ utilisateur }) {
               value={saisie}
               onChange={e => setSaisie(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && envoyer()}
-              placeholder="Posez votre question..."
+              placeholder={t('chat.placeholder')}
               disabled={charge}
             />
             <button onClick={envoyer} disabled={charge || !saisie.trim()}>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info, CloudSun } from 'lucide-react';
+import { Zap, MapPin, Truck, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Save, Info, CloudSun, Cloud, GitCompare } from 'lucide-react';
 import { TableauBordNew } from '../dashboard/TableauBordNew';
+import { VueOptimisationComparative } from './VueOptimisationComparative';
 import { useOptimizationIntegration } from '../../hooks/useOptimizationIntegration';
 import { useOptimizationStorage } from '../../hooks/useOptimizationStorage';
 import { ServiceDonnees } from '../../services/ServiceDonnees';
@@ -23,6 +24,9 @@ export function OptimisationTournees({
   const [depotSelectionne, setDepotSelectionne] = useState(depot);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [modeComparatif, setModeComparatif] = useState(false);
+  const [resultatComparatif, setResultatComparatif] = useState(null);
+  const [resultatValide, setResultatValide] = useState(null);
   const { processOptimizationResult } = useOptimizationIntegration();
   const { optimizations, isLoaded } = useOptimizationStorage();
 
@@ -105,7 +109,122 @@ export function OptimisationTournees({
     }
   };
 
-  // Si résultat disponible, afficher le tableau de bord
+  const lancerOptimisationComparative = async () => {
+    if (!depotSelectionne) {
+      setErreur('Sélectionnez un dépôt.');
+      return;
+    }
+    if (camionsSelectiones.size === 0) {
+      setErreur('Sélectionnez au moins un camion.');
+      return;
+    }
+
+    setChargement(true);
+    setErreur('');
+
+    try {
+      const token = localStorage.getItem('rn_token');
+      const response = await fetch('/api/optimisations/comparer-avec-meteo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          depotId: depotSelectionne.id,
+          camionIds: Array.from(camionsSelectiones),
+          prixCarburantKm: prixCarburant
+        })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = `Erreur ${response.status}`;
+        try {
+          const json = JSON.parse(text);
+          message = json.message || json.error || message;
+        } catch (e) {
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+
+      const resultat = await response.json();
+      setResultatComparatif(resultat);
+      setModeComparatif(true);
+    } catch (err) {
+      setErreur(`Erreur d'optimisation comparative: ${err.message}`);
+      console.error(err);
+    } finally {
+      setChargement(false);
+    }
+  };
+
+  const validerComparatif = (type) => {
+    const resultatChoisi = type === 'standard' ? resultatComparatif.resultatStandard : resultatComparatif.resultatAvecMeteo;
+    const label = type === 'standard' ? 'Standard' : 'Avec ajustement météo';
+    resultatChoisi.labelValidation = label;
+    setResultatValide(resultatChoisi);
+    onOptimiser(resultatChoisi);
+  };
+
+  const annulerComparatif = () => {
+    setModeComparatif(false);
+    setResultatComparatif(null);
+    setResultatValide(null);
+  };
+
+  // Si résultat comparatif validé, afficher le résultat choisi avec badge
+  if (resultatValide) {
+    return (
+      <div className="optimisation-tournees-container section-carte">
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          padding: '8px 16px', borderRadius: '20px', marginBottom: '16px',
+          background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff',
+          fontWeight: 700, fontSize: '0.9rem', boxShadow: '0 2px 8px rgba(34,197,94,0.3)'
+        }}>
+          <Save size={16} />
+          ✓ Validé ({resultatValide.labelValidation || 'Standard'})
+        </div>
+        <TableauBordNew
+          villages={villages}
+          routes={emptyRoutes}
+          optimisations={optimizations}
+          resultatsOptimisation={resultatValide}
+          onOptimizationSelect={onOptimiser}
+        />
+        <button
+          onClick={annulerComparatif}
+          className="btn btn-validate"
+          style={{ width: '100%', marginTop: '24px' }}
+        >
+          <GitCompare size={16} />
+          Nouvelle Optimisation Comparative
+        </button>
+      </div>
+    );
+  }
+
+  // Si mode comparatif actif, afficher la vue comparative
+  if (modeComparatif && resultatComparatif) {
+    return (
+      <div className="optimisation-tournees-container section-carte">
+        <VueOptimisationComparative
+          resultatStandard={resultatComparatif.resultatStandard}
+          resultatAvecMeteo={resultatComparatif.resultatAvecMeteo}
+          differenceDistance={resultatComparatif.differenceDistance}
+          differenceCout={resultatComparatif.differenceCout}
+          villagesTouchesParMeteo={resultatComparatif.villagesTouchesParMeteo}
+          onValider={validerComparatif}
+          onAnnuler={annulerComparatif}
+        />
+      </div>
+    );
+  }
+
+  // Si résultat disponible (non comparatif), afficher le tableau de bord
   if (resultatOptimisation) {
     return (
       <div className="optimisation-tournees-container section-carte">
@@ -262,6 +381,24 @@ export function OptimisationTournees({
       >
         <Zap size={18} />
         {chargement ? 'Optimisation en cours...' : 'Lancer l\'Optimisation'}
+      </button>
+
+      <button
+        onClick={lancerOptimisationComparative}
+        disabled={chargement || !depot || camionsSelectiones.size === 0}
+        className="bouton-principal"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          marginTop: '12px',
+          background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+          opacity: (chargement || !depot || camionsSelectiones.size === 0) ? 0.5 : 1
+        }}
+      >
+        <Cloud size={18} />
+        {chargement ? 'Calcul en cours...' : 'Optimisation comparative (avec météo)'}
       </button>
 
       <div style={{

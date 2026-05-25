@@ -73,6 +73,32 @@ export const ServiceApiOptimisation = {
   },
 
   /**
+   * Lance l'optimisation comparative (standard + avec météo)
+   * @param {string} depotId - ID du dépôt
+   * @param {string[]} camionIds - IDs des camions
+   * @param {number} prixCarburantKm - Prix du carburant par km
+   * @returns {Promise<Object>} Résultats comparatifs
+   */
+  async lancerOptimisationComparative(depotId, camionIds, prixCarburantKm) {
+    try {
+      const reponse = await fetch(`${URL_BASE_API}/optimisations/comparer-avec-meteo`, {
+        method: 'POST',
+        headers: obtenirHeadersAuthentifies(),
+        body: JSON.stringify({ depotId, camionIds, prixCarburantKm })
+      });
+
+      if (!reponse.ok) {
+        throw new Error(`Erreur HTTP ${reponse.status}`);
+      }
+
+      return await reponse.json();
+    } catch (erreur) {
+      console.error('Erreur lors de l\'optimisation comparative :', erreur);
+      throw erreur;
+    }
+  },
+
+  /**
    * Exporte une optimisation en PDF
    * @param {string} optimisationId - ID de l'optimisation
    */

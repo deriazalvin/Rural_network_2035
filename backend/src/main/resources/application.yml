@@ -28,11 +28,11 @@ osrm:
 
 weather:
   api:
-    key: 57f5f0cadb44eb75f8b25e368643cb0b
+    key: ${WEATHER_API_KEY}
 
 gemini:
   api:
-    key: "AIzaSyBVdMsiFwCpI2E2zeBHpZPx71Eev_ySJWY"
+    key: ${GEMINI_API_KEY}
 
 logging:
   level:

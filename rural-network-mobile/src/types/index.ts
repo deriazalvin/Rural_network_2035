@@ -79,3 +79,11 @@ export interface Notification {
 }
 
 export type ThemeMode = 'clair' | 'sombre';
+
+export interface OptimisationComparative {
+  resultatStandard: ResultatOptimisation;
+  resultatAvecMeteo: ResultatOptimisation;
+  differenceDistance: number;
+  differenceCout: number;
+  villagesTouchesParMeteo: string[];
+}

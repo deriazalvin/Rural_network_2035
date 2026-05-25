@@ -4,6 +4,7 @@
  */
 import { Tabs } from 'expo-router';
 import { useTheme } from '../../src/contextes/ContexteTheme';
+import { useI18n } from '../../src/contextes/ContexteI18n';
 import {
   BarChart3,
   MapPin,
@@ -16,6 +17,7 @@ import {
 
 export default function TabLayout() {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <Tabs
@@ -40,49 +42,49 @@ export default function TabLayout() {
       <Tabs.Screen
         name="tableau-bord"
         options={{
-          title: 'Tableau',
+          title: t('nav.tableau'),
           tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="villages"
         options={{
-          title: 'Villages',
+          title: t('nav.villages'),
           tabBarIcon: ({ color, size }) => <MapPin size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="routes"
         options={{
-          title: 'Routes',
+          title: t('nav.routes'),
           tabBarIcon: ({ color, size }) => <Route size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="camions"
         options={{
-          title: 'Flotte',
+          title: t('nav.flotte'),
           tabBarIcon: ({ color, size }) => <Truck size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="meteo"
         options={{
-          title: 'Météo',
+          title: t('nav.meteo'),
           tabBarIcon: ({ color, size }) => <Cloud size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="optimisation"
         options={{
-          title: 'Calcul',
+          title: t('nav.calcul'),
           tabBarIcon: ({ color, size }) => <Zap size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="demo"
         options={{
-          title: 'Démo',
+          title: t('nav.demo'),
           tabBarIcon: ({ color, size }) => <Play size={size} color={color} />,
         }}
       />
