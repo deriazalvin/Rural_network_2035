@@ -19,7 +19,7 @@ import java.util.*;
 @Service
 public class OrchestrateurOptimisation {
 
-    private static final Double COUT_PAR_KM = 0.15; // Ariary par km
+    private static final Double COUT_PAR_KM_DEFAUT = 0.15; // Ariary par km
 
     private final VillageDepot villageDepot;
     private final CamionDepot camionDepot;
@@ -46,8 +46,9 @@ public class OrchestrateurOptimisation {
     /**
      * Orchestre l'optimisation complète des tournées.
      */
-    public OptimisationResultatDTO optimiserTournees(Long utilisateurId, String depotId, List<String> camionIds) {
+    public OptimisationResultatDTO optimiserTournees(Long utilisateurId, String depotId, List<String> camionIds, Double prixCarburantKm) {
         long tempsDebut = System.currentTimeMillis();
+        Double prixKm = prixCarburantKm != null && prixCarburantKm > 0 ? prixCarburantKm : COUT_PAR_KM_DEFAUT;
 
         // Étape 1 : Récupération des données utilisateur
         List<Village> tousLesVillages = villageDepot.findByUtilisateurIdOrderByNomAsc(utilisateurId);
@@ -69,7 +70,7 @@ public class OrchestrateurOptimisation {
 
         // Étape 4 : Calcul baseline
         Double distanceBaseline = algorithmOptimisation.calculerDistanceReferenceNaive(depot, villagesAVisiter, matriceDistances);
-        Double coutBaseline = distanceBaseline * COUT_PAR_KM;
+        Double coutBaseline = distanceBaseline * prixKm;
 
         // Étape 5 : Construction des tournées
         Set<String> villagesVisites = new HashSet<>();
@@ -86,6 +87,7 @@ public class OrchestrateurOptimisation {
             TourneeDTO tournee = algorithmOptimisation.construireTourneeOptimisee(
                     camion, depot, villagesAVisiter, villagesVisites, couleur, matriceDistances
             );
+            tournee.setCoutTotal(tournee.getDistanceTotalKm() * prixKm);
 
             tournees.add(tournee);
             distanceTotalKm += tournee.getDistanceTotalKm();

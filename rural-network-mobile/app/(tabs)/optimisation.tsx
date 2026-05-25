@@ -2,11 +2,12 @@
  * Optimisation des Tournées — Version Mobile
  * Sélection dépôt, sélection camions, lancement, résultats
  */
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   Pressable,
@@ -54,6 +55,7 @@ export default function OptimisationScreen() {
   const [selectedHistoryIdx, setSelectedHistoryIdx] = useState<number>(-1);
   const [showHistorique, setShowHistorique] = useState(false);
   const [expandedHistTour, setExpandedHistTour] = useState<Set<string>>(new Set());
+  const [prixCamburant, setPrixCarburant] = useState(0.15);
 
   const camionsDispo = camions.filter((c) => c.etat === 'DISPONIBLE');
 
@@ -88,7 +90,7 @@ export default function OptimisationScreen() {
     }, 400);
 
     try {
-      const res = await serviceDonnees.optimiserTournees(depotId, Array.from(camionsSel));
+      const res = await serviceDonnees.optimiserTournees(depotId, Array.from(camionsSel), prixCamburant);
       clearInterval(interval);
       setProgres(100);
       setResultat(res);
@@ -103,7 +105,7 @@ export default function OptimisationScreen() {
   };
 
   const rotation = useSharedValue(0);
-  React.useEffect(() => {
+  useEffect(() => {
     if (chargement) {
       rotation.value = withRepeat(
         withTiming(360, { duration: 1000, easing: Easing.linear }),
@@ -312,6 +314,20 @@ export default function OptimisationScreen() {
               </View>
             )}
 
+            {/* Prix carburant */}
+            <View style={[styles.carburantRow, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
+              <Text style={[styles.carburantLabel, { color: theme.texte }]}>Prix carburant</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <TextInput
+                  value={String(prixCamburant)}
+                  onChangeText={(t) => setPrixCarburant(parseFloat(t) || 0)}
+                  keyboardType="decimal-pad"
+                  style={[styles.carburantInput, { backgroundColor: theme.fond, color: theme.texte, borderColor: theme.bordure }]}
+                />
+                <Text style={[styles.carburantUnite, { color: theme.texteTertiaire }]}>Ar/km</Text>
+              </View>
+            </View>
+
             {/* Progression */}
             {chargement && (
               <View style={styles.progressArea}>
@@ -332,7 +348,7 @@ export default function OptimisationScreen() {
               <Cloud size={20} color={COULEURS.bleu} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.meteoRappelTitre, { color: COULEURS.bleu }]}>
-                  🌤 Avant de lancer l'optimisation
+                  Avant de lancer l'optimisation
                 </Text>
                 <Text style={[styles.meteoRappelSous, { color: theme.texteTertiaire }]}>
                   Pensez à vérifier la météo
@@ -574,4 +590,15 @@ const styles = StyleSheet.create({
   },
   meteoRappelTitre: { fontSize: 13, fontWeight: '700' },
   meteoRappelSous: { fontSize: 11, marginTop: 2 },
+  carburantRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: ESPACEMENTS.md, borderRadius: RAYONS.md, borderWidth: 1,
+    marginTop: ESPACEMENTS.xl,
+  },
+  carburantLabel: { fontSize: 14, fontWeight: '600' },
+  carburantInput: {
+    width: 80, paddingVertical: 6, paddingHorizontal: 10, borderRadius: RAYONS.sm,
+    borderWidth: 1, fontSize: 15, fontWeight: '700', textAlign: 'center',
+  },
+  carburantUnite: { fontSize: 12, fontWeight: '600' },
 });

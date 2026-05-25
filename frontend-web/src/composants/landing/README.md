@@ -1,5 +1,7 @@
 # 📄 Landing Page - Documentation
 
+> **Documentation générale du projet :** [README.md](../../../../README.md)
+
 ## 📋 Vue d'ensemble
 
 La landing page est constituée d'une collection de composants React modulaires et réutilisables, avec des styles séparés et des icônes lucide-react.

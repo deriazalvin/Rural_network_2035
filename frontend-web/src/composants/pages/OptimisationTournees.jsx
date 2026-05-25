@@ -16,7 +16,8 @@ export function OptimisationTournees({
   depot = null,
   resultatOptimisation = null,
   onOptimiser = () => {},
-  onValidation = () => {}
+  onValidation = () => {},
+  prixCarburant = 0.15
 }) {
   const [camionsSelectiones, setCamionsSelectiones] = useState(new Set());
   const [depotSelectionne, setDepotSelectionne] = useState(depot);
@@ -77,7 +78,8 @@ export function OptimisationTournees({
         },
         body: JSON.stringify({
           depotId: depotSelectionne.id,
-          camionIds: Array.from(camionsSelectiones)
+          camionIds: Array.from(camionsSelectiones),
+          prixCarburantKm: prixCarburant
         })
       });
 
@@ -238,7 +240,7 @@ export function OptimisationTournees({
         <CloudSun size={22} color="#3b82f6" />
         <div>
           <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#2563eb' }}>
-            🌤 Avant de lancer l'optimisation, pensez à vérifier la météo
+            Avant de lancer l'optimisation, pensez a verifier la meteo
           </div>
           <div style={{ fontSize: '0.8rem', color: '#60a5fa', marginTop: '2px' }}>
             Cliquez ici pour voir les conditions météorologiques

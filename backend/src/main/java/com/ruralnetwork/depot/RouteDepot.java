@@ -15,6 +15,10 @@ public interface RouteDepot extends JpaRepository<Route, String> {
     List<Route> findByVillageDepart_Id(String villageId);
     List<Route> findByEstBloqueeTrue();
 
+    @Query("SELECT r FROM Route r WHERE " +
+           "r.villageDepart.utilisateurId = :userId OR r.villageArrivee.utilisateurId = :userId")
+    List<Route> findByUtilisateurId(@Param("userId") Long userId);
+
     /**
      * Vérifie si une route existe entre deux villages, peu importe le sens.
      * Retourne true si une route existe A→B ou B→A

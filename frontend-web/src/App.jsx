@@ -14,6 +14,7 @@ import LogoRN from './composants/common/LogoRN.jsx';
 import './styles/styles.css';
 import AuthForm from './composants/common/AuthForm.jsx';
 import { Circle, Sun, Moon } from "lucide-react";
+import { ChatBot } from './composants/assistant/ChatBot';
 import "leaflet/dist/leaflet.css";
 import { AlertCircle, XOctagon, MapPinOff, Activity } from 'lucide-react';
 import { useTheme } from './contexts/ThemeContext.jsx';
@@ -678,6 +679,7 @@ function App() {
             resultatOptimisation={resultatsOptimisation}
             onOptimiser={setResultatsOptimisation}
             onValidation={validerOptimisation}
+            prixCarburant={parseFloat(localStorage.getItem('rn_prix_carburant') || '0.15')}
           />
         )}
       </main>
@@ -690,6 +692,7 @@ function App() {
           onFermer={() => setNotification(null)}
         />
       )}
+      <ChatBot utilisateur={utilisateur} />
     </div>
   );
 }

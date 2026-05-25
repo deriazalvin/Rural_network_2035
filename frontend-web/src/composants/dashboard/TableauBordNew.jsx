@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   BarChart3, MapPin, Route, Package, AlertTriangle, TrendingUp,
   Truck, Calendar, Activity, Zap, ChevronDown, ChevronRight,
-  Target, Award, Clock, Users, Eye, EyeOff, Play, Pause, Star
+  Target, Award, Clock, Users, Eye, EyeOff, Play, Pause, Star, DollarSign
 } from 'lucide-react';
 import { StatCard } from './StatCard';
 import { OptimizationItem } from './OptimizationItem';
@@ -46,6 +46,15 @@ export function TableauBordNew({
   const [activeView, setActiveView] = useState('overview');
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [optimSelectionnee, setOptimSelectionnee] = useState(null);
+  const [prixCarburant, setPrixCarburant] = useState(() => {
+    return parseFloat(localStorage.getItem('rn_prix_carburant') || '0.15');
+  });
+
+  const changerPrix = (val) => {
+    const p = parseFloat(val) || 0;
+    setPrixCarburant(p);
+    localStorage.setItem('rn_prix_carburant', String(p));
+  };
 
   // Calculer les stats avancées
   useEffect(() => {
@@ -264,6 +273,30 @@ export function TableauBordNew({
                 <div className="metric-trend positive">
                   <TrendingUp size={14} />
                   Stable
+                </div>
+              </div>
+
+              <div className="metric-card secondary" style={{ borderColor: '#f59e0b' }}>
+                <div className="metric-header">
+                  <DollarSign className="metric-icon" size={18} />
+                  <span className="metric-label">Prix carburant</span>
+                </div>
+                <div className="metric-value" style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={prixCarburant}
+                    onChange={(e) => changerPrix(e.target.value)}
+                    style={{
+                      width: 80, padding: '4px 8px', borderRadius: 6, border: '1px solid #d1d5db',
+                      fontSize: '1rem', fontWeight: 700, textAlign: 'center', background: 'rgba(255,255,255,0.8)'
+                    }}
+                  />
+                  <span className="metric-unit">Ar/km</span>
+                </div>
+                <div className="metric-trend" style={{ color: '#6b7280', fontSize: '0.7rem' }}>
+                  Utilisé pour les calculs de coût
                 </div>
               </div>
             </section>

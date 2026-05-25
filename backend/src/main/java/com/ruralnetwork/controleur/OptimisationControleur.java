@@ -54,13 +54,14 @@ public class OptimisationControleur {
 
             String depotId = request.getDepotId();
             List<String> camionIds = request.getCamionIds();
+            Double prixCarburantKm = request.getPrixCarburantKm();
 
             if (depotId == null || depotId.isEmpty() || camionIds == null || camionIds.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("message", "Le dépôt et au moins un camion doivent être fournis."));
             }
 
-            OptimisationResultatDTO resultat = orchestrateurOptimisation.optimiserTournees(utilisateurId, depotId, camionIds);
+            OptimisationResultatDTO resultat = orchestrateurOptimisation.optimiserTournees(utilisateurId, depotId, camionIds, prixCarburantKm);
 
             // Persister dans l'historique
             OptimisationHistorique hist = new OptimisationHistorique();

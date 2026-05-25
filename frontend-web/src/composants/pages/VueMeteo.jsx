@@ -21,16 +21,16 @@ const ICONES_METEO = {
 };
 
 const CONSEILS = [
-  { min: 0, max: 15, texte: 'Routes possiblement boueuses - prévoyez des pneus adaptés', icone: '⚠️' },
-  { min: 15, max: 25, texte: 'Conditions idéales pour le transport', icone: '✅' },
-  { min: 25, max: 35, texte: 'Chaleur élevée - vérifiez l\'état des véhicules', icone: '🌡️' },
-  { min: 35, max: 50, texte: 'Risque de surchauffe moteur - évitez les heures chaudes', icone: '🔥' },
+  { min: 0, max: 15, texte: '[ATTENTION] Routes possiblement boueuses - prevoyez des pneus adaptes', icone: '' },
+  { min: 15, max: 25, texte: '[OK] Conditions ideales pour le transport', icone: '' },
+  { min: 25, max: 35, texte: '[CHALEUR] Chaleur elevee - verifiez l\'etat des vehicules', icone: '' },
+  { min: 35, max: 50, texte: '[CANICULE] Risque de surchauffe moteur - evitez les heures chaudes', icone: '' },
 ];
 
 const VENT_CONSEILS = [
-  { min: 0, max: 20, texte: 'Vent favorable', icone: '🍃' },
-  { min: 20, max: 40, texte: 'Vent modéré - conduite normale', icone: '💨' },
-  { min: 40, max: 100, texte: 'Vent fort - ralentissez sur les routes dégagées', icone: '🌪️' },
+  { min: 0, max: 20, texte: '[VENT FAIBLE] Vent favorable', icone: '' },
+  { min: 20, max: 40, texte: '[VENT MODERE] Vent modere - conduite normale', icone: '' },
+  { min: 40, max: 100, texte: '[VENT FORT] Vent fort - ralentissez sur les routes degagees', icone: '' },
 ];
 
 async function fetchMeteo(lat, lon) {
@@ -195,14 +195,14 @@ export function VueMeteo({ villages = [] }) {
           <div className="meteo-conseils">
             <h3><AlertCircle size={16} /> Conseils pour la collecte</h3>
             <div className="conseil">
-              {getConseil(meteo.temperature).icone} {getConseil(meteo.temperature).texte}
+              {getConseil(meteo.temperature).texte}
             </div>
             <div className="conseil">
-              {getVentConseil(meteo.ventVitesse).icone} {getVentConseil(meteo.ventVitesse).texte}
+              {getVentConseil(meteo.ventVitesse).texte}
             </div>
             {meteo.humidite > 80 && (
               <div className="conseil conseil-important">
-                ⚠️ Humidité très élevée - risque de routes glissantes
+                [ATTENTION] Humidite tres elevee - risque de routes glissantes
               </div>
             )}
           </div>

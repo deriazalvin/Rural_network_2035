@@ -91,10 +91,10 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-25" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Voir performances&lt;/font&gt;" vertex="1">
-          <mxGeometry height="80" width="160" x="360" y="560" as="geometry" />
+          <mxGeometry height="80" width="160" x="345" y="570" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-26" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Consulter historique&lt;/font&gt;" vertex="1">
-          <mxGeometry height="80" width="160" x="360" y="690" as="geometry" />
+          <mxGeometry height="80" width="160" x="345" y="690" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-27" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Supprimer historique&lt;/font&gt;" vertex="1">
           <mxGeometry height="80" width="160" x="610" y="690" as="geometry" />
@@ -121,9 +121,6 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-33" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;dashed=1;" value="" vertex="1">
-          <mxGeometry height="800" width="540" x="250" y="30" as="geometry" />
-        </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-34" edge="1" parent="1" source="TB4-vI2JniVlwDZ4Y0XQ-13" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.3333333333333333;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryPerimeter=0;" target="TB4-vI2JniVlwDZ4Y0XQ-37" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
             <mxPoint x="780" y="330" as="sourcePoint" />
@@ -149,25 +146,52 @@
           <mxGeometry height="30" width="230" x="435" y="-40" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-40" parent="1" style="whiteSpace=wrap;html=1;fillColor=#6a00ff;fontColor=#ffffff;strokeColor=#3700CC;" value="" vertex="1">
-          <mxGeometry height="20" width="30" x="260" y="860" as="geometry" />
+          <mxGeometry height="20" width="30" x="340" y="1100" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-41" parent="1" style="whiteSpace=wrap;html=1;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" value="" vertex="1">
-          <mxGeometry height="20" width="30" x="260" y="1020" as="geometry" />
+          <mxGeometry height="20" width="30" x="340" y="1225" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-42" parent="1" style="whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" value="" vertex="1">
-          <mxGeometry height="20" width="30" x="260" y="940" as="geometry" />
+          <mxGeometry height="20" width="30" x="340" y="1160" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-47" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=15;" value="Gestion de données" vertex="1">
-          <mxGeometry height="30" width="160" x="300" y="855" as="geometry" />
+          <mxGeometry height="30" width="160" x="400" y="1095" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-48" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=15;" value="Suivi" vertex="1">
-          <mxGeometry height="30" width="160" x="250" y="1015" as="geometry" />
+          <mxGeometry height="30" width="160" x="400" y="1220" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-49" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=15;" value="Optimisation" vertex="1">
-          <mxGeometry height="30" width="160" x="275" y="930" as="geometry" />
+          <mxGeometry height="30" width="160" x="400" y="1150" as="geometry" />
         </mxCell>
         <mxCell id="TB4-vI2JniVlwDZ4Y0XQ-50" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Ce diagramme montre &lt;strong&gt;qui fait quoi&lt;/strong&gt; dans RuralNetwork. L&#39;unique acteur humain est le &lt;strong&gt;Gestionnaire&lt;/strong&gt; (responsable logistique). Il interagit avec 9 cas d&#39;utilisation regroupés en 3 familles : gestion des données (villages, camions, routes), optimisation (lancer → calculer → afficher), et suivi (historique, performances). Un acteur externe &lt;strong&gt;OSRM API&lt;/strong&gt; est inclus car le calcul des distances réelles sur le réseau routier délègue à ce service externe. Les relations &lt;code class=&quot;bg-text-200/5 border border-0.5 border-border-300 text-danger-000 whitespace-pre-wrap rounded-[0.4rem] px-1 py-px text-[0.9rem]&quot;&gt;«include»&lt;/code&gt; signifient que l&#39;optimisation &lt;em&gt;appelle obligatoirement&lt;/em&gt; le calcul de distances, qui lui-même &lt;em&gt;appelle&lt;/em&gt; OSRM. La relation &lt;code class=&quot;bg-text-200/5 border border-0.5 border-border-300 text-danger-000 whitespace-pre-wrap rounded-[0.4rem] px-1 py-px text-[0.9rem]&quot;&gt;«extend»&lt;/code&gt; sur &quot;Supprimer historique&quot; signifie que c&#39;est une action optionnelle déclenchable depuis la consultation de l&#39;historique." vertex="1">
-          <mxGeometry height="30" width="430" x="800" y="920" as="geometry" />
+          <mxGeometry height="30" width="430" x="930" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-1" edge="1" parent="1" source="TB4-vI2JniVlwDZ4Y0XQ-1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="QTDVfxKga-SjAYjKDaDs-2" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="170" y="470" as="sourcePoint" />
+            <mxPoint x="360" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Consulter la météo&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="160" x="345" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Demander conseille à IA&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="160" x="350" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-5" edge="1" parent="1" source="TB4-vI2JniVlwDZ4Y0XQ-1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="QTDVfxKga-SjAYjKDaDs-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="130" y="460" as="sourcePoint" />
+            <mxPoint x="300" y="1053" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="1110" width="530" x="280" y="-50" as="geometry" />
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-12" parent="1" style="whiteSpace=wrap;html=1;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" value="" vertex="1">
+          <mxGeometry height="20" width="30" x="340" y="1280" as="geometry" />
+        </mxCell>
+        <mxCell id="QTDVfxKga-SjAYjKDaDs-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=15;" value="Optimisation" vertex="1">
+          <mxGeometry height="30" width="160" x="410" y="1270" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

@@ -111,10 +111,12 @@ class ServiceDonnees {
   }
 
   // === OPTIMISATION ===
-  optimiserTournees(depotId: string, camionIds: string[]): Promise<ResultatOptimisation> {
+  optimiserTournees(depotId: string, camionIds: string[], prixCarburantKm?: number): Promise<ResultatOptimisation> {
+    const body: any = { depotId, camionIds };
+    if (prixCarburantKm != null && prixCarburantKm > 0) body.prixCarburantKm = prixCarburantKm;
     return this.request('/optimisations/multi-camions', {
       method: 'POST',
-      body: JSON.stringify({ depotId, camionIds }),
+      body: JSON.stringify(body),
     });
   }
 
@@ -129,6 +131,11 @@ class ServiceDonnees {
   // === MÉTÉO ===
   obtenirMeteo(lat: number, lon: number): Promise<any> {
     return this.request(`/meteo?lat=${lat}&lon=${lon}`);
+  }
+
+  // === ASSISTANT IA ===
+  poserQuestionIA(question: string): Promise<any> {
+    return this.request('/assistant/poser', { method: 'POST', body: JSON.stringify({ question }) });
   }
 
   // === STOCKAGE LOCAL ===

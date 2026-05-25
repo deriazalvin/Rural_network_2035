@@ -227,14 +227,14 @@ export default function MeteoScreen() {
                 <AlertCircle size={14} color={COULEURS.bleu} /> Conseils
               </Text>
               <Text style={[styles.conseilText, { color: theme.texte }]}>
-                {meteo.temperature < 15 ? '⚠️ Routes possiblement boueuses' :
-                 meteo.temperature < 25 ? '✅ Conditions idéales pour le transport' :
-                 meteo.temperature < 35 ? '🌡️ Chaleur élevée - vérifiez les véhicules' :
-                 '🔥 Risque de surchauffe'}
+                {meteo.temperature < 15 ? '[ATTENTION] Routes possiblement boueuses' :
+                 meteo.temperature < 25 ? '[OK] Conditions idéales pour le transport' :
+                 meteo.temperature < 35 ? '[CHALEUR] Chaleur élevée - vérifiez les véhicules' :
+                 '[CANICULE] Risque de surchauffe'}
               </Text>
               {meteo.humidite > 80 && (
                 <Text style={[styles.conseilText, { color: COULEURS.rouge }]}>
-                  ⚠️ Humidité très élevée - routes glissantes
+                  [ATTENTION] Humidite tres elevee - routes glissantes
                 </Text>
               )}
             </Carte>

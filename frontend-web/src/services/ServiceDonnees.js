@@ -132,6 +132,9 @@
       // Météo
       obtenirMeteo(lat, lon) { return this.request(`/meteo?lat=${lat}&lon=${lon}`); }
 
+      // Assistant IA
+      poserQuestionIA(question) { return this.request('/assistant/poser', { method: 'POST', body: JSON.stringify({ question }) }); }
+
       // Camions
     obtenirTousLesCamions() { return this.request('/camions'); }
     obtenirCamionParId(id) { return this.request(`/camions/${id}`); }
