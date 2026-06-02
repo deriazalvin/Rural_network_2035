@@ -15,14 +15,17 @@ import { useRouter } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, interpolate } from 'react-native-reanimated';
 import { useTheme } from '../src/contextes/ContexteTheme';
 import { useAuth } from '../src/contextes/ContexteAuth';
+import { useI18n } from '../src/contextes/ContexteI18n';
 import { Bouton, ChampSaisie } from '../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../src/styles/couleurs';
+import { COULEURS } from '../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../src/styles/espacements';
 import { User, Mail, Lock, ArrowLeft, Zap, Sun } from 'lucide-react-native';
 
 export default function InscriptionScreen() {
   const { theme, basculerTheme } = useTheme();
   const { inscription } = useAuth();
   const router = useRouter();
+  const { t } = useI18n();
 
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
@@ -43,7 +46,7 @@ export default function InscriptionScreen() {
   const soumettre = async () => {
     setErreur('');
     if (!nom || !email || !motDePasse) {
-      setErreur('Veuillez remplir tous les champs');
+      setErreur(t('auth.champsVide'));
       return;
     }
     setChargement(true);
@@ -51,7 +54,7 @@ export default function InscriptionScreen() {
       await inscription(email, motDePasse, nom);
       router.replace('/(tabs)/tableau-bord');
     } catch (err: any) {
-      setErreur(err.message || "Erreur d'inscription");
+      setErreur(err.message || t('inscription.erreur'));
     } finally {
       setChargement(false);
     }
@@ -76,10 +79,10 @@ export default function InscriptionScreen() {
               <Zap size={32} color={COULEURS.blanc} />
             </View>
             <Text style={[styles.titre, { color: theme.texte }]}>
-              Créer un compte
+              {t('inscription.titre')}
             </Text>
             <Text style={[styles.sousTitre, { color: theme.texteTertiaire }]}>
-              Rejoignez Rural Network 2035
+              {t('inscription.sousTitre')}
             </Text>
           </View>
 
@@ -87,16 +90,16 @@ export default function InscriptionScreen() {
             {erreur ? <Text style={styles.erreurGlobale}>{erreur}</Text> : null}
 
             <ChampSaisie
-              etiquette="Nom"
-              placeholder="Jean Dupont"
+              etiquette={t('inscription.nom')}
+              placeholder={t('inscription.nomPlaceholder')}
               value={nom}
               onChangeText={setNom}
               icone={<User size={18} color={theme.texteTertiaire} />}
             />
 
             <ChampSaisie
-              etiquette="Email"
-              placeholder="votre@email.com"
+              etiquette={t('auth.email')}
+              placeholder={t('inscription.emailPlaceholder')}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -105,8 +108,8 @@ export default function InscriptionScreen() {
             />
 
             <ChampSaisie
-              etiquette="Mot de passe"
-              placeholder="••••••••"
+              etiquette={t('auth.motDePasse')}
+              placeholder={t('inscription.mdpPlaceholder')}
               value={motDePasse}
               onChangeText={setMotDePasse}
               secureTextEntry
@@ -114,7 +117,7 @@ export default function InscriptionScreen() {
             />
 
             <Bouton
-              titre="S'inscrire"
+              titre={t('inscription.sinscrire')}
               onPress={soumettre}
               variante="primaire"
               taille="lg"
@@ -124,9 +127,9 @@ export default function InscriptionScreen() {
 
             <Pressable onPress={() => router.back()} style={styles.lien}>
               <Text style={[styles.lienTexte, { color: theme.texteTertiaire }]}>
-                Déjà un compte ?{' '}
+                {t('inscription.dejaCompte')}{' '}
                 <Text style={{ color: COULEURS.orange, fontWeight: '700' }}>
-                  Se connecter
+                  {t('inscription.seConnecter')}
                 </Text>
               </Text>
             </Pressable>

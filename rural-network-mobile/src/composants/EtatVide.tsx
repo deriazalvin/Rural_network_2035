@@ -4,7 +4,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../contextes/ContexteTheme';
-import { COULEURS, ESPACEMENTS, RAYONS } from '../styles/couleurs';
+import { COULEURS } from '../styles/couleurs';
+import { ESPACEMENTS, RAYONS } from '../styles/espacements';
 import { TAILLES } from '../styles/espacements';
 import { Bouton } from './Bouton';
 

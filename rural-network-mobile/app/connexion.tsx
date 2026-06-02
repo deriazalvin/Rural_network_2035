@@ -22,14 +22,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '../src/contextes/ContexteTheme';
 import { useAuth } from '../src/contextes/ContexteAuth';
+import { useI18n } from '../src/contextes/ContexteI18n';
 import { Bouton, ChampSaisie } from '../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../src/styles/couleurs';
+import { COULEURS } from '../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../src/styles/espacements';
 import { Mail, Lock, Zap, Sun, ArrowLeft } from 'lucide-react-native';
 
 export default function ConnexionScreen() {
   const { theme, mode, basculerTheme } = useTheme();
   const { connexion } = useAuth();
   const router = useRouter();
+  const { t } = useI18n();
 
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
@@ -50,7 +53,7 @@ export default function ConnexionScreen() {
   const soumettre = async () => {
     setErreur('');
     if (!email || !motDePasse) {
-      setErreur('Veuillez remplir tous les champs');
+      setErreur(t('auth.champsVide'));
       return;
     }
     setChargement(true);
@@ -58,7 +61,7 @@ export default function ConnexionScreen() {
       await connexion(email, motDePasse);
       router.replace('/(tabs)/tableau-bord');
     } catch (err: any) {
-      setErreur(err.message || 'Erreur de connexion');
+      setErreur(err.message || t('auth.erreur'));
     } finally {
       setChargement(false);
     }
@@ -90,7 +93,7 @@ export default function ConnexionScreen() {
               <Zap size={32} color={COULEURS.blanc} />
             </View>
             <Text style={[styles.titre, { color: theme.texte }]}>
-              Rural Network 2035
+              {t('app.titre')}
             </Text>
             <Text style={[styles.sousTitre, { color: theme.texteTertiaire }]}>
               Plateforme d'optimisation logistique agricole
@@ -100,7 +103,7 @@ export default function ConnexionScreen() {
           {/* Formulaire */}
           <View style={[styles.formulaire, { backgroundColor: theme.fondCarte }]}>
             <Text style={[styles.formTitre, { color: theme.texte }]}>
-              Connexion
+              {t('auth.connexion')}
             </Text>
 
             {erreur ? (
@@ -108,8 +111,8 @@ export default function ConnexionScreen() {
             ) : null}
 
             <ChampSaisie
-              etiquette="Email"
-              placeholder="votre@email.com"
+              etiquette={t('auth.email')}
+              placeholder={t('inscription.emailPlaceholder')}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -118,8 +121,8 @@ export default function ConnexionScreen() {
             />
 
             <ChampSaisie
-              etiquette="Mot de passe"
-              placeholder="••••••••"
+              etiquette={t('auth.motDePasse')}
+              placeholder={t('inscription.mdpPlaceholder')}
               value={motDePasse}
               onChangeText={setMotDePasse}
               secureTextEntry
@@ -127,7 +130,7 @@ export default function ConnexionScreen() {
             />
 
             <Bouton
-              titre="Se connecter"
+              titre={t('auth.seConnecter')}
               onPress={soumettre}
               variante="primaire"
               taille="lg"
@@ -140,9 +143,9 @@ export default function ConnexionScreen() {
               style={styles.lien}
             >
               <Text style={[styles.lienTexte, { color: theme.texteTertiaire }]}>
-                Pas encore de compte ?{' '}
+                {t('auth.pasEncore')}{' '}
                 <Text style={{ color: COULEURS.orange, fontWeight: '700' }}>
-                  S'inscrire
+                  {t('auth.sinscrire')}
                 </Text>
               </Text>
             </Pressable>

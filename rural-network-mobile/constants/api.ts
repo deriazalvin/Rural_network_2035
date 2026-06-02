@@ -1,5 +1,5 @@
 
-const API_HOST = process.env.EXPO_PUBLIC_API_HOST || '10.35.97.175';
+const API_HOST = process.env.EXPO_PUBLIC_API_HOST || '192.168.88.30';
 const API_PORT = process.env.EXPO_PUBLIC_API_PORT || '8080';
 const API_PROTOCOL = process.env.EXPO_PUBLIC_API_PROTOCOL || 'http';
 

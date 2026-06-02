@@ -12,6 +12,7 @@ import {
   ImageBackground,
   Dimensions,
   useWindowDimensions,
+  StatusBar,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -25,7 +26,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../src/contextes/ContexteTheme';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../src/styles/couleurs';
+import { useI18n } from '../src/contextes/ContexteI18n';
+import { ModalParametres } from '../src/composants/ModalParametres';
+import { COULEURS } from '../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../src/styles/espacements';
 import { TAILLES } from '../src/styles/espacements';
 import {
   Rocket,
@@ -44,25 +48,10 @@ import {
   TrendingUp,
   Clock,
   Award,
+  Settings as SettingsIcon,
 } from 'lucide-react-native';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-
-const FEATURES = [
-  { icone: 'map', titre: 'Cartographie', desc: 'Géolocalisez vos villages et visualisez votre réseau en temps réel.' },
-  { icone: 'route', titre: 'Routes Intelligentes', desc: 'Suivez l\'état des routes et détectez les blocages instantanément.' },
-  { icone: 'truck', titre: 'Flotte Connectée', desc: 'Gérez vos camions, leur état et leur capacité de chargement.' },
-  { icone: 'zap', titre: 'Optimisation IA', desc: 'Algorithmes avancés pour réduire les distances et les coûts.' },
-  { icone: 'chart', titre: 'Analytics', desc: 'Tableaux de bord et statistiques pour piloter vos opérations.' },
-  { icone: 'shield', titre: 'Fiabilité', desc: 'Données sécurisées et sauvegardées sur le cloud.' },
-];
-
-const STEPS = [
-  { num: '01', titre: 'Enregistrez', desc: 'Ajoutez vos villages avec leurs coordonnées et productions.' },
-  { num: '02', titre: 'Cartographiez', desc: 'Tracez les routes et identifiez les connexions possibles.' },
-  { num: '03', titre: 'Configurez', desc: 'Définissez votre flotte de camions et leurs capacités.' },
-  { num: '04', titre: 'Optimisez', desc: 'Lancez l\'algorithme et recevez vos tournées optimales.' },
-];
 
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
   const anim = useSharedValue(0);
@@ -98,9 +87,27 @@ function FeatureIcon({ type, color }: { type: string; color: string }) {
 
 export default function AccueilScreen() {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
+  const FEATURES = [
+    { icone: 'map', titre: t('landing.features.villageTitle'), desc: t('landing.features.villageDesc') },
+    { icone: 'route', titre: t('landing.features.routeTitle'), desc: t('landing.features.routeDesc') },
+    { icone: 'truck', titre: t('landing.features.truckTitle'), desc: t('landing.features.truckDesc') },
+    { icone: 'zap', titre: t('landing.features.perfTitle'), desc: t('landing.features.perfDesc') },
+    { icone: 'chart', titre: t('landing.features.mapTitle'), desc: t('landing.features.mapDesc') },
+    { icone: 'shield', titre: t('accueil.feature.fiabilite'), desc: t('accueil.feature.fiabiliteDesc') },
+  ];
+
+  const STEPS = [
+    { num: '01', titre: t('landing.how.step1Title'), desc: t('landing.how.step1Desc') },
+    { num: '02', titre: t('landing.how.step2Title'), desc: t('landing.how.step2Desc') },
+    { num: '03', titre: t('landing.how.step3Title'), desc: t('landing.how.step3Desc') },
+    { num: '04', titre: t('landing.how.step4Title'), desc: t('landing.how.step4Desc') },
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,12 +117,14 @@ export default function AccueilScreen() {
   }, []);
 
   return (
-    <ScrollView
-      ref={scrollRef}
-      style={[styles.conteneur, { backgroundColor: theme.fond }]}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={{ flex: 1 }}>
+      <StatusBar barStyle="light-content" />
+      <ScrollView
+        ref={scrollRef}
+        style={[styles.conteneur, { backgroundColor: theme.fond }]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       {/* ===== HERO SECTION ===== */}
       <ImageBackground
         source={{ uri: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&q=80' }}
@@ -127,19 +136,19 @@ export default function AccueilScreen() {
           {/* Badge Live */}
           <Animated.View entering={FadeInUp.duration(600).delay(200)} style={styles.heroBadge}>
             <View style={styles.pulseDot} />
-            <Text style={styles.heroBadgeText}>Version 1.0 — Madagascar</Text>
+            <Text style={styles.heroBadgeText}>{t('accueil.badgeVersion')}</Text>
           </Animated.View>
 
           {/* Titre */}
           <Animated.View entering={FadeInUp.duration(600).delay(400)}>
-            <Text style={styles.heroTitle}>Réseau Rural</Text>
-            <Text style={[styles.heroTitle, styles.heroTitleGradient]}>Madagascar 2035</Text>
+            <Text style={styles.heroTitle}>{t('landing.hero.title')}</Text>
+            <Text style={[styles.heroTitle, styles.heroTitleGradient]}>{t('landing.hero.title2')}</Text>
           </Animated.View>
 
           {/* Sous-titre */}
           <Animated.View entering={FadeInUp.duration(600).delay(600)}>
             <Text style={styles.heroSubtitle}>
-              Optimisez la collecte des productions agricoles. Gérez vos villages, routes, camions et planifiez des tournées intelligentes.
+              {t('landing.hero.subtitle')}
             </Text>
           </Animated.View>
 
@@ -150,14 +159,14 @@ export default function AccueilScreen() {
               style={styles.btnPrimary}
             >
               <Rocket size={18} color="#fff" />
-              <Text style={styles.btnPrimaryText}>Commencer gratuitement</Text>
+              <Text style={styles.btnPrimaryText}>{t('landing.hero.btnStart')}</Text>
             </Pressable>
             <Pressable
               onPress={() => scrollRef.current?.scrollTo({ y: 600, animated: true })}
               style={styles.btnSecondary}
             >
               <Play size={18} color={COULEURS.emeraude} />
-              <Text style={styles.btnSecondaryText}>Découvrir</Text>
+              <Text style={styles.btnSecondaryText}>{t('landing.hero.btnDiscover')}</Text>
             </Pressable>
           </Animated.View>
 
@@ -165,17 +174,17 @@ export default function AccueilScreen() {
           <Animated.View entering={FadeInUp.duration(600).delay(1000)} style={styles.heroStats}>
             <View style={styles.heroStat}>
               <AnimatedCounter value={2500} suffix="+" />
-              <Text style={styles.heroStatLabel}>Villages connectés</Text>
+              <Text style={styles.heroStatLabel}>{t('landing.hero.statVillages')}</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
               <AnimatedCounter value={98} suffix="%" />
-              <Text style={styles.heroStatLabel}>Efficacité</Text>
+              <Text style={styles.heroStatLabel}>{t('landing.hero.statEfficiency')}</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
               <AnimatedCounter value={35} suffix="%" />
-              <Text style={styles.heroStatLabel}>Économie</Text>
+              <Text style={styles.heroStatLabel}>{t('landing.hero.statSavings')}</Text>
             </View>
           </Animated.View>
         </View>
@@ -184,9 +193,9 @@ export default function AccueilScreen() {
       {/* ===== FEATURES SECTION ===== */}
       <View style={[styles.section, { backgroundColor: theme.fond }]}>
         <Animated.View entering={FadeInUp.duration(500)}>
-          <Text style={[styles.sectionTitle, { color: theme.texte }]}>Fonctionnalités</Text>
+          <Text style={[styles.sectionTitle, { color: theme.texte }]}>{t('landing.features.title')}</Text>
           <Text style={[styles.sectionSubtitle, { color: theme.texteSecondaire }]}>
-            Tout ce dont vous avez besoin pour gérer votre réseau logistique rural
+            {t('landing.features.subtitle')}
           </Text>
         </Animated.View>
 
@@ -214,9 +223,9 @@ export default function AccueilScreen() {
       {/* ===== HOW IT WORKS ===== */}
       <View style={[styles.section, { backgroundColor: theme.fondCarte }]}>
         <Animated.View entering={FadeInUp.duration(500)}>
-          <Text style={[styles.sectionTitle, { color: theme.texte }]}>Comment ça marche</Text>
+          <Text style={[styles.sectionTitle, { color: theme.texte }]}>{t('landing.how.title')}</Text>
           <Text style={[styles.sectionSubtitle, { color: theme.texteSecondaire }]}>
-            4 étapes simples pour optimiser votre réseau
+            {t('landing.how.subtitle')}
           </Text>
         </Animated.View>
 
@@ -248,12 +257,12 @@ export default function AccueilScreen() {
         <View style={styles.statsGrid}>
           {[
             [
-              { icone: <Globe size={20} color={COULEURS.emeraude} />, valeur: '22', label: 'Régions couvertes', couleur: COULEURS.emeraude },
-              { icone: <Users size={20} color={COULEURS.bleu} />, valeur: '150K+', label: 'Agriculteurs', couleur: COULEURS.bleu },
+              { icone: <Globe size={20} color={COULEURS.emeraude} />, valeur: '22', label: t('accueil.stats.regions'), couleur: COULEURS.emeraude },
+              { icone: <Users size={20} color={COULEURS.bleu} />, valeur: '150K+', label: t('accueil.stats.agriculteurs'), couleur: COULEURS.bleu },
             ],
             [
-              { icone: <TrendingUp size={20} color={COULEURS.ambre} />, valeur: '42%', label: 'Gain moyen', couleur: COULEURS.ambre },
-              { icone: <Clock size={20} color={COULEURS.rouge} />, valeur: '-30%', label: 'Temps trajet', couleur: COULEURS.rouge },
+              { icone: <TrendingUp size={20} color={COULEURS.ambre} />, valeur: '42%', label: t('accueil.stats.gain'), couleur: COULEURS.ambre },
+              { icone: <Clock size={20} color={COULEURS.rouge} />, valeur: '-30%', label: t('accueil.stats.temps'), couleur: COULEURS.rouge },
             ],
           ].map((row, rowIdx) => (
             <View key={rowIdx} style={styles.statsRow}>
@@ -276,36 +285,47 @@ export default function AccueilScreen() {
       </View>
 
       {/* ===== CTA SECTION ===== */}
-      <View style={[styles.ctaSection, { backgroundColor: COULEURS.vertPrincipal }]}>
+      <View style={[styles.ctaSection, { backgroundColor: COULEURS.emeraude }]}>
         <Animated.View entering={FadeInUp.duration(500)}>
-          <Text style={styles.ctaTitle}>Prêt à transformer votre réseau ?</Text>
+          <Text style={styles.ctaTitle}>{t('landing.cta.title')}</Text>
           <Text style={styles.ctaSubtitle}>
-            Rejoignez les collectivités qui optimisent déjà leurs tournées avec Rural Network.
+            {t('landing.cta.desc')}
           </Text>
           <Pressable
             onPress={() => router.push('/inscription')}
             style={styles.ctaButton}
           >
-            <Text style={styles.ctaButtonText}>Créer un compte gratuit</Text>
+            <Text style={styles.ctaButtonText}>{t('landing.cta.btn')}</Text>
             <ArrowRight size={18} color="#fff" />
           </Pressable>
           <Pressable
             onPress={() => router.push('/connexion')}
             style={styles.ctaLink}
           >
-            <Text style={styles.ctaLinkText}>Déjà un compte ? Se connecter</Text>
+            <Text style={styles.ctaLinkText}>{t('landing.cta.login')}</Text>
           </Pressable>
         </Animated.View>
       </View>
 
       {/* ===== FOOTER ===== */}
       <View style={[styles.footer, { backgroundColor: theme.fondCarte, borderTopColor: theme.bordure }]}>
-        <Text style={[styles.footerBrand, { color: theme.texte }]}>Rural Network</Text>
+        <Text style={[styles.footerBrand, { color: theme.texte }]}>{t('app.titre')}</Text>
         <Text style={[styles.footerCopy, { color: theme.texteTertiaire }]}>
-          © 2025 Rural Network Madagascar. Tous droits réservés.
+          {t('landing.footer.copyright').replace('{year}', '2025')}
         </Text>
       </View>
     </ScrollView>
+
+      {/* Bouton paramètres en haut à droite */}
+      <Pressable
+        onPress={() => setModalVisible(true)}
+        style={[styles.gearBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
+      >
+        <SettingsIcon size={22} color="#fff" />
+      </Pressable>
+
+      <ModalParametres visible={modalVisible} onFermer={() => setModalVisible(false)} />
+    </View>
   );
 }
 
@@ -603,5 +623,16 @@ const styles = StyleSheet.create({
   footerCopy: {
     fontSize: 12,
     textAlign: 'center',
+  },
+  gearBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
   },
 });

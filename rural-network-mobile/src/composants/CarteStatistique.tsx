@@ -6,8 +6,10 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useTheme } from '../contextes/ContexteTheme';
+import { useI18n } from '../contextes/ContexteI18n';
 import { Carte } from './Carte';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../styles/couleurs';
+import { COULEURS } from '../styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../styles/espacements';
 import { TAILLES } from '../styles/espacements';
 
 interface CarteStatistiqueProps {
@@ -30,6 +32,7 @@ export function CarteStatistique({
   tendancePositive = true,
 }: CarteStatistiqueProps) {
   const { theme } = useTheme();
+  const { t, langue } = useI18n();
   const animValue = useSharedValue(0);
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export function CarteStatistique({
 
   const displayValue = () => {
     if (unite === '%') return `${Math.round(valeur)}%`;
-    if (valeur > 999) return `${valeur.toLocaleString('fr-FR')}${unite ? ' ' + unite : ''}`;
+    if (valeur > 999) return `${valeur.toLocaleString(langue === 'mg' ? 'fr-FR' : langue)}${unite ? ' ' + unite : ''}`;
     return `${valeur}${unite ? ' ' + unite : ''}`;
   };
 

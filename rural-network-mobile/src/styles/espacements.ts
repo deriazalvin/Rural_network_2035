@@ -12,6 +12,7 @@ export const ESPACEMENTS = {
   xl: 24,
   '2xl': 32,
   '3xl': 40,
+  xxl: 32,
 } as const;
 
 export const RAYONS = {
@@ -20,6 +21,7 @@ export const RAYONS = {
   lg: 14,
   xl: 20,
   full: 9999,
+  rond: 9999,
 } as const;
 
 export const TAILLES = {

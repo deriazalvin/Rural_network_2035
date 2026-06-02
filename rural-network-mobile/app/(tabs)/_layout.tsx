@@ -1,7 +1,3 @@
-/**
- * Layout des onglets principaux (Bottom Tab Navigation)
- * Tableau de bord, Villages, Routes, Camions, Optimisation, Demo
- */
 import { Tabs } from 'expo-router';
 import { useTheme } from '../../src/contextes/ContexteTheme';
 import { useI18n } from '../../src/contextes/ContexteI18n';
@@ -27,9 +23,9 @@ export default function TabLayout() {
           backgroundColor: theme.fondCarte,
           borderTopColor: theme.bordure,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 60,
+          paddingBottom: 6,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: theme.primaire,
         tabBarInactiveTintColor: theme.texteTertiaire,
@@ -72,6 +68,7 @@ export default function TabLayout() {
         options={{
           title: t('nav.meteo'),
           tabBarIcon: ({ color, size }) => <Cloud size={size} color={color} />,
+          tabBarItemStyle: { display: 'none' },
         }}
       />
       <Tabs.Screen
@@ -86,6 +83,7 @@ export default function TabLayout() {
         options={{
           title: t('nav.demo'),
           tabBarIcon: ({ color, size }) => <Play size={size} color={color} />,
+          tabBarItemStyle: { display: 'none' },
         }}
       />
     </Tabs>

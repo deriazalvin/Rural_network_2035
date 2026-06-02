@@ -4,8 +4,7 @@
 import React from 'react';
 import { View, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '../contextes/ContexteTheme';
-import { RAYONS } from '../styles/couleurs';
-import { OMBRES, ESPACEMENTS } from '../styles/espacements';
+import { OMBRES, ESPACEMENTS, RAYONS } from '../styles/espacements';
 
 interface CarteProps {
   children: React.ReactNode;

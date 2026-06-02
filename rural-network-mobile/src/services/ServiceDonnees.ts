@@ -120,6 +120,15 @@ class ServiceDonnees {
     });
   }
 
+  calculerOptimisation(depotId: string, villageIds: string[], camionIds: string[], avecMeteo: boolean, prixCarburantKm?: number): Promise<ResultatOptimisation> {
+    const body: any = { depotId, villageIds, camionIds, avecMeteo };
+    if (prixCarburantKm != null && prixCarburantKm > 0) body.prixCarburantKm = prixCarburantKm;
+    return this.request('/optimisations/calculer', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
   obtenirHistoriqueOptimisations(): Promise<any[]> {
     return this.request('/optimisations/historique');
   }

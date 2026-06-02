@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, Modal,
   FlatList, StyleSheet, Dimensions, Animated, PanResponder, KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import { serviceDonnees } from '../services/ServiceDonnees';
 import { useTheme } from '../contextes/ContexteTheme';
 import { useI18n } from '../contextes/ContexteI18n';
@@ -17,23 +18,13 @@ interface Message {
   heure: string;
 }
 
-function now() {
-  return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function nettoyerTexte(texte: string): string {
-  return texte
-    .replace(/\*\*\*/g, '')
-    .replace(/\*\*/g, '')
-    .replace(/__/g, '')
-    .replace(/`/g, '')
-    .replace(/\s*\n\s*/g, '\n')
-    .trim();
+function now(lang: string = 'fr') {
+  return new Date().toLocaleTimeString(lang === 'mg' ? 'fr-FR' : lang, { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function AssistantChat({ visible }: { visible: boolean }) {
   const { mode, theme } = useTheme();
-  const { t } = useI18n();
+  const { t, langue } = useI18n();
   const estSombre = mode === 'sombre';
   const posDepart = useRef({ x: 0, y: 0 });
   const ouvertRef = useRef(false);
@@ -41,6 +32,7 @@ export default function AssistantChat({ visible }: { visible: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [saisie, setSaisie] = useState('');
   const [charge, setCharge] = useState(false);
+  const [agrandi, setAgrandi] = useState(false);
   const pan = useRef(new Animated.ValueXY(BULLE_INIT)).current;
 
   useEffect(() => { ouvertRef.current = ouvert; }, [ouvert]);
@@ -69,29 +61,32 @@ export default function AssistantChat({ visible }: { visible: boolean }) {
     if (!saisie.trim()) return;
     const q = saisie.trim();
     setSaisie('');
-    setMessages(m => [...m, { role: 'user', texte: q, heure: now() }]);
+    setMessages(m => [...m, { role: 'user', texte: q, heure: now(langue) }]);
     setCharge(true);
     try {
       const rep = await serviceDonnees.poserQuestionIA(q);
-      setMessages(m => [...m, { role: 'ia', texte: rep.reponse || rep, heure: now() }]);
+      setMessages(m => [...m, { role: 'ia', texte: rep.reponse || rep, heure: now(langue) }]);
     } catch {
-      setMessages(m => [...m, { role: 'ia', texte: t('chat.erreur'), heure: now() }]);
+      setMessages(m => [...m, { role: 'ia', texte: t('chat.erreur'), heure: now(langue) }]);
     }
     setCharge(false);
   }, [saisie]);
 
   if (!visible) return null;
 
-  const s = stylesDynamic(estSombre);
+  const s = stylesDynamic(estSombre, agrandi);
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {ouvert && (
         <Modal transparent animationType="slide" visible={ouvert} onRequestClose={() => setOuvert(false)}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.overlay}>
-            <View style={[s.panel, { maxHeight: ECRAN_H * 0.6 }]}>
+            <View style={[s.panel, { maxHeight: agrandi ? ECRAN_H * 0.9 : ECRAN_H * 0.6 }]}>
               <View style={s.header}>
                   <Text style={s.headerTitre}>{t('chat.titre')}</Text>
+                <TouchableOpacity onPress={() => setAgrandi(a => !a)} style={s.btnAgrandir}>
+                  <Text style={s.btnAgrandirTexte}>{agrandi ? '⊟' : '⊞'}</Text>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={() => setOuvert(false)} style={s.btnFermer}>
                   <Text style={s.btnFermerTexte}>{t('chat.fermer')}</Text>
                 </TouchableOpacity>
@@ -103,7 +98,11 @@ export default function AssistantChat({ visible }: { visible: boolean }) {
                 contentContainerStyle={s.listeContenu}
                 renderItem={({ item }) => (
                     <View style={[s.msg, item.role === 'user' ? s.msgUser : s.msgIA]}>
-                      <Text style={item.role === 'user' ? s.msgUserTexte : s.msgIATexte}>{item.role === 'ia' ? nettoyerTexte(item.texte) : item.texte}</Text>
+                      {item.role === 'ia' ? (
+                        <Markdown style={s.markdown}>{item.texte}</Markdown>
+                      ) : (
+                        <Text style={s.msgUserTexte}>{item.texte}</Text>
+                      )}
                     <Text style={s.msgHeure}>{item.heure}</Text>
                   </View>
                 )}
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const stylesDynamic = (estSombre: boolean) => StyleSheet.create({
+const stylesDynamic = (estSombre: boolean, agrandi: boolean) => StyleSheet.create({
   panel: {
     backgroundColor: estSombre ? '#1f2937' : '#fff',
     borderTopLeftRadius: 20,
@@ -212,8 +211,17 @@ const stylesDynamic = (estSombre: boolean) => StyleSheet.create({
     color: estSombre ? '#9ca3af' : '#6b7280',
     fontWeight: '600',
   },
+  btnAgrandir: {
+    padding: 4,
+    marginLeft: 'auto',
+  },
+  btnAgrandirTexte: {
+    color: estSombre ? '#9ca3af' : '#6b7280',
+    fontWeight: '700',
+    fontSize: 18,
+  },
   liste: {
-    maxHeight: 300,
+    maxHeight: agrandi ? ECRAN_H * 0.6 : 300,
   },
   listeContenu: {
     padding: 12,
@@ -233,12 +241,21 @@ const stylesDynamic = (estSombre: boolean) => StyleSheet.create({
     backgroundColor: estSombre ? '#374151' : '#f3f4f6',
     alignSelf: 'flex-start',
     borderBottomLeftRadius: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   msgUserTexte: { color: '#fff', fontSize: 14 },
   msgIATexte: { color: estSombre ? '#f3f4f6' : '#1f2937', fontSize: 14, flexShrink: 1 },
   msgHeure: { fontSize: 10, opacity: 0.6, marginTop: 4, textAlign: 'right' },
+  markdown: {
+    body: { color: estSombre ? '#f3f4f6' : '#1f2937', fontSize: 14, lineHeight: 20 },
+    heading2: { fontSize: 16, fontWeight: '700', marginTop: 8, marginBottom: 4, color: estSombre ? '#f3f4f6' : '#1f2937' },
+    heading3: { fontSize: 14, fontWeight: '700', marginTop: 6, marginBottom: 3, color: estSombre ? '#f3f4f6' : '#1f2937' },
+    bullet_list: { marginVertical: 2 },
+    ordered_list: { marginVertical: 2 },
+    list_item: { marginBottom: 2, flexDirection: 'row' },
+    strong: { fontWeight: '700' },
+    paragraph: { marginVertical: 2 },
+    hr: { marginVertical: 6, backgroundColor: estSombre ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', height: 1 },
+  },
   inputCont: {
     flexDirection: 'row',
     gap: 8,

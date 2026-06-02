@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useTheme } from '../contextes/ContexteTheme';
-import { RAYONS, ESPACEMENTS } from '../styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../styles/espacements';
 
 interface BarreProgressionProps {
   progres: number; // 0 - 100

@@ -3,7 +3,6 @@
  * Sélection dépôt, sélection camions, lancement, résultats
  */
 import { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -15,11 +14,13 @@ import {
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, Easing } from 'react-native-reanimated';
 import { useTheme } from '../../src/contextes/ContexteTheme';
-import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useDonnees } from '../../src/contextes/ContexteDonnees';
 import { serviceDonnees } from '../../src/services/ServiceDonnees';
+import { useI18n } from '../../src/contextes/ContexteI18n';
 import { Carte, Bouton, BarreProgression, Notification } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
+import { HeaderApp } from '../../src/composants/HeaderApp';
 import {
   Zap,
   MapPin,
@@ -29,23 +30,15 @@ import {
   Info,
   ChevronDown,
   ChevronRight,
-  Sun,
-  Moon,
-  LogOut,
 } from 'lucide-react-native';
 import type { Notification as NotificationType, ResultatOptimisation, OptimisationComparative } from '../../src/types';
 
 export default function OptimisationScreen() {
-  const { theme, mode, basculerTheme } = useTheme();
-  const { deconnexion } = useAuth();
-  const router = useRouter();
+  const { theme } = useTheme();
   const { villages, camions, optimisations, sauvegarderOptimisation } = useDonnees();
-
-  const handleDeconnexion = async () => {
-    await deconnexion();
-    router.replace('/accueil');
-  };
+  const { t, langue } = useI18n();
   const [depotId, setDepotId] = useState('');
+  const [villagesSel, setVillagesSel] = useState<Set<string>>(new Set());
   const [camionsSel, setCamionsSel] = useState<Set<string>>(new Set());
   const [chargement, setChargement] = useState(false);
   const [progres, setProgres] = useState(0);
@@ -62,6 +55,8 @@ export default function OptimisationScreen() {
 
   const camionsDispo = camions.filter((c) => c.etat === 'DISPONIBLE');
 
+  const villagesSansDepot = villages.filter((v) => v.id !== depotId);
+
   const toggleCamion = (id: string) => {
     setCamionsSel((prev) => {
       const n = new Set(prev);
@@ -71,20 +66,33 @@ export default function OptimisationScreen() {
     });
   };
 
-  const lancer = async () => {
+  const toggleVillage = (id: string) => {
+    setVillagesSel((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  };
+
+  const lancer = async (avecMeteo = false) => {
     if (!depotId) {
-      setNotification({ type: 'avertissement', titre: 'Dépôt requis', message: 'Sélectionnez un dépôt' });
+      setNotification({ type: 'avertissement', titre: t('optimisation.depotRequis'), message: t('optimisation.depotRequisMsg') });
+      return;
+    }
+    if (villagesSel.size === 0) {
+      setNotification({ type: 'avertissement', titre: t('optimisation.villagesRequis'), message: t('optimisation.villagesRequisMsg') });
       return;
     }
     if (camionsSel.size === 0) {
-      setNotification({ type: 'avertissement', titre: 'Camions requis', message: 'Sélectionnez au moins un camion' });
+      setNotification({ type: 'avertissement', titre: t('optimisation.camionsRequis'), message: t('optimisation.camionsRequisMsg') });
       return;
     }
     setChargement(true);
     setProgres(0);
-    setResultat(null);
+    if (avecMeteo) setResultatComparatif(null);
+    else setResultat(null);
 
-    // Animation de progression simulée
     let p = 0;
     const interval = setInterval(() => {
       p += Math.random() * 15;
@@ -93,50 +101,17 @@ export default function OptimisationScreen() {
     }, 400);
 
     try {
-      const res = await serviceDonnees.optimiserTournees(depotId, Array.from(camionsSel), prixCamburant);
+      const res = await serviceDonnees.calculerOptimisation(
+        depotId, Array.from(villagesSel), Array.from(camionsSel), avecMeteo, prixCamburant
+      );
       clearInterval(interval);
       setProgres(100);
       setResultat(res);
       await sauvegarderOptimisation(res);
-      setNotification({ type: 'succes', titre: 'Optimisation terminée', message: `${res.tournees?.length || 0} tournée(s) calculée(s)` });
+      setNotification({ type: 'succes', titre: t('optimisation.terminee'), message: t('optimisation.termineeMsg').replace('{count}', String(res.tournees?.length || 0)) });
     } catch (err: any) {
       clearInterval(interval);
-      setNotification({ type: 'erreur', titre: 'Erreur', message: err.message });
-    } finally {
-      setChargement(false);
-    }
-  };
-
-  const lancerComparatif = async () => {
-    if (!depotId) {
-      setNotification({ type: 'avertissement', titre: 'Dépôt requis', message: 'Sélectionnez un dépôt' });
-      return;
-    }
-    if (camionsSel.size === 0) {
-      setNotification({ type: 'avertissement', titre: 'Camions requis', message: 'Sélectionnez au moins un camion' });
-      return;
-    }
-    setChargement(true);
-    setProgres(0);
-    setResultatComparatif(null);
-
-    let p = 0;
-    const interval = setInterval(() => {
-      p += Math.random() * 15;
-      if (p > 90) p = 90;
-      setProgres(p);
-    }, 400);
-
-    try {
-      const res = await serviceDonnees.optimiserTourneesAvecMeteo(depotId, Array.from(camionsSel), prixCamburant);
-      clearInterval(interval);
-      setProgres(100);
-      setResultatComparatif(res);
-      setModeComparatif(true);
-      setNotification({ type: 'succes', titre: 'Comparaison terminée', message: '2 tournées calculées (standard + météo)' });
-    } catch (err: any) {
-      clearInterval(interval);
-      setNotification({ type: 'erreur', titre: 'Erreur', message: err.message });
+      setNotification({ type: 'erreur', titre: t('optimisation.erreur'), message: err.message });
     } finally {
       setChargement(false);
     }
@@ -161,7 +136,7 @@ export default function OptimisationScreen() {
   const validerComparatifMobile = (type: 'standard' | 'meteo') => {
     if (!resultatComparatif) return;
     const resultat = type === 'standard' ? resultatComparatif.resultatStandard : resultatComparatif.resultatAvecMeteo;
-    const label = type === 'standard' ? 'Standard' : 'Avec ajustement météo';
+    const label = type === 'standard' ? t('optimisation.standard') : t('optimisation.adapteeMeteo');
     setResultatValideMobile({ resultat, label });
     setModeComparatif(false);
     setResultat(resultat);
@@ -186,59 +161,47 @@ export default function OptimisationScreen() {
 
   return (
     <SafeAreaView style={[styles.conteneur, { backgroundColor: theme.fond }]}>
-      <View style={[styles.header, { backgroundColor: theme.fondCarte, borderBottomColor: theme.bordure }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitle}>
-            <Zap size={22} color={theme.primaire} />
-            <Text style={[styles.headerText, { color: theme.texte }]}>Optimisation</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable onPress={basculerTheme} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              {mode === 'sombre' ? <Sun size={18} color={theme.primaire} /> : <Moon size={18} color={theme.primaire} />}
-            </Pressable>
-            <Pressable onPress={handleDeconnexion} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              <LogOut size={18} color={theme.texteTertiaire} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <HeaderApp
+        icone={<Zap size={22} color={theme.primaire} />}
+        titre={t('optimisation.titre')}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {resultatValideMobile ? (
           <>
             <View style={[styles.resultBadge, { backgroundColor: COULEURS.emeraude + '20', borderColor: COULEURS.emeraude }]}>
               <Text style={{ color: COULEURS.emeraude, fontWeight: '800', fontSize: 13 }}>
-                ✓ Validé ({resultatValideMobile.label})
+                {t('optimisation.valide')} ({resultatValideMobile.label})
               </Text>
             </View>
             <Carte style={styles.resultCard} ombre="sm">
               <View style={styles.resultHeader}>
                 <Zap size={20} color={COULEURS.emeraude} />
                 <Text style={[styles.resultTitle, { color: theme.texte }]}>
-                  Résultats d'Optimisation
+                  {t('optimisation.resultats')}
                 </Text>
               </View>
               <View style={styles.resultGrid}>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.distance')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatValideMobile.resultat.distanceTotalKm?.toFixed(1)} km
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.gain')}</Text>
                   <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
                     {resultatValideMobile.resultat.gainPourcent?.toFixed(1)}%
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.cout')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatValideMobile.resultat.coutTotal?.toFixed(0)} Ar
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.camions')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatValideMobile.resultat.tournees?.length || 0}
                   </Text>
@@ -246,7 +209,7 @@ export default function OptimisationScreen() {
               </View>
             </Carte>
             <Bouton
-              titre="Nouvelle Optimisation Comparative"
+              titre={t('optimisation.nouvelleComparatif')}
               onPress={annulerComparatifMobile}
               variante="outline"
               style={{ marginTop: ESPACEMENTS.lg }}
@@ -255,28 +218,28 @@ export default function OptimisationScreen() {
         ) : modeComparatif && resultatComparatif ? (
           <>
             <Text style={[styles.sectionTitle, { color: theme.texte, marginBottom: ESPACEMENTS.md }]}>
-              Optimisation Comparative
+              {t('optimisation.comparatif')}
             </Text>
             <Text style={[styles.comparatifSubtitle, { color: theme.texteTertiaire }]}>
-              Choisissez la tournée à valider
+              {t('optimisation.comparatifSubtitle')}
             </Text>
 
             {resultatComparatif.villagesTouchesParMeteo?.length > 0 && (
               <View style={[styles.meteoAlert, { backgroundColor: '#f59e0b20', borderColor: '#f59e0b' }]}>
                 <Cloud size={16} color="#f59e0b" />
                 <Text style={{ color: '#b45309', fontSize: 12, fontWeight: '600', flex: 1 }}>
-                  Météo défavorable sur : {resultatComparatif.villagesTouchesParMeteo.join(', ')}
+                  {t('optimisation.meteoDefavorable')} {resultatComparatif.villagesTouchesParMeteo.join(', ')}
                 </Text>
               </View>
             )}
 
             {resultatComparatif.differenceDistance !== undefined && (
               <View style={[styles.comparatifEcart, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
-                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>Écart distance</Text>
+                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>{t('optimisation.ecartDistance')}</Text>
                 <Text style={[styles.ecartValue, { color: '#f59e0b' }]}>
                   +{resultatComparatif.differenceDistance.toFixed(1)} km
                 </Text>
-                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>Écart coût</Text>
+                <Text style={[styles.ecartLabel, { color: theme.texteTertiaire }]}>{t('optimisation.ecartCout')}</Text>
                 <Text style={[styles.ecartValue, { color: '#f59e0b' }]}>
                   +{resultatComparatif.differenceCout.toFixed(0)} Ar
                 </Text>
@@ -287,30 +250,30 @@ export default function OptimisationScreen() {
             <Carte style={styles.comparatifCard} ombre="sm">
               <View style={[styles.comparatifHeader, { borderBottomColor: theme.bordure }]}>
                 <Zap size={18} color="#3b82f6" />
-                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>Standard</Text>
-                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>Greedy classique</Text>
+                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>{t('optimisation.standard')}</Text>
+                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>{t('optimisation.standardSous')}</Text>
               </View>
               <View style={styles.resultGrid}>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.distance')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatStandard.distanceTotalKm?.toFixed(1)} km
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.gain')}</Text>
                   <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
                     {resultatComparatif.resultatStandard.gainPourcent?.toFixed(1)}%
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.cout')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatStandard.coutTotal?.toFixed(0)} Ar
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.camions')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatStandard.tournees?.length || 0}
                   </Text>
@@ -320,7 +283,7 @@ export default function OptimisationScreen() {
                 onPress={() => validerComparatifMobile('standard')}
                 style={[styles.validerBtn, { backgroundColor: '#3b82f6' }]}
               >
-                <Text style={styles.validerBtnText}>✓ VALIDER (Standard)</Text>
+                <Text style={styles.validerBtnText}>{t('optimisation.validerStandard')}</Text>
               </Pressable>
             </Carte>
 
@@ -328,30 +291,30 @@ export default function OptimisationScreen() {
             <Carte style={styles.comparatifCard} ombre="sm">
               <View style={[styles.comparatifHeader, { borderBottomColor: theme.bordure }]}>
                 <Cloud size={18} color="#8b5cf6" />
-                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>Adaptée Météo</Text>
-                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>Avec pénalités météo</Text>
+                <Text style={[styles.comparatifTitle, { color: theme.texte }]}>{t('optimisation.adapteeMeteo')}</Text>
+                <Text style={[styles.comparatifSous, { color: theme.texteTertiaire }]}>{t('optimisation.meteoSous')}</Text>
               </View>
               <View style={styles.resultGrid}>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.distance')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatAvecMeteo.distanceTotalKm?.toFixed(1)} km
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.gain')}</Text>
                   <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
                     {resultatComparatif.resultatAvecMeteo.gainPourcent?.toFixed(1)}%
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.cout')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatAvecMeteo.coutTotal?.toFixed(0)} Ar
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.camions')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultatComparatif.resultatAvecMeteo.tournees?.length || 0}
                   </Text>
@@ -361,12 +324,12 @@ export default function OptimisationScreen() {
                 onPress={() => validerComparatifMobile('meteo')}
                 style={[styles.validerBtn, { backgroundColor: '#8b5cf6' }]}
               >
-                <Text style={styles.validerBtnText}>✓ VALIDER (Météo)</Text>
+                <Text style={styles.validerBtnText}>{t('optimisation.validerMeteo')}</Text>
               </Pressable>
             </Carte>
 
             <Bouton
-              titre="Retour"
+              titre={t('optimisation.retour')}
               onPress={annulerComparatifMobile}
               variante="outline"
               style={{ marginTop: ESPACEMENTS.md }}
@@ -378,30 +341,30 @@ export default function OptimisationScreen() {
               <View style={styles.resultHeader}>
                 <Zap size={20} color={COULEURS.emeraude} />
                 <Text style={[styles.resultTitle, { color: theme.texte }]}>
-                  Résultats d'Optimisation
+                  {t('optimisation.resultats')}
                 </Text>
               </View>
               <View style={styles.resultGrid}>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Distance</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.distance')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultat.distanceTotalKm?.toFixed(1)} km
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Gain</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.gain')}</Text>
                   <Text style={[styles.resultValue, { color: COULEURS.emeraude }]}>
                     {resultat.gainPourcent?.toFixed(1)}%
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Coût</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.cout')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultat.coutTotal?.toFixed(0)} Ar
                   </Text>
                 </View>
                 <View style={styles.resultItem}>
-                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>Camions</Text>
+                  <Text style={[styles.resultLabel, { color: theme.texteTertiaire }]}>{t('optimisation.camions')}</Text>
                   <Text style={[styles.resultValue, { color: theme.texte }]}>
                     {resultat.tournees?.length || 0}
                   </Text>
@@ -416,7 +379,7 @@ export default function OptimisationScreen() {
                   <View style={styles.tourInfo}>
                     <View style={[styles.tourDot, { backgroundColor: t.couleurHex || COULEURS.emeraude }]} />
                     <Text style={[styles.tourName, { color: theme.texte }]}>
-                      {t.nom || t.camionNom || `Tournée ${idx + 1}`}
+                      {t.nom || t.camionNom || `${t('optimisation.tournee')} ${idx + 1}`}
                     </Text>
                   </View>
                   <View style={styles.tourMetrics}>
@@ -452,7 +415,7 @@ export default function OptimisationScreen() {
             ))}
 
             <Bouton
-              titre="Nouvelle Optimisation"
+              titre={t('optimisation.nouvelle')}
               onPress={() => setResultat(null)}
               variante="outline"
               style={{ marginTop: ESPACEMENTS.lg }}
@@ -461,12 +424,12 @@ export default function OptimisationScreen() {
         ) : (
           <>
             {/* Dépôt */}
-            <Text style={[styles.sectionTitle, { color: theme.texte }]}>Dépôt de Départ</Text>
+            <Text style={[styles.sectionTitle, { color: theme.texte }]}>{t('optimisation.depotDepart')}</Text>
             {villages.length === 0 ? (
               <Carte style={styles.alertCard} ombre="sm">
                 <AlertCircle size={18} color={COULEURS.rouge} />
                 <Text style={[styles.alertText, { color: COULEURS.rouge }]}>
-                  Aucun village disponible. Créez des villages d'abord.
+                  {t('optimisation.aucunVillage')}
                 </Text>
               </Carte>
             ) : (
@@ -492,15 +455,59 @@ export default function OptimisationScreen() {
               </View>
             )}
 
+            {/* Villages à desservir */}
+            {depotId ? (
+              <>
+                <Text style={[styles.sectionTitle, { color: theme.texte, marginTop: ESPACEMENTS.lg }]}>
+                  {t('optimisation.villagesDesservir')}
+                  <Text style={{ fontSize: 12, color: theme.texteTertiaire, fontWeight: '500' }}>
+                    {' '}({villagesSel.size}/{villagesSansDepot.length})
+                  </Text>
+                </Text>
+                {villagesSansDepot.length === 0 ? (
+                  <Carte style={styles.alertCard} ombre="sm">
+                    <AlertCircle size={18} color={COULEURS.rouge} />
+                    <Text style={[styles.alertText, { color: COULEURS.rouge }]}>
+                      {t('optimisation.aucunAutreVillage')}
+                    </Text>
+                  </Carte>
+                ) : (
+                  <View style={styles.villageGrid}>
+                    {villagesSansDepot.map((v) => (
+                      <Pressable
+                        key={v.id}
+                        onPress={() => toggleVillage(v.id)}
+                        style={[
+                          styles.villageItem,
+                          {
+                            backgroundColor: villagesSel.has(v.id) ? theme.primaire + '15' : theme.carte,
+                            borderColor: villagesSel.has(v.id) ? theme.primaire : theme.bordure,
+                          },
+                        ]}
+                      >
+                        <MapPin size={14} color={villagesSel.has(v.id) ? theme.primaire : theme.texteTertiaire} />
+                        <Text style={[styles.villageText, { color: villagesSel.has(v.id) ? theme.primaire : theme.texte }]}>
+                          {v.nom}
+                        </Text>
+                        <View style={[styles.checkboxSmall, villagesSel.has(v.id) && { backgroundColor: theme.primaire, borderColor: theme.primaire }]}>
+                          {villagesSel.has(v.id) && <Text style={{ color: COULEURS.blanc, fontSize: 9, fontWeight: '800' }}>✓</Text>}
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </>
+            ) : null}
+
             {/* Camions */}
             <Text style={[styles.sectionTitle, { color: theme.texte, marginTop: ESPACEMENTS.lg }]}>
-              Sélectionner les Camions
+              {t('optimisation.selectCamions')}
             </Text>
             {camionsDispo.length === 0 ? (
               <Carte style={styles.alertCard} ombre="sm">
                 <AlertCircle size={18} color={COULEURS.rouge} />
                 <Text style={[styles.alertText, { color: COULEURS.rouge }]}>
-                  Aucun camion disponible.
+                  {t('optimisation.aucunCamion')}
                 </Text>
               </Carte>
             ) : (
@@ -530,7 +537,7 @@ export default function OptimisationScreen() {
                       </View>
                     </View>
                     <Text style={[styles.camionCapa, { color: theme.texteTertiaire }]}>
-                      {(c.capaciteKg || 0).toLocaleString('fr-FR')} kg
+                      {(c.capaciteKg || 0).toLocaleString(langue)} kg
                     </Text>
                   </Pressable>
                 ))}
@@ -539,7 +546,7 @@ export default function OptimisationScreen() {
 
             {/* Prix carburant */}
             <View style={[styles.carburantRow, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
-              <Text style={[styles.carburantLabel, { color: theme.texte }]}>Prix carburant</Text>
+              <Text style={[styles.carburantLabel, { color: theme.texte }]}>{t('optimisation.prixCarburant')}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <TextInput
                   value={String(prixCamburant)}
@@ -547,7 +554,7 @@ export default function OptimisationScreen() {
                   keyboardType="decimal-pad"
                   style={[styles.carburantInput, { backgroundColor: theme.fond, color: theme.texte, borderColor: theme.bordure }]}
                 />
-                <Text style={[styles.carburantUnite, { color: theme.texteTertiaire }]}>Ar/km</Text>
+                <Text style={[styles.carburantUnite, { color: theme.texteTertiaire }]}>{t('optimisation.uniteKm')}</Text>
               </View>
             </View>
 
@@ -558,7 +565,7 @@ export default function OptimisationScreen() {
                   <Zap size={28} color={theme.primaire} />
                 </Animated.View>
                 <Text style={[styles.progressText, { color: theme.texteSecondaire }]}>
-                  Optimisation en cours...
+                  {t('optimisation.enCours')}
                 </Text>
                 <BarreProgression progres={progres} couleur={theme.primaire} />
               </View>
@@ -571,39 +578,39 @@ export default function OptimisationScreen() {
               <Cloud size={20} color={COULEURS.bleu} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.meteoRappelTitre, { color: COULEURS.bleu }]}>
-                  Avant de lancer l'optimisation
+                  {t('optimisation.avantLancer')}
                 </Text>
                 <Text style={[styles.meteoRappelSous, { color: theme.texteTertiaire }]}>
-                  Pensez à vérifier la météo
+                  {t('optimisation.verifierMeteo')}
                 </Text>
               </View>
             </Pressable>
 
             <Bouton
-              titre="Lancer l'Optimisation"
-              onPress={lancer}
+              titre={t('optimisation.optimiserClassique')}
+              onPress={() => lancer(false)}
               variante="primaire"
               taille="lg"
-              desactive={chargement || !depotId || camionsSel.size === 0}
+              desactive={chargement || !depotId || villagesSel.size === 0 || camionsSel.size === 0}
               style={{ marginTop: ESPACEMENTS.xl }}
             />
 
             <Bouton
-              titre="Optimisation comparative (avec météo)"
-              onPress={lancerComparatif}
+              titre={t('optimisation.optimiserMeteo')}
+              onPress={() => lancer(true)}
               variante="primaire"
               taille="lg"
-              desactive={chargement || !depotId || camionsSel.size === 0}
-              style={{ marginTop: ESPACEMENTS.md }}
+              desactive={chargement || !depotId || villagesSel.size === 0 || camionsSel.size === 0}
+              style={{ marginTop: ESPACEMENTS.md, backgroundColor: '#8b5cf6' }}
             />
 
             <Carte style={styles.infoCard} ombre="sm">
               <View style={styles.infoRow}>
                 <Info size={16} color={COULEURS.bleu} />
-                <Text style={[styles.infoTitle, { color: COULEURS.bleu }]}>Optimisation bêta</Text>
+                <Text style={[styles.infoTitle, { color: COULEURS.bleu }]}>{t('optimisation.betaTitre')}</Text>
               </View>
               <Text style={[styles.infoText, { color: theme.texteTertiaire }]}>
-                Algorithme greedy multi-camions. Certains résultats peuvent être en développement.
+                {t('optimisation.betaDesc')}
               </Text>
             </Carte>
           </>
@@ -615,7 +622,7 @@ export default function OptimisationScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: COULEURS.emeraude }} />
                 <Text style={[styles.sectionTitle, { color: theme.texte, marginBottom: 0 }]}>
-                  Historique des Optimisations
+                  {t('optimisation.historique')}
                 </Text>
                 <Text style={{ fontSize: 11, color: theme.texteTertiaire, fontWeight: '600' }}>
                   ({optimisations.length})
@@ -628,7 +635,7 @@ export default function OptimisationScreen() {
               <View style={{ marginTop: ESPACEMENTS.md }}>
                 {/* Barres de performance (gains) */}
                 <Text style={[styles.sectionTitle, { color: theme.texteSecondaire, fontSize: 12, marginBottom: ESPACEMENTS.sm }]}>
-                  Gains réalisés (%)
+                  {t('optimisation.gainsRealises')}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: ESPACEMENTS.md }}>
                   <View style={{ flexDirection: 'row', gap: ESPACEMENTS.sm, paddingBottom: ESPACEMENTS.sm }}>
@@ -659,7 +666,7 @@ export default function OptimisationScreen() {
                           }}>
                             <View style={{
                               height: `${Math.max(gain, 2)}%` as any,
-                              backgroundColor: isSelected ? COULEURS.emeraude : COULEURS.vertClair,
+                              backgroundColor: isSelected ? COULEURS.emeraude : COULEURS.emeraudeClair,
                               borderRadius: 4,
                               minHeight: 4,
                             }} />
@@ -677,15 +684,15 @@ export default function OptimisationScreen() {
                 {selectedHistoryIdx >= 0 && selectedHistoryIdx < optimisations.length && (
                   <View style={{ borderTopWidth: 1, borderTopColor: theme.bordure, paddingTop: ESPACEMENTS.md }}>
                     <Text style={[styles.sectionTitle, { color: theme.texte, fontSize: 13, marginBottom: ESPACEMENTS.sm }]}>
-                      Détails de l'Optimisation
+                      {t('optimisation.detailsOptim')}
                     </Text>
 
                     {/* KPIs */}
                     <View style={{ flexDirection: 'row', gap: ESPACEMENTS.sm, marginBottom: ESPACEMENTS.md }}>
                       {[
-                        { label: 'Gain', value: `${(optimisations[selectedHistoryIdx].gainPourcent ?? 0).toFixed(1)}%`, color: COULEURS.emeraude },
-                        { label: 'Distance', value: `${(optimisations[selectedHistoryIdx].distanceTotalKm ?? 0).toFixed(1)} km`, color: COULEURS.bleu },
-                        { label: 'Coût', value: `${(optimisations[selectedHistoryIdx].coutTotal ?? 0).toFixed(0)} Ar`, color: COULEURS.ambre },
+                        { label: t('optimisation.gain'), value: `${(optimisations[selectedHistoryIdx].gainPourcent ?? 0).toFixed(1)}%`, color: COULEURS.emeraude },
+                        { label: t('optimisation.distance'), value: `${(optimisations[selectedHistoryIdx].distanceTotalKm ?? 0).toFixed(1)} km`, color: COULEURS.bleu },
+                        { label: t('optimisation.cout'), value: `${(optimisations[selectedHistoryIdx].coutTotal ?? 0).toFixed(0)} Ar`, color: COULEURS.ambre },
                       ].map((kpi, ki) => (
                         <View key={ki} style={{ flex: 1, backgroundColor: theme.carte, borderRadius: RAYONS.md, padding: ESPACEMENTS.sm, alignItems: 'center' }}>
                           <Text style={{ fontSize: 9, color: theme.texteTertiaire, fontWeight: '600', marginBottom: 2 }}>{kpi.label}</Text>
@@ -696,7 +703,7 @@ export default function OptimisationScreen() {
 
                     {/* Tournées */}
                     <Text style={[styles.sectionTitle, { color: theme.texteSecondaire, fontSize: 12, marginBottom: ESPACEMENTS.sm }]}>
-                      Tournées et Grains réalisés
+                      {t('optimisation.tourneesGrains')}
                     </Text>
                     {(optimisations[selectedHistoryIdx].tournees ?? []).map((t, ti) => {
                       const tKey = `${selectedHistoryIdx}-${ti}`;
@@ -710,7 +717,7 @@ export default function OptimisationScreen() {
                           }} style={{ flexDirection: 'row', alignItems: 'center', padding: ESPACEMENTS.sm, gap: ESPACEMENTS.sm }}>
                             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.couleurHex || COULEURS.emeraude }} />
                             <Text style={{ flex: 1, fontSize: 13, fontWeight: '600', color: theme.texte }}>
-                              {t.nom || t.camionNom || `Tournée ${ti + 1}`}
+                              {t.nom || t.camionNom || `${t('optimisation.tournee')} ${ti + 1}`}
                             </Text>
                             <Text style={{ fontSize: 11, color: theme.texteTertiaire, fontWeight: '600' }}>
                               {(t.distanceTotalKm ?? 0).toFixed(1)} km
@@ -741,7 +748,7 @@ export default function OptimisationScreen() {
                     {(optimisations[selectedHistoryIdx].villagesNonDesservis ?? []).length > 0 && (
                       <View style={{ marginTop: ESPACEMENTS.sm, padding: ESPACEMENTS.sm, backgroundColor: COULEURS.rouge + '15', borderRadius: RAYONS.md }}>
                         <Text style={{ fontSize: 11, color: COULEURS.rouge, fontWeight: '600' }}>
-                          ⚠ Villages non desservis : {(optimisations[selectedHistoryIdx].villagesNonDesservis ?? []).join(', ')}
+                          {t('optimisation.villagesNonDesservis')} {(optimisations[selectedHistoryIdx].villagesNonDesservis ?? []).join(', ')}
                         </Text>
                       </View>
                     )}
@@ -775,6 +782,10 @@ const styles = StyleSheet.create({
   depotList: { gap: ESPACEMENTS.sm },
   depotItem: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm, padding: ESPACEMENTS.md, borderRadius: RAYONS.md, borderWidth: 1.5 },
   depotText: { fontSize: 14, fontWeight: '600' },
+  villageGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACEMENTS.sm },
+  villageItem: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.xs, padding: ESPACEMENTS.sm, borderRadius: RAYONS.md, borderWidth: 1.5, width: '48%' },
+  villageText: { fontSize: 12, fontWeight: '600', flex: 1 },
+  checkboxSmall: { width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, borderColor: '#94a3b8', alignItems: 'center', justifyContent: 'center' },
   camionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACEMENTS.md },
   camionCard: { width: '47%', borderRadius: RAYONS.md, borderWidth: 1.5, padding: ESPACEMENTS.md },
   camionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm, marginBottom: ESPACEMENTS.xs },

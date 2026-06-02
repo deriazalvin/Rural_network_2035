@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,15 @@ import {
   ScrollView,
   Pressable,
   SafeAreaView,
+  Animated,
 } from 'react-native';
 import { useTheme } from '../../src/contextes/ContexteTheme';
-import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useDonnees } from '../../src/contextes/ContexteDonnees';
+import { useI18n } from '../../src/contextes/ContexteI18n';
 import { Carte } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
+import { HeaderApp } from '../../src/composants/HeaderApp';
 import {
   Cloud,
   Sun,
@@ -24,7 +27,6 @@ import {
   RefreshCw,
   CloudSun,
   Navigation,
-  LogOut,
 } from 'lucide-react-native';
 
 const CLE_API = '57f5f0cadb44eb75f8b25e368643cb0b';
@@ -44,8 +46,8 @@ const ICONES_METEO: Record<string, React.ReactNode> = {
   '10n': <CloudRain size={40} color="#60a5fa" />,
 };
 
-async function fetchMeteo(lat: number, lon: number) {
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${CLE_API}&units=metric&lang=fr`;
+async function fetchMeteo(lat: number, lon: number, lang: string = 'fr') {
+  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${CLE_API}&units=metric&lang=${lang === 'mg' ? 'fr' : lang}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Erreur météo: ${res.status}`);
   const data = await res.json();
@@ -67,8 +69,8 @@ async function fetchMeteo(lat: number, lon: number) {
 
 export default function MeteoScreen() {
   const { theme } = useTheme();
-  const { deconnexion } = useAuth();
   const { villages } = useDonnees();
+  const { t, langue } = useI18n();
 
   const [meteo, setMeteo] = useState<any>(null);
   const [chargement, setChargement] = useState(false);
@@ -77,15 +79,29 @@ export default function MeteoScreen() {
   const [geoOk, setGeoOk] = useState<boolean | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    if (meteo && !chargement) {
+      fadeAnim.setValue(0);
+      slideAnim.setValue(30);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [meteo, chargement]);
+
   const chargerMeteo = async (lat: number, lon: number, village?: any) => {
     setChargement(true);
     setErreur('');
     try {
-      const data = await fetchMeteo(lat, lon);
+      const data = await fetchMeteo(lat, lon, langue);
       setMeteo(data);
       setVillageSel(village?.id || '');
     } catch (err: any) {
-      setErreur(err.message || 'Impossible de charger la météo');
+      setErreur(err.message || t('meteo.erreurChargement'));
     } finally {
       setChargement(false);
     }
@@ -93,7 +109,7 @@ export default function MeteoScreen() {
 
   const chargerPosition = () => {
     if (!navigator.geolocation) {
-      setErreur('Géolocalisation non supportée');
+      setErreur(t('meteo.geolocNonSupportee'));
       return;
     }
     setGeoLoading(true);
@@ -106,7 +122,7 @@ export default function MeteoScreen() {
       () => {
         setGeoOk(false);
         setGeoLoading(false);
-        setErreur('Activez la géolocalisation dans les paramètres');
+        setErreur(t('meteo.geolocDesactivee'));
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -114,22 +130,13 @@ export default function MeteoScreen() {
 
   return (
     <SafeAreaView style={[styles.conteneur, { backgroundColor: theme.fond }]}>
-      <View style={[styles.header, { backgroundColor: theme.fondCarte, borderBottomColor: theme.bordure }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitle}>
-            <Cloud size={22} color={theme.primaire} />
-            <Text style={[styles.headerText, { color: theme.texte }]}>Météo</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable onPress={deconnexion} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              <LogOut size={18} color={theme.texteTertiaire} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <HeaderApp
+        icone={<Cloud size={22} color={theme.primaire} />}
+        titre={t('meteo.titre')}
+      />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={[styles.label, { color: theme.texte }]}>Sélectionnez un village :</Text>
+        <Text style={[styles.label, { color: theme.texte }]}>{t('meteo.selection')}</Text>
         <View style={styles.villageList}>
           {villages.map((v) => (
             <Pressable
@@ -158,14 +165,14 @@ export default function MeteoScreen() {
         >
           <Navigation size={16} color={COULEURS.bleu} />
           <Text style={[styles.positionText, { color: COULEURS.bleu }]}>
-            {geoLoading ? 'Localisation...' : 'Ma position'}
+            {geoLoading ? t('meteo.localisation') : t('meteo.maPosition')}
           </Text>
         </Pressable>
 
         {chargement && (
           <View style={styles.loadingRow}>
             <RefreshCw size={20} color={theme.primaire} />
-            <Text style={[styles.loadingText, { color: theme.texteSecondaire }]}>Chargement...</Text>
+            <Text style={[styles.loadingText, { color: theme.texteSecondaire }]}>{t('meteo.chargement')}</Text>
           </View>
         )}
 
@@ -177,13 +184,13 @@ export default function MeteoScreen() {
         ) : null}
 
         {meteo && !chargement ? (
-          <View style={{ marginTop: ESPACEMENTS.lg }}>
+          <Animated.View style={{ marginTop: ESPACEMENTS.lg, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
             <Carte style={styles.meteoCard} ombre="md">
               <View style={styles.meteoHeader}>
                 <View style={styles.villeRow}>
                   <MapPin size={16} color={theme.primaire} />
                   <Text style={[styles.villeText, { color: theme.texte }]}>
-                    {meteo.ville || villages.find(v => v.id === villageSel)?.nom || 'Position actuelle'}
+                    {meteo.ville || villages.find(v => v.id === villageSel)?.nom || t('meteo.positionActuelle')}
                   </Text>
                 </View>
                 <Text style={[styles.coords, { color: theme.texteTertiaire }]}>
@@ -199,24 +206,24 @@ export default function MeteoScreen() {
                   {meteo.description}
                 </Text>
                 <Text style={[styles.ressenti, { color: theme.texteTertiaire }]}>
-                  Ressenti {Math.round(meteo.ressenti)}°C
+                  {t('meteo.ressenti').replace('{temp}', String(Math.round(meteo.ressenti)))}
                 </Text>
               </View>
 
               <View style={styles.detailGrid}>
                 <View style={[styles.detailItem, { backgroundColor: theme.carte }]}>
                   <Droplets size={18} color={COULEURS.bleu} />
-                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>Humidité</Text>
+                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>{t('meteo.humidite')}</Text>
                   <Text style={[styles.detailValue, { color: theme.texte }]}>{meteo.humidite}%</Text>
                 </View>
                 <View style={[styles.detailItem, { backgroundColor: theme.carte }]}>
                   <Wind size={18} color={COULEURS.bleu} />
-                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>Vent</Text>
+                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>{t('meteo.vent')}</Text>
                   <Text style={[styles.detailValue, { color: theme.texte }]}>{meteo.ventVitesse} km/h</Text>
                 </View>
                 <View style={[styles.detailItem, { backgroundColor: theme.carte }]}>
                   <Thermometer size={18} color={COULEURS.bleu} />
-                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>Temp.</Text>
+                  <Text style={[styles.detailLabel, { color: theme.texteTertiaire }]}>{t('meteo.temp')}</Text>
                   <Text style={[styles.detailValue, { color: theme.texte }]}>{Math.round(meteo.temperature)}°C</Text>
                 </View>
               </View>
@@ -224,18 +231,27 @@ export default function MeteoScreen() {
 
             <Carte style={styles.conseilsCard} ombre="sm">
               <Text style={[styles.conseilsTitle, { color: COULEURS.bleu }]}>
-                <AlertCircle size={14} color={COULEURS.bleu} /> Conseils
+                <AlertCircle size={14} color={COULEURS.bleu} /> {t('meteo.conseils')}
               </Text>
-              <Text style={[styles.conseilText, { color: theme.texte }]}>
-                {meteo.temperature < 15 ? '[ATTENTION] Routes possiblement boueuses' :
-                 meteo.temperature < 25 ? '[OK] Conditions idéales pour le transport' :
-                 meteo.temperature < 35 ? '[CHALEUR] Chaleur élevée - vérifiez les véhicules' :
-                 '[CANICULE] Risque de surchauffe'}
-              </Text>
-              {meteo.humidite > 80 && (
-                <Text style={[styles.conseilText, { color: COULEURS.rouge }]}>
-                  [ATTENTION] Humidite tres elevee - routes glissantes
+              <View style={styles.conseilRow}>
+                {meteo.temperature < 15 ? <CloudRain size={16} color={COULEURS.bleuClair} /> :
+                 meteo.temperature < 25 ? <Sun size={16} color="#f59e0b" /> :
+                 meteo.temperature < 35 ? <Thermometer size={16} color={COULEURS.orange} /> :
+                 <AlertCircle size={16} color={COULEURS.rouge} />}
+                <Text style={[styles.conseilText, { color: theme.texte }]}>
+                  {meteo.temperature < 15 ? t('meteo.conseilBoue') :
+                   meteo.temperature < 25 ? t('meteo.conseilOk') :
+                   meteo.temperature < 35 ? t('meteo.conseilChaleur') :
+                   t('meteo.conseilCanicule')}
                 </Text>
+              </View>
+              {meteo.humidite > 80 && (
+                <View style={styles.conseilRow}>
+                  <Droplets size={16} color={COULEURS.bleu} />
+                  <Text style={[styles.conseilText, { color: COULEURS.rouge }]}>
+                    {t('meteo.conseilHumidite')}
+                  </Text>
+                </View>
               )}
             </Carte>
 
@@ -249,9 +265,9 @@ export default function MeteoScreen() {
               style={[styles.refreshBtn, { borderColor: theme.primaire }]}
             >
               <RefreshCw size={14} color={theme.primaire} />
-              <Text style={[styles.refreshText, { color: theme.primaire }]}>Actualiser</Text>
+              <Text style={[styles.refreshText, { color: theme.primaire }]}>{t('meteo.actualiser')}</Text>
             </Pressable>
-          </View>
+          </Animated.View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -295,7 +311,8 @@ const styles = StyleSheet.create({
   detailValue: { fontSize: 14, fontWeight: '800' },
   conseilsCard: { padding: ESPACEMENTS.md, marginBottom: ESPACEMENTS.md },
   conseilsTitle: { fontSize: 13, fontWeight: '700', marginBottom: ESPACEMENTS.sm },
-  conseilText: { fontSize: 13, fontWeight: '500', paddingVertical: 4 },
+  conseilRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
+  conseilText: { fontSize: 13, fontWeight: '500', flex: 1 },
   refreshBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACEMENTS.xs, padding: ESPACEMENTS.md, borderRadius: RAYONS.md, borderWidth: 1.5 },
   refreshText: { fontSize: 13, fontWeight: '700' },
 });

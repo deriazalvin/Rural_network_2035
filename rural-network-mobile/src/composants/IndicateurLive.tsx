@@ -5,7 +5,9 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { useTheme } from '../contextes/ContexteTheme';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../styles/couleurs';
+import { useI18n } from '../contextes/ContexteI18n';
+import { COULEURS } from '../styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../styles/espacements';
 
 interface IndicateurLiveProps {
   actif: boolean;
@@ -14,6 +16,7 @@ interface IndicateurLiveProps {
 
 export function IndicateurLive({ actif, onPress }: IndicateurLiveProps) {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const echelle = useSharedValue(1);
 
   React.useEffect(() => {
@@ -51,7 +54,7 @@ export function IndicateurLive({ actif, onPress }: IndicateurLiveProps) {
         />
       </View>
       <Text style={[styles.texte, { color: theme.texteSecondaire }]}>
-        {actif ? 'LIVE' : 'PAUSE'}
+        {actif ? t('indicateur.live') : t('indicateur.pause')}
       </Text>
     </Pressable>
   );

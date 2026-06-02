@@ -3,7 +3,6 @@
  * Ajout, suppression, changement d'état, couleurs
  */
 import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -12,12 +11,17 @@ import {
   Pressable,
   Modal,
   SafeAreaView,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../../src/contextes/ContexteTheme';
-import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useDonnees } from '../../src/contextes/ContexteDonnees';
+import { useI18n } from '../../src/contextes/ContexteI18n';
 import { Carte, Bouton, ChampSaisie, Notification, EtatVide } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
+import { HeaderApp } from '../../src/composants/HeaderApp';
 import {
   Truck,
   Plus,
@@ -26,9 +30,6 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
-  Sun,
-  Moon,
-  LogOut,
 } from 'lucide-react-native';
 import type { Camion as CamionType, Notification as NotificationType } from '../../src/types';
 
@@ -43,15 +44,9 @@ const COULEURS_DISPONIBLES = [
 const ETATS: CamionType['etat'][] = ['DISPONIBLE', 'OCCUPE', 'EN_PANNE'];
 
 export default function CamionsScreen() {
-  const { theme, mode, basculerTheme } = useTheme();
-  const { deconnexion } = useAuth();
-  const router = useRouter();
+  const { theme } = useTheme();
   const { camions, ajouterCamion, supprimerCamion, modifierEtatCamion } = useDonnees();
-
-  const handleDeconnexion = async () => {
-    await deconnexion();
-    router.replace('/accueil');
-  };
+  const { t, langue } = useI18n();
   const [modalVisible, setModalVisible] = useState(false);
   const [nom, setNom] = useState('');
   const [capacite, setCapacite] = useState('');
@@ -66,11 +61,11 @@ export default function CamionsScreen() {
 
   const soumettre = async () => {
     if (!nom || !capacite) {
-      setModalNotif({ type: 'erreur', titre: 'Champs incomplets', message: 'Remplissez le nom et la capacité' });
+      setModalNotif({ type: 'erreur', titre: t('camions.champsIncomplets'), message: t('camions.champsIncompletsMsg') });
       return;
     }
     if (isNaN(parseFloat(capacite)) || parseFloat(capacite) <= 0) {
-      setModalNotif({ type: 'erreur', titre: 'Capacité invalide', message: 'La capacité doit être un nombre positif' });
+      setModalNotif({ type: 'erreur', titre: t('camions.capaInvalide'), message: t('camions.capaInvalideMsg') });
       return;
     }
     try {
@@ -83,9 +78,9 @@ export default function CamionsScreen() {
       setModalVisible(false);
       setNom('');
       setCapacite('');
-      setNotification({ type: 'succes', titre: 'Camion ajouté', message: `${nom} enregistré avec succès` });
+      setNotification({ type: 'succes', titre: t('camions.ajoute'), message: t('camions.ajouteMsg').replace('{nom}', nom) });
     } catch (err: any) {
-      setModalNotif({ type: 'erreur', titre: 'Erreur', message: err.message });
+      setModalNotif({ type: 'erreur', titre: t('camions.erreur'), message: err.message });
     }
   };
 
@@ -94,15 +89,15 @@ export default function CamionsScreen() {
       case 'DISPONIBLE': return COULEURS.succes;
       case 'OCCUPE': return COULEURS.ambre;
       case 'EN_PANNE': return COULEURS.rouge;
-      default: return COULEURS.gris;
+      default: return COULEURS.texteTertiaire;
     }
   };
 
   const getEtatLabel = (etat: CamionType['etat']) => {
     switch (etat) {
-      case 'DISPONIBLE': return 'Disponible';
-      case 'OCCUPE': return 'Occupé';
-      case 'EN_PANNE': return 'En panne';
+      case 'DISPONIBLE': return t('camions.etatDisponible');
+      case 'OCCUPE': return t('camions.etatOccupe');
+      case 'EN_PANNE': return t('camions.etatPanne');
       default: return etat;
     }
   };
@@ -111,64 +106,47 @@ export default function CamionsScreen() {
     try {
       await modifierEtatCamion(id, etat);
     } catch (err: any) {
-      setNotification({ type: 'erreur', titre: 'Erreur', message: err.message });
+      setNotification({ type: 'erreur', titre: t('camions.erreur'), message: err.message });
     }
   };
 
   return (
     <SafeAreaView style={[styles.conteneur, { backgroundColor: theme.fond }]}>
-      <View style={[styles.header, { backgroundColor: theme.fondCarte, borderBottomColor: theme.bordure }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitle}>
-            <Truck size={22} color={theme.primaire} />
-            <Text style={[styles.headerText, { color: theme.texte }]}>Gestion de la Flotte</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable onPress={basculerTheme} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              {mode === 'sombre' ? <Sun size={18} color={theme.primaire} /> : <Moon size={18} color={theme.primaire} />}
-            </Pressable>
-            <Pressable onPress={handleDeconnexion} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              <LogOut size={18} color={theme.texteTertiaire} />
-            </Pressable>
-            <Pressable onPress={() => setModalVisible(true)} style={[styles.btnAjout, { backgroundColor: theme.primaire }]}>
-              <Plus size={18} color={COULEURS.blanc} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <HeaderApp
+        icone={<Truck size={22} color={theme.primaire} />}
+        titre={t('camions.titre')}
+      >
+        <Pressable onPress={() => setModalVisible(true)} style={[styles.btnAjout, { backgroundColor: theme.primaire }]}>
+          <Plus size={18} color={COULEURS.blanc} />
+        </Pressable>
+      </HeaderApp>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={[styles.scroll, { paddingBottom: 0 }]}>
         {/* Stats */}
         <View style={styles.statsRow}>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Total</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('camions.total')}</Text>
             <Text style={[styles.statValue, { color: theme.texte }]}>{camions.length}</Text>
           </Carte>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Disponibles</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('camions.disponibles')}</Text>
             <Text style={[styles.statValue, { color: COULEURS.succes }]}>
               {camions.filter((c) => c.etat === 'DISPONIBLE').length}
             </Text>
           </Carte>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Capacité</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('camions.capacite')}</Text>
             <Text style={[styles.statValue, { color: theme.texte }]}>
               {(camions.reduce((s, c) => s + (c.capaciteKg || 0), 0) / 1000).toFixed(1)}t
             </Text>
           </Carte>
         </View>
+      </View>
 
-        {/* Liste Camions */}
-        {camions.length === 0 ? (
-          <EtatVide
-            icone={<Truck size={32} color={theme.primaire} />}
-            titre="Aucun camion enregistré"
-            description="Ajoutez vos camions pour constituer votre flotte de livraison."
-            actionLabel="Ajouter un camion"
-            onAction={() => setModalVisible(true)}
-          />
-        ) : (
-          camions.map((camion) => (
+      <FlatList
+        data={camions}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item: camion }) => (
           <Carte key={camion.id} style={styles.camionCard} ombre="sm">
             <View style={styles.camionHeader}>
               <View style={styles.camionTitle}>
@@ -181,7 +159,7 @@ export default function CamionsScreen() {
             </View>
 
             <Text style={[styles.camionCapa, { color: theme.texteSecondaire }]}>
-              Capacité: {(camion.capaciteKg || 0).toLocaleString('fr-FR')} kg
+              {t('camions.capaciteLabel')} {(camion.capaciteKg || 0).toLocaleString(langue)} kg
             </Text>
 
             <View style={styles.etatRow}>
@@ -224,49 +202,67 @@ export default function CamionsScreen() {
               </Text>
             </View>
           </Carte>
-        ))
         )}
-      </ScrollView>
+        ListEmptyComponent={
+          <EtatVide
+            icone={<Truck size={32} color={theme.primaire} />}
+            titre={t('camions.vide')}
+            description={t('camions.videDesc')}
+            actionLabel={t('camions.videCTA')}
+            onAction={() => setModalVisible(true)}
+          />
+        }
+        contentContainerStyle={{ padding: ESPACEMENTS.lg, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      />
 
       {/* Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContenu, { backgroundColor: theme.fond }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitre, { color: theme.texte }]}>Ajouter un Camion</Text>
-              <Pressable onPress={() => setModalVisible(false)}>
-                <X size={22} color={theme.texteTertiaire} />
-              </Pressable>
-            </View>
-            <ChampSaisie etiquette="Nom" placeholder="Camion A" value={nom} onChangeText={setNom} />
-            <ChampSaisie etiquette="Capacité (kg)" placeholder="5000" value={capacite} onChangeText={setCapacite} keyboardType="numeric" />
-            <Text style={[styles.selectLabel, { color: theme.texteSecondaire }]}>Couleur</Text>
-            <View style={styles.couleursRow}>
-              {couleursRestantes.map((c) => (
-                <Pressable
-                  key={c.valeur}
-                  onPress={() => setCouleur(c.valeur)}
-                  style={[
-                    styles.couleurCircle,
-                    { backgroundColor: c.valeur },
-                    couleur === c.valeur && styles.couleurActive,
-                  ]}
-                />
-              ))}
-            </View>
-            {couleursRestantes.length === 0 && (
-              <Text style={{ color: COULEURS.rouge, fontSize: 12, marginBottom: ESPACEMENTS.md }}>
-                Toutes les couleurs sont utilisées
-              </Text>
-            )}
-            <Bouton titre="Ajouter le Camion" onPress={soumettre} variante="primaire" taille="lg" style={{ marginTop: ESPACEMENTS.lg }} />
-            {modalNotif && (
-              <View style={{ marginTop: ESPACEMENTS.md }}>
-                <Notification notification={modalNotif} onFermer={() => setModalNotif(null)} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
+            <View style={[styles.modalContenu, { backgroundColor: theme.fond }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitre, { color: theme.texte }]}>{t('camions.ajouterTitre')}</Text>
+                <Pressable onPress={() => setModalVisible(false)}>
+                  <X size={22} color={theme.texteTertiaire} />
+                </Pressable>
               </View>
-            )}
-          </View>
-        </View>
+              <ChampSaisie etiquette={t('camions.nomLabel')} placeholder={t('camions.nomPlaceholder')} value={nom} onChangeText={setNom} />
+              <ChampSaisie etiquette={t('camions.capaLabel')} placeholder={t('camions.capaPlaceholder')} value={capacite} onChangeText={setCapacite} keyboardType="numeric" />
+              <Text style={[styles.selectLabel, { color: theme.texteSecondaire }]}>{t('camions.couleurLabel')}</Text>
+              <View style={styles.couleursRow}>
+                {couleursRestantes.map((c) => (
+                  <Pressable
+                    key={c.valeur}
+                    onPress={() => setCouleur(c.valeur)}
+                    style={[
+                      styles.couleurCircle,
+                      { backgroundColor: c.valeur },
+                      couleur === c.valeur && styles.couleurActive,
+                    ]}
+                  />
+                ))}
+              </View>
+              {couleursRestantes.length === 0 && (
+                <Text style={{ color: COULEURS.rouge, fontSize: 12, marginBottom: ESPACEMENTS.md }}>
+                  {t('camions.couleursEpuisees')}
+                </Text>
+              )}
+              <Bouton titre={t('camions.ajouterBtn')} onPress={soumettre} variante="primaire" taille="lg" style={{ marginTop: ESPACEMENTS.lg }} />
+              {modalNotif && (
+                <View style={{ marginTop: ESPACEMENTS.md }}>
+                  <Notification notification={modalNotif} onFermer={() => setModalNotif(null)} />
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {notification && (

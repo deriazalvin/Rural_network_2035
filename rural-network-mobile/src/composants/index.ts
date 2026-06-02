@@ -10,3 +10,4 @@ export { Notification } from './Notification';
 export { BarreProgression } from './BarreProgression';
 export { EtatVide } from './EtatVide';
 export { HeaderApp } from './HeaderApp';
+export { DeviationProposal } from './DeviationProposal';

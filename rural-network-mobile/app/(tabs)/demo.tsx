@@ -8,7 +8,8 @@ import { useTheme } from '../../src/contextes/ContexteTheme';
 import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useI18n } from '../../src/contextes/ContexteI18n';
 import { Carte, CarteStatistique, BarreProgression, Notification } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
 import {
   BarChart3, MapPin, Route, Truck, Zap, TrendingUp,
   ChevronRight, RotateCcw, Activity, Package, AlertTriangle,
@@ -27,15 +28,15 @@ const VILLAGES = [
   { nom:'Vohipeno', prod:190, badge:'Faible' as const },
 ];
 
-const METEO_DATA = [
-  { ville:'Fianarantsoa', temp:28, ressenti:31, desc:'Ensoleillé', humidite:45, vent:12, icone:'☀️', conseil:'✅ Conditions favorables' },
-  { ville:'Manakara', temp:32, ressenti:36, desc:'Pluie légère', humidite:78, vent:8, icone:'🌦️', conseil:'⚠️ Humidité élevée' },
-];
-
 export default function DemoScreen() {
   const { theme, mode, basculerTheme } = useTheme();
   const { deconnexion } = useAuth();
   const { t, langue, definirLangue } = useI18n();
+
+  const METEO_DATA = [
+    { ville:'Fianarantsoa', temp:28, ressenti:31, desc:t('demoPage.meteoEnsoleille'), humidite:45, vent:12, icone:'☀️', conseil:t('demoPage.conseilFavorable') },
+    { ville:'Manakara', temp:32, ressenti:36, desc:t('demoPage.meteoPluie'), humidite:78, vent:8, icone:'🌦️', conseil:t('demoPage.conseilHumide') },
+  ];
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [etape, setEtape] = useState(0);
@@ -44,29 +45,29 @@ export default function DemoScreen() {
   const [autoPlay, setAutoPlay] = useState(true);
 
   const ETAPES: { id:Etape; label:string; icone:React.ReactNode; couleur:string }[] = [
-    { id:'tableau', label:'Dashboard', icone:<Layers size={16} color={COULEURS.bleuClair} />, couleur:COULEURS.bleuClair },
-    { id:'villages', label:'Villages', icone:<MapPin size={16} color={COULEURS.emeraude} />, couleur:COULEURS.emeraude },
-    { id:'routes', label:'Routes', icone:<Route size={16} color={COULEURS.bleu} />, couleur:COULEURS.bleu },
-    { id:'camions', label:'Camions', icone:<Truck size={16} color={COULEURS.orange} />, couleur:COULEURS.orange },
-    { id:'meteo', label:'Météo', icone:<Cloud size={16} color={COULEURS.bleuClair} />, couleur:COULEURS.bleuClair },
-    { id:'optimisation', label:'Calcul', icone:<Zap size={16} color={COULEURS.ambre} />, couleur:COULEURS.ambre },
-    { id:'resultats', label:'Résultats', icone:<TrendingUp size={16} color={COULEURS.rouge} />, couleur:COULEURS.rouge },
+    { id:'tableau', label:t('nav.tableau'), icone:<Layers size={16} color={COULEURS.bleuClair} />, couleur:COULEURS.bleuClair },
+    { id:'villages', label:t('nav.villages'), icone:<MapPin size={16} color={COULEURS.emeraude} />, couleur:COULEURS.emeraude },
+    { id:'routes', label:t('nav.routes'), icone:<Route size={16} color={COULEURS.bleu} />, couleur:COULEURS.bleu },
+    { id:'camions', label:t('nav.flotte'), icone:<Truck size={16} color={COULEURS.orange} />, couleur:COULEURS.orange },
+    { id:'meteo', label:t('nav.meteo'), icone:<Cloud size={16} color={COULEURS.bleuClair} />, couleur:COULEURS.bleuClair },
+    { id:'optimisation', label:t('nav.calcul'), icone:<Zap size={16} color={COULEURS.ambre} />, couleur:COULEURS.ambre },
+    { id:'resultats', label:t('demo.resultats'), icone:<TrendingUp size={16} color={COULEURS.rouge} />, couleur:COULEURS.rouge },
   ];
 
   useEffect(() => {
     if (!autoPlay) return;
-    const t: ReturnType<typeof setTimeout>[] = [];
-    t.push(setTimeout(() => { setEtape(1); showToast('Création village Ikongo (280 kg)','info'); }, 4000));
-    t.push(setTimeout(() => { setEtape(2); showToast('Route Ambalavao → Ikongo ajoutée','succes'); }, 8000));
-    t.push(setTimeout(() => { setEtape(3); showToast('Camion C en panne','avertissement'); }, 12000));
-    t.push(setTimeout(() => { setEtape(4); showToast('Météo chargée pour 6 villages','info'); }, 16000));
-    t.push(setTimeout(() => { setEtape(5); runProgress(); showToast('Optimisation multi-camions...','info'); }, 20000));
-    t.push(setTimeout(() => { setEtape(6); showToast('Gain 32,1% ! Résultats disponibles','succes'); }, 26000));
-    return () => t.forEach(clearTimeout);
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    timeouts.push(setTimeout(() => { setEtape(1); showToast(t('demoPage.toastCreation'),'info'); }, 4000));
+    timeouts.push(setTimeout(() => { setEtape(2); showToast(t('demoPage.toastRoute'),'succes'); }, 8000));
+    timeouts.push(setTimeout(() => { setEtape(3); showToast(t('demoPage.toastCamion'),'avertissement'); }, 12000));
+    timeouts.push(setTimeout(() => { setEtape(4); showToast(t('demoPage.toastMeteo'),'info'); }, 16000));
+    timeouts.push(setTimeout(() => { setEtape(5); runProgress(); showToast(t('demoPage.toastOptim'),'info'); }, 20000));
+    timeouts.push(setTimeout(() => { setEtape(6); showToast(t('demoPage.toastResultat'),'succes'); }, 26000));
+    return () => timeouts.forEach(clearTimeout);
   }, [autoPlay]);
 
   const showToast = (message: string, type: NotificationType['type']) => {
-    setToast({ type, titre: type==='succes'?t('commun.succes'):type==='avertissement'?'Avertissement':t('commun.info'), message });
+    setToast({ type, titre: type==='succes'?t('commun.succes'):type==='avertissement'?t('demoPage.avertissement'):t('commun.info'), message });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -124,15 +125,15 @@ export default function DemoScreen() {
         {etape===0 && (
           <Animated.View entering={FadeInUp.duration(400)}>
             <View style={styles.metricsRow}>
-              <View style={styles.metricHalf}><CarteStatistique label="Villages" valeur={6} icone={<MapPin size={16} color={COULEURS.emeraude}/>} couleur={COULEURS.emeraude} tendance="+2 ce mois" /></View>
-              <View style={styles.metricHalf}><CarteStatistique label="Routes" valeur={5} icone={<Route size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} tendance="80% actives" /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('nav.villages')} valeur={6} icone={<MapPin size={16} color={COULEURS.emeraude}/>} couleur={COULEURS.emeraude} tendance="+2 ce mois" /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('nav.routes')} valeur={5} icone={<Route size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} tendance="80% actives" /></View>
             </View>
             <View style={styles.metricsRow}>
-              <View style={styles.metricHalf}><CarteStatistique label="Production" valeur={2440} unite="kg" icone={<Package size={16} color={COULEURS.bleuClair}/>} couleur={COULEURS.bleuClair} tendance="+12%" /></View>
-              <View style={styles.metricHalf}><CarteStatistique label="Efficacité" valeur={87} unite="%" icone={<Zap size={16} color={COULEURS.ambre}/>} couleur={COULEURS.ambre} tendance="Record" /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('tableauBord.production')} valeur={2440} unite="kg" icone={<Package size={16} color={COULEURS.bleuClair}/>} couleur={COULEURS.bleuClair} tendance="+12%" /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('tableauBord.efficacite')} valeur={87} unite="%" icone={<Zap size={16} color={COULEURS.ambre}/>} couleur={COULEURS.ambre} tendance="Record" /></View>
             </View>
             <Carte style={styles.chartCard} ombre="sm">
-              <Text style={[styles.chartTitle,{color:theme.texte}]}>Historique des Optimisations</Text>
+              <Text style={[styles.chartTitle,{color:theme.texte}]}>{t('demoPage.historique')}</Text>
               <View style={styles.miniBars}>
                 {[18,24,29,35].map((h,i)=>(
                   <View key={i} style={styles.miniBarCol}>
@@ -150,7 +151,7 @@ export default function DemoScreen() {
         {/* VILLAGES */}
         {etape===1 && (
           <Animated.View entering={FadeInUp.duration(400)}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Gestion des Villages ({VILLAGES.length})</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('villages.titre')} ({VILLAGES.length})</Text>
             {VILLAGES.map((v,i)=>(
               <Carte key={i} style={styles.demoCard} ombre="sm">
                 <View style={styles.demoCardRow}>
@@ -168,7 +169,7 @@ export default function DemoScreen() {
         {/* ROUTES */}
         {etape===2 && (
           <Animated.View entering={FadeInUp.duration(400)}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Gestion des Routes (5)</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('routes.titre')} (5)</Text>
             {[
               {d:'Fianarantsoa',a:'Ambalavao',dist:75,qual:'BONNE'},
               {d:'Fianarantsoa',a:'Mananjary',dist:95,qual:'MOYENNE'},
@@ -182,8 +183,8 @@ export default function DemoScreen() {
                   <Text style={{fontSize:12,fontWeight:'600',color:r.qual==='BONNE'?COULEURS.emeraude:r.qual==='MOYENNE'?COULEURS.ambre:COULEURS.danger}}>{r.dist} km</Text>
                 </View>
                 <View style={styles.demoCardRow}>
-                  <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>Qualité: {r.qual}</Text>
-                  {r.bloc && <Text style={{fontSize:11,fontWeight:'700',color:COULEURS.danger}}>BLOQUÉE</Text>}
+                  <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>{t('demoPage.qualite')} {r.qual}</Text>
+                  {r.bloc && <Text style={{fontSize:11,fontWeight:'700',color:COULEURS.danger}}>{t('demoPage.bloquee')}</Text>}
                 </View>
               </Carte>
             ))}
@@ -193,10 +194,10 @@ export default function DemoScreen() {
         {/* CAMIONS */}
         {etape===3 && (
           <Animated.View entering={FadeInUp.duration(400)}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Gestion des Camions</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('camions.titre')}</Text>
             <View style={styles.metricsRow}>
-              <View style={styles.metricHalf}><CarteStatistique label="Total" valeur={3} icone={<Truck size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} /></View>
-              <View style={styles.metricHalf}><CarteStatistique label="Disponibles" valeur={2} icone={<CheckMark />} couleur={COULEURS.emeraude} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('demoPage.camionsTotal')} valeur={3} icone={<Truck size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('demoPage.camionsDispos')} valeur={2} icone={<CheckMark />} couleur={COULEURS.emeraude} /></View>
             </View>
             {[
               {nom:'Camion A',cap:5000,etat:'DISPONIBLE',coul:COULEURS.emeraude},
@@ -214,7 +215,7 @@ export default function DemoScreen() {
                     color: c.etat==='DISPONIBLE'?COULEURS.emeraude:c.etat==='EN_PANNE'?COULEURS.danger:COULEURS.ambre,
                   }]}>{c.etat}</Text>
                 </View>
-                <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>Capacité: {(c.cap/1000).toFixed(1)} tonne</Text>
+                <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>{t('demoPage.capacite')} {(c.cap/1000).toFixed(1)} t</Text>
               </Carte>
             ))}
           </Animated.View>
@@ -223,17 +224,17 @@ export default function DemoScreen() {
         {/* MÉTÉO */}
         {etape===4 && (
           <Animated.View entering={FadeInUp.duration(400)}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Météo des Villages</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('meteo.titre')}</Text>
             {METEO_DATA.map((m,i)=>(
               <Carte key={i} style={styles.demoCard} ombre="sm">
                 <View style={styles.demoCardRow}>
                   <Text style={[styles.demoNom,{color:theme.texte}]}>{m.icone} {m.ville}</Text>
                   <Text style={{fontSize:24,fontWeight:'800',color:theme.texte}}>{m.temp}°</Text>
                 </View>
-                <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>{m.desc} · Ressenti {m.ressenti}°</Text>
+                <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>{m.desc} · {t('meteo.ressenti').replace('{temp}',String(m.ressenti))}</Text>
                 <View style={styles.meteoDetails}>
                   <View><Droplets size={14} color={COULEURS.bleuClair} /><Text style={[styles.meteoDetailText,{color:theme.texteTertiaire}]}>{m.humidite}%</Text></View>
-                  <View><Wind size={14} color={COULEURS.cyan} /><Text style={[styles.meteoDetailText,{color:theme.texteTertiaire}]}>{m.vent} km/h</Text></View>
+                  <View><Wind size={14} color={COULEURS.bleuClair} /><Text style={[styles.meteoDetailText,{color:theme.texteTertiaire}]}>{m.vent} km/h</Text></View>
                 </View>
                 <View style={[styles.conseilBox,{backgroundColor:m.humidite>70?COULEURS.ambre+'15':COULEURS.emeraude+'15'}]}>
                   <Text style={{fontSize:12,color:m.humidite>70?COULEURS.ambre:COULEURS.emeraude}}>{m.conseil}</Text>
@@ -246,10 +247,10 @@ export default function DemoScreen() {
         {/* OPTIMISATION */}
         {etape===5 && (
           <Animated.View entering={FadeInUp.duration(400)} style={styles.centerCol}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Optimisation Multi-Camions</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('optimisation.titre')}</Text>
             <Carte style={styles.demoCard} ombre="sm">
-              <Text style={[styles.demoNom,{color:theme.texte,marginBottom:8}]}>Dépôt: Fianarantsoa</Text>
-              <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>Camions: Camion A (5t) · Camion B (3t)</Text>
+              <Text style={[styles.demoNom,{color:theme.texte,marginBottom:8}]}>{t('optimisation.depotDepart')}: Fianarantsoa</Text>
+              <Text style={[styles.demoMeta,{color:theme.texteTertiaire}]}>{t('camions.titre')}: Camion A (5t) · Camion B (3t)</Text>
             </Carte>
             <Animated.View style={styles.spinnerWrapper}><Zap size={48} color={COULEURS.ambre} /></Animated.View>
             <BarreProgression progres={progres} couleur={COULEURS.ambre} etiquette="Greedy Nearest-Neighbor" />
@@ -267,27 +268,27 @@ export default function DemoScreen() {
         {/* RÉSULTATS */}
         {etape===6 && (
           <Animated.View entering={FadeInUp.duration(400)}>
-            <Text style={[styles.etapeTitre,{color:theme.texte}]}>Résultats Comparatifs</Text>
+            <Text style={[styles.etapeTitre,{color:theme.texte}]}>{t('optimisation.resultats')}</Text>
             <View style={styles.metricsRow}>
-              <View style={styles.metricHalf}><CarteStatistique label="Distance" valeur={285} unite="km" icone={<Route size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} /></View>
-              <View style={styles.metricHalf}><CarteStatistique label="Gain" valeur={32.1} unite="%" icone={<TrendingUp size={16} color={COULEURS.emeraude}/>} couleur={COULEURS.emeraude} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('tableauBord.distance')} valeur={285} unite="km" icone={<Route size={16} color={COULEURS.bleu}/>} couleur={COULEURS.bleu} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('tableauBord.gainLabel')} valeur={32.1} unite="%" icone={<TrendingUp size={16} color={COULEURS.emeraude}/>} couleur={COULEURS.emeraude} /></View>
             </View>
             <View style={styles.metricsRow}>
-              <View style={styles.metricHalf}><CarteStatistique label="Carburant" valeur={228} unite="L" icone={<Package size={16} color={COULEURS.bleuClair}/>} couleur={COULEURS.bleuClair} /></View>
-              <View style={styles.metricHalf}><CarteStatistique label="Camions" valeur={2} unite="" icone={<Truck size={16} color={COULEURS.vertClair}/>} couleur={COULEURS.vertClair} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('tableauBord.cout')} valeur={228} unite="L" icone={<Package size={16} color={COULEURS.bleuClair}/>} couleur={COULEURS.bleuClair} /></View>
+              <View style={styles.metricHalf}><CarteStatistique label={t('optimisation.camions')} valeur={2} unite="" icone={<Truck size={16} color={COULEURS.emeraudeClair}/>} couleur={COULEURS.emeraudeClair} /></View>
             </View>
 
             <Carte style={styles.resultCard} ombre="sm">
-              <Text style={[styles.resultTitle,{color:theme.texte}]}>Standard vs Ajusté Météo</Text>
+              <Text style={[styles.resultTitle,{color:theme.texte}]}>{t('demoPage.comparatif')}</Text>
               <View style={styles.compareRow}>
                 <View style={[styles.compareBox,{backgroundColor:theme.carte}]}>
-                  <Text style={[styles.compareLabel,{color:theme.texteTertiaire}]}>Standard</Text>
+                  <Text style={[styles.compareLabel,{color:theme.texteTertiaire}]}>{t('demoPage.standardLabel')}</Text>
                   <Text style={[styles.compareValue,{color:COULEURS.emeraude}]}>285 km</Text>
                   <Text style={[styles.compareLabel,{color:theme.texteTertiaire}]}>+32,1%</Text>
                 </View>
                 <ChevronRight size={20} color={COULEURS.emeraude} />
                 <View style={[styles.compareBox,{backgroundColor:COULEURS.bleu+'10',borderColor:COULEURS.bleu}]}>
-                  <Text style={[styles.compareLabel,{color:COULEURS.bleu}]}>Avec Météo</Text>
+                  <Text style={[styles.compareLabel,{color:COULEURS.bleu}]}>{t('demoPage.avecMeteoLabel')}</Text>
                   <Text style={[styles.compareValue,{color:COULEURS.bleu}]}>312 km</Text>
                   <Text style={[styles.compareLabel,{color:theme.texteTertiaire}]}>+27,4%</Text>
                 </View>
@@ -297,7 +298,7 @@ export default function DemoScreen() {
             <Carte style={styles.resultCard} ombre="sm">
               <View style={{flexDirection:'row',alignItems:'center',gap:8,marginBottom:12}}>
                 <Bot size={20} color={COULEURS.emeraude} />
-                <Text style={[styles.resultTitle,{color:theme.texte,flex:1,marginBottom:0}]}>Assistant IA</Text>
+                <Text style={[styles.resultTitle,{color:theme.texte,flex:1,marginBottom:0}]}>{t('demoPage.assistantIA')}</Text>
               </View>
               <View style={[styles.iaMsg,{backgroundColor:theme.carte}]}>
                 <Text style={{fontSize:13,color:theme.texte}}>Plan optimal : Camion A → Ambalavao (450 kg), Camion B → Mananjary + Manakara (840 kg). Gain 32,1% !</Text>

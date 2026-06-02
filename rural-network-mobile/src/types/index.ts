@@ -52,6 +52,23 @@ export interface Tournee {
   etapes: EtapeTournee[];
 }
 
+export interface RouteBloqueeDetectee {
+  fromVillageId: string;
+  fromVillageNom: string;
+  toVillageId: string;
+  toVillageNom: string;
+  tourneeNom?: string;
+  estBloquee: boolean;
+  raison?: string;
+  status: 'DEVIATION_POSSIBLE' | 'VILLAGE_ISOLE';
+  deviationProposee?: string[];
+  distanceDirecte?: number;
+  distanceDeviation?: number;
+  surcout?: number;
+  tempsSupplementaire?: number;
+  messageUtilisateur?: string;
+}
+
 export interface ResultatOptimisation {
   distanceTotalKm: number;
   distanceBaseline?: number;
@@ -62,6 +79,7 @@ export interface ResultatOptimisation {
   dureeCalculMs?: number;
   tournees: Tournee[];
   villagesNonDesservis: string[];
+  routesBloqueeDetectees?: RouteBloqueeDetectee[];
   resultatDTO?: unknown;
 }
 

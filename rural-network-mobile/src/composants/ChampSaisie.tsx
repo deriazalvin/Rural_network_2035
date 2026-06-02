@@ -5,7 +5,8 @@
 import React from 'react';
 import { View, TextInput, Text, StyleSheet, type TextInputProps } from 'react-native';
 import { useTheme } from '../contextes/ContexteTheme';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../styles/couleurs';
+import { COULEURS } from '../styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../styles/espacements';
 
 interface ChampSaisieProps extends TextInputProps {
   icone?: React.ReactNode;

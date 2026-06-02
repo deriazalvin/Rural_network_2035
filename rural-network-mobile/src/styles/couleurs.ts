@@ -1,15 +1,7 @@
-/**
- * Système de couleurs inspiré de l'identité visuelle web
- * Adapté pour React Native avec des valeurs hex explicites
- */
-
 export const COULEURS = {
   // Primaires
-  vertPrincipal: '#2d5016',
-  vertSecondaire: '#4a7c2c',
-  vertClair: '#6b9d4a',
-  emeraude: '#10b981',
-  emeraudeClair: '#34d399',
+  emeraude: '#22c55e',
+  emeraudeClair: '#4ade80',
 
   // Fonds clair
   beige: '#f5f1e8',
@@ -52,9 +44,6 @@ export const COULEURS = {
 
 export type Couleur = keyof typeof COULEURS;
 
-/**
- * Thèmes clair et sombre prêts à l'emploi
- */
 export const THEME_CLAIR = {
   fond: COULEURS.blanc,
   fondSecondaire: COULEURS.beige,
@@ -63,8 +52,8 @@ export const THEME_CLAIR = {
   texteSecondaire: COULEURS.texteSecondaire,
   texteTertiaire: COULEURS.texteTertiaire,
   bordure: COULEURS.bordure,
-  primaire: COULEURS.vertPrincipal,
-  accent: COULEURS.vertClair,
+  primaire: COULEURS.emeraude,
+  accent: COULEURS.emeraudeClair,
   carte: COULEURS.grisClair,
   statutBar: 'dark',
 } as const;
@@ -84,25 +73,3 @@ export const THEME_SOMBRE = {
 } as const;
 
 export type Theme = typeof THEME_CLAIR;
-/**
- * Espacements du design system
- */
-export const ESPACEMENTS = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-} as const;
-
-/**
- * Rayons des bordures
- */
-export const RAYONS = {
-  sm: 4,
-  md: 8,
-  lg: 16,
-  xl: 24,
-  rond: 9999,
-} as const;

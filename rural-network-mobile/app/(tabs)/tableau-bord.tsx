@@ -3,7 +3,6 @@
  * Dashboard immersif avec métriques animées, graphique historique, résultats d'optimisation
  */
 import React, { useState, useMemo } from 'react';
-import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -17,9 +16,12 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, interpo
 import { useTheme } from '../../src/contextes/ContexteTheme';
 import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useDonnees } from '../../src/contextes/ContexteDonnees';
-import { Carte, CarteStatistique, IndicateurLive, Notification } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { useI18n } from '../../src/contextes/ContexteI18n';
+import { Carte, CarteStatistique, IndicateurLive, Notification, DeviationProposal } from '../../src/composants';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
 import { TAILLES } from '../../src/styles/espacements';
+import { HeaderApp } from '../../src/composants/HeaderApp';
 import {
   MapPin,
   Route,
@@ -33,23 +35,15 @@ import {
   Calendar,
   BarChart3,
   WifiOff,
-  Sun,
-  Moon,
-  LogOut,
   Trash2,
 } from 'lucide-react-native';
 import type { Notification as NotificationType } from '../../src/types';
 
 export default function TableauBordScreen() {
-  const { theme, mode, basculerTheme } = useTheme();
-  const { deconnexion, utilisateur } = useAuth();
-  const router = useRouter();
+  const { theme } = useTheme();
+  const { utilisateur } = useAuth();
   const { villages, routes, optimisations, chargement, recharger, enLigne, supprimerOptimisations } = useDonnees();
-
-  const handleDeconnexion = async () => {
-    await deconnexion();
-    router.replace('/accueil');
-  };
+  const { t, langue } = useI18n();
   const [rafraichissant, setRafraichissant] = useState(false);
   const [liveMode, setLiveMode] = useState(true);
   const [expandedTours, setExpandedTours] = useState<Set<number>>(new Set());
@@ -97,48 +91,40 @@ export default function TableauBordScreen() {
   };
 
   const derniereOptim = optimisations[0];
+  const deviationsDerniereOptim = derniereOptim?.routesBloqueeDetectees?.filter(
+    (d) => d.status === 'DEVIATION_POSSIBLE'
+  ) || [];
+  const villagesIsoleDerniereOptim = derniereOptim?.routesBloqueeDetectees?.filter(
+    (d) => d.status === 'VILLAGE_ISOLE'
+  ) || [];
 
   return (
     <SafeAreaView style={[styles.conteneur, { backgroundColor: theme.fond }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.fondCarte, borderBottomColor: theme.bordure }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerTitle}>
-            <View style={[styles.iconBadge, { backgroundColor: theme.primaire + '18' }]}>
-              <BarChart3 size={22} color={theme.primaire} />
-            </View>
-            <View>
-              <Text style={[styles.headerTitre, { color: theme.texte }]}>Tableau de Bord</Text>
-              <Text style={[styles.headerSousTitre, { color: theme.texteTertiaire }]}>
-                Réseau Rural Intelligent
-              </Text>
-            </View>
+      <HeaderApp
+        icone={
+          <View style={[styles.iconBadge, { backgroundColor: theme.primaire + '18' }]}>
+            <BarChart3 size={22} color={theme.primaire} />
           </View>
-          <View style={styles.headerActions}>
-            {utilisateur && (
-              <Text style={[styles.headerUser, { color: theme.primaire }]}>
-                {utilisateur.nom || 'Utilisateur'}
-              </Text>
-            )}
-            <IndicateurLive actif={liveMode && enLigne} onPress={() => setLiveMode(!liveMode)} />
-            <Pressable onPress={basculerTheme} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              {mode === 'sombre' ? <Sun size={18} color={theme.primaire} /> : <Moon size={18} color={theme.primaire} />}
-            </Pressable>
-            <Pressable onPress={handleDeconnexion} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              <LogOut size={18} color={theme.texteTertiaire} />
-            </Pressable>
-          </View>
-        </View>
-        <View style={styles.dateRow}>
-          <Calendar size={14} color={theme.texteTertiaire} />
-          <Text style={[styles.dateText, { color: theme.texteTertiaire }]}>
-            {new Date().toLocaleDateString('fr-FR', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
+        }
+        titre={t('tableauBord.titre')}
+        subtitle={t('tableauBord.sousTitre')}
+      >
+        {utilisateur && (
+          <Text style={[styles.headerUser, { color: theme.primaire }]}>
+            {utilisateur.nom || t('tableauBord.utilisateur')}
           </Text>
-        </View>
+        )}
+        <IndicateurLive actif={liveMode && enLigne} onPress={() => setLiveMode(!liveMode)} />
+      </HeaderApp>
+      <View style={styles.dateRow}>
+        <Calendar size={14} color={theme.texteTertiaire} />
+        <Text style={[styles.dateText, { color: theme.texteTertiaire }]}>
+          {new Date().toLocaleDateString(langue, {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+          })}
+        </Text>
       </View>
 
       {!enLigne && (
@@ -146,7 +132,7 @@ export default function TableauBordScreen() {
         >
           <WifiOff size={14} color={COULEURS.ambre} />
           <Text style={[styles.offlineText, { color: COULEURS.ambre }]}>
-            Mode hors-ligne — Données en cache
+            {t('tableauBord.horsLigne')}
           </Text>
         </View>
       )}
@@ -160,41 +146,41 @@ export default function TableauBordScreen() {
         <View style={styles.metricsRow}>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Villages"
+              label={t('tableauBord.villages')}
               valeur={stats.villages}
               icone={<MapPin size={18} color={COULEURS.emeraude} />}
               couleur={COULEURS.emeraude}
-              tendance="+3 ce mois"
+              tendance={t('tableauBord.villagesTrend')}
             />
           </View>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Routes"
+              label={t('tableauBord.routes')}
               valeur={stats.routes}
               icone={<Route size={18} color={COULEURS.bleu} />}
               couleur={COULEURS.bleu}
-              tendance="96% opérationnel"
+              tendance={t('tableauBord.routesTrend')}
             />
           </View>
         </View>
         <View style={styles.metricsRow}>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Production"
+              label={t('tableauBord.production')}
               valeur={stats.production}
               unite="kg"
               icone={<Package size={18} color={COULEURS.bleuClair} />}
               couleur={COULEURS.bleuClair}
-              tendance="+12% vs N-1"
+              tendance={t('tableauBord.productionTrend')}
             />
           </View>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Bloquées"
+              label={t('tableauBord.bloquees')}
               valeur={stats.blocked}
               icone={<AlertTriangle size={18} color={COULEURS.ambre} />}
               couleur={COULEURS.ambre}
-              tendance="-2 cette semaine"
+              tendance={t('tableauBord.bloqueesTrend')}
               tendancePositive={false}
             />
           </View>
@@ -202,22 +188,22 @@ export default function TableauBordScreen() {
         <View style={styles.metricsRow}>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Efficacité"
+              label={t('tableauBord.efficacite')}
               valeur={stats.efficiency}
               unite="%"
               icone={<Zap size={18} color={COULEURS.orange} />}
               couleur={COULEURS.orange}
-              tendance="Record"
+              tendance={t('tableauBord.efficaciteTrend')}
             />
           </View>
           <View style={styles.metricHalf}>
             <CarteStatistique
-              label="Disponibilité"
+              label={t('tableauBord.disponibilite')}
               valeur={stats.uptime}
               unite="%"
-              icone={<Clock size={18} color={COULEURS.vertClair} />}
-              couleur={COULEURS.vertClair}
-              tendance="Stable"
+              icone={<Clock size={18} color={COULEURS.emeraudeClair} />}
+              couleur={COULEURS.emeraudeClair}
+              tendance={t('tableauBord.disponibiliteTrend')}
             />
           </View>
         </View>
@@ -228,15 +214,15 @@ export default function TableauBordScreen() {
             <View style={styles.chartHeader}>
               <TrendingUp size={18} color={COULEURS.emeraude} />
               <Text style={[styles.chartTitle, { color: theme.texte }]}>
-                Historique des Optimisations
+                {t('tableauBord.historique')}
               </Text>
               <Pressable
                 onPress={async () => {
                   try {
                     await supprimerOptimisations();
-                    setNotification({ type: 'succes', titre: 'Historique effacé', message: 'Les optimisations ont été supprimées' });
+                    setNotification({ type: 'succes', titre: t('tableauBord.historiqueEfface'), message: t('tableauBord.historiqueEffaceMsg') });
                   } catch (err: any) {
-                    setNotification({ type: 'erreur', titre: 'Erreur', message: err.message });
+                    setNotification({ type: 'erreur', titre: t('tableauBord.erreur'), message: err.message });
                   }
                 }}
                 style={{ padding: ESPACEMENTS.sm }}
@@ -271,7 +257,7 @@ export default function TableauBordScreen() {
             <View style={styles.legendRow}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: COULEURS.emeraude }]} />
-                <Text style={[styles.legendText, { color: theme.texteTertiaire }]}>Gain (%)</Text>
+                <Text style={[styles.legendText, { color: theme.texteTertiaire }]}>{t('tableauBord.gain')}</Text>
               </View>
             </View>
           </Carte>
@@ -283,17 +269,17 @@ export default function TableauBordScreen() {
             <View style={styles.optimHeader}>
               <Zap size={18} color={COULEURS.emeraude} />
               <Text style={[styles.optimTitle, { color: theme.texte }]}>
-                Dernière Optimisation
+                {t('tableauBord.derniereOptim')}
               </Text>
               <View style={styles.optimBadge}>
-                <Text style={styles.optimBadgeText}>Terminé</Text>
+                <Text style={styles.optimBadgeText}>{t('tableauBord.termine')}</Text>
               </View>
             </View>
             <View style={styles.optimGrid}>
               <View style={styles.optimItem}>
                 <Route size={18} color={theme.texteTertiaire} />
                 <Text style={[styles.optimLabel, { color: theme.texteTertiaire }]}>
-                  Distance
+                  {t('tableauBord.distance')}
                 </Text>
                 <Text style={[styles.optimValue, { color: theme.texte }]}>
                   {derniereOptim.distanceTotalKm?.toFixed(1)} km
@@ -302,7 +288,7 @@ export default function TableauBordScreen() {
               <View style={styles.optimItem}>
                 <TrendingUp size={18} color={COULEURS.emeraude} />
                 <Text style={[styles.optimLabel, { color: theme.texteTertiaire }]}>
-                  Gain
+                  {t('tableauBord.gainLabel')}
                 </Text>
                 <Text style={[styles.optimValue, { color: COULEURS.emeraude }]}>
                   {derniereOptim.gainPourcent?.toFixed(1)}%
@@ -311,7 +297,7 @@ export default function TableauBordScreen() {
               <View style={styles.optimItem}>
                 <Package size={18} color={theme.texteTertiaire} />
                 <Text style={[styles.optimLabel, { color: theme.texteTertiaire }]}>
-                  Coût
+                  {t('tableauBord.cout')}
                 </Text>
                 <Text style={[styles.optimValue, { color: theme.texte }]}>
                   {derniereOptim.coutTotal?.toFixed(0)} Ar
@@ -320,7 +306,7 @@ export default function TableauBordScreen() {
               <View style={styles.optimItem}>
                 <Zap size={18} color={theme.texteTertiaire} />
                 <Text style={[styles.optimLabel, { color: theme.texteTertiaire }]}>
-                  Tournées
+                  {t('tableauBord.tournees')}
                 </Text>
                 <Text style={[styles.optimValue, { color: theme.texte }]}>
                   {derniereOptim.tournees?.length || 0}
@@ -332,7 +318,7 @@ export default function TableauBordScreen() {
             {derniereOptim.tournees && derniereOptim.tournees.length > 0 && (
               <View style={styles.toursSection}>
                 <Text style={[styles.toursTitle, { color: theme.texte }]}>
-                  Détail des Tournées
+                  {t('tableauBord.detailTournees')}
                 </Text>
                 {derniereOptim.tournees.map((tournee, idx) => (
                   <View key={idx}>
@@ -354,7 +340,7 @@ export default function TableauBordScreen() {
                           {tournee.nom || tournee.camionNom || `Tournée ${idx + 1}`}
                         </Text>
                         <Text style={[styles.tourStops, { color: theme.texteTertiaire }]}>
-                          {tournee.etapes?.length || 0} arrêts
+                          {tournee.etapes?.length || 0} {t('tableauBord.arrets')}
                         </Text>
                       </View>
                       <View style={styles.tourMetrics}>
@@ -397,6 +383,45 @@ export default function TableauBordScreen() {
                       </View>
                     )}
                   </View>
+                ))}
+              </View>
+            )}
+          </Carte>
+        )}
+
+        {/* Déviation de la dernière optimisation */}
+        {derniereOptim && derniereOptim.routesBloqueeDetectees && derniereOptim.routesBloqueeDetectees.length > 0 && (
+          <Carte style={styles.deviationCard} ombre="sm">
+            <View style={styles.deviationCardHeader}>
+              <AlertTriangle size={18} color={COULEURS.ambre} />
+              <Text style={[styles.deviationCardTitle, { color: theme.texte }]}>
+                {t('tableauBord.routesBloquees')}
+              </Text>
+              <View style={[styles.deviationBadge, { backgroundColor: COULEURS.ambre + '18' }]}>
+                <Text style={[styles.deviationBadgeText, { color: COULEURS.ambre }]}>
+                  {deviationsDerniereOptim.length + villagesIsoleDerniereOptim.length}
+                </Text>
+              </View>
+            </View>
+
+            {deviationsDerniereOptim.length > 0 && (
+              <View style={styles.deviationSection}>
+                <Text style={[styles.deviationSectionTitle, { color: theme.texteSecondaire }]}>
+                  {t('tableauBord.deviationPossible')} ({deviationsDerniereOptim.length})
+                </Text>
+                {deviationsDerniereOptim.map((d, idx) => (
+                  <DeviationProposal key={idx} deviation={d} />
+                ))}
+              </View>
+            )}
+
+            {villagesIsoleDerniereOptim.length > 0 && (
+              <View style={styles.deviationSection}>
+                <Text style={[styles.deviationSectionTitle, { color: theme.texteSecondaire }]}>
+                  {t('tableauBord.villageIsole')} ({villagesIsoleDerniereOptim.length})
+                </Text>
+                {villagesIsoleDerniereOptim.map((d, idx) => (
+                  <DeviationProposal key={idx} deviation={d} />
                 ))}
               </View>
             )}
@@ -479,6 +504,13 @@ const styles = StyleSheet.create({
   optimItem: { flex: 1, minWidth: 70, alignItems: 'center', padding: ESPACEMENTS.md },
   optimLabel: { fontSize: 11, marginTop: ESPACEMENTS.xs },
   optimValue: { fontSize: 16, fontWeight: '800', marginTop: ESPACEMENTS.xs },
+  deviationCard: { marginTop: ESPACEMENTS.md, padding: ESPACEMENTS.lg },
+  deviationCardHeader: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm, marginBottom: ESPACEMENTS.md },
+  deviationCardTitle: { fontSize: 15, fontWeight: '700', flex: 1 },
+  deviationBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RAYONS.rond },
+  deviationBadgeText: { fontSize: 11, fontWeight: '700' },
+  deviationSection: { marginTop: ESPACEMENTS.md },
+  deviationSectionTitle: { fontSize: 12, fontWeight: '700', marginBottom: ESPACEMENTS.sm, textTransform: 'uppercase', letterSpacing: 0.5 },
   toursSection: { marginTop: ESPACEMENTS.lg },
   toursTitle: { fontSize: 14, fontWeight: '700', marginBottom: ESPACEMENTS.md },
   tourHeader: {

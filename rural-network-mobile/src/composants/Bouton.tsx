@@ -5,7 +5,8 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, ActivityIndicator, type ViewStyle } from 'react-native';
 import { useTheme } from '../contextes/ContexteTheme';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../styles/couleurs';
+import { COULEURS } from '../styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../styles/espacements';
 import { OMBRES } from '../styles/espacements';
 
 type Variante = 'primaire' | 'secondaire' | 'danger' | 'outline' | 'ghost';

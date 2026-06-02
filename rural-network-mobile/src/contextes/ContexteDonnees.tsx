@@ -98,9 +98,18 @@ export function FournisseurDonnees({ children }: { children: React.ReactNode }) 
   // === Actions CRUD ===
   const ajouterVillage = async (v: Partial<Village>) => {
     const nouveau = await serviceDonnees.ajouterVillage(v);
-    const updated = [...villages, nouveau];
-    setVillages(updated);
-    await serviceDonnees.sauvegarderCache(CLES_STOCKAGE.villages, updated);
+    const updatedVillages = [...villages, nouveau];
+    setVillages(updatedVillages);
+    await serviceDonnees.sauvegarderCache(CLES_STOCKAGE.villages, updatedVillages);
+    // Rafraîchir les routes — le backend crée automatiquement les routes
+    // du nouveau village vers tous les villages existants
+    try {
+      const routesActualisees = await serviceDonnees.obtenirToutesLesRoutes();
+      setRoutes(routesActualisees);
+      await serviceDonnees.sauvegarderCache(CLES_STOCKAGE.routes, routesActualisees);
+    } catch {
+      // Échec du rafraîchissement des routes — on continue
+    }
   };
 
   const supprimerVillage = async (id: string) => {

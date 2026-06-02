@@ -2,8 +2,7 @@
  * Gestion des Routes — Version Mobile
  * Ajout, édition, liste actives/bloquées, qualité
  */
-import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,12 +11,16 @@ import {
   Pressable,
   Modal,
   SafeAreaView,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { useTheme } from '../../src/contextes/ContexteTheme';
-import { useAuth } from '../../src/contextes/ContexteAuth';
 import { useDonnees } from '../../src/contextes/ContexteDonnees';
-import { Carte, Bouton, Notification, EtatVide } from '../../src/composants';
-import { COULEURS, RAYONS, ESPACEMENTS } from '../../src/styles/couleurs';
+import { useI18n } from '../../src/contextes/ContexteI18n';
+import { Carte, Bouton, Notification, EtatVide, DeviationProposal } from '../../src/composants';
+import { COULEURS } from '../../src/styles/couleurs';
+import { RAYONS, ESPACEMENTS } from '../../src/styles/espacements';
+import { HeaderApp } from '../../src/composants/HeaderApp';
 import {
   MapPin,
   CheckCircle,
@@ -29,18 +32,17 @@ import {
   Eye,
   Navigation,
   AlertOctagon,
-  Sun,
-  Moon,
-  LogOut,
+  Route,
+  Search,
+  ChevronRight,
 } from 'lucide-react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import type { Notification as NotificationType, RouteItem } from '../../src/types';
+import type { Notification as NotificationType, RouteItem, RouteBloqueeDetectee } from '../../src/types';
 
 export default function RoutesScreen() {
-  const { theme, mode, basculerTheme } = useTheme();
-  const { deconnexion, utilisateur } = useAuth();
-  const router = useRouter();
-  const { villages, routes, ajouterRoute, modifierRoute, chargement } = useDonnees();
+  const { theme } = useTheme();
+  const { villages, routes, optimisations, ajouterRoute, modifierRoute, chargement } = useDonnees();
+  const { t } = useI18n();
   const [modalVisible, setModalVisible] = useState(false);
   const [departId, setDepartId] = useState('');
   const [arriveeId, setArriveeId] = useState('');
@@ -51,21 +53,20 @@ export default function RoutesScreen() {
   const [vue, setVue] = useState<'actives' | 'bloquees'>('actives');
   const [itineraireModal, setItineraireModal] = useState<RouteItem | null>(null);
   const [edition, setEdition] = useState<RouteItem | null>(null);
-
-  const handleDeconnexion = async () => {
-    await deconnexion();
-    router.replace('/accueil');
-  };
+  const [deviationModal, setDeviationModal] = useState<RouteBloqueeDetectee | null>(null);
+  const [rechercheRoutes, setRechercheRoutes] = useState('');
+  const [pageCourante, setPageCourante] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const getQualiteInfo = (value: number) => {
-    if (value <= 33) return { label: 'Mauvaise', couleur: COULEURS.rouge, icone: <XCircle size={14} color={COULEURS.rouge} /> };
-    if (value >= 66) return { label: 'Bonne', couleur: COULEURS.succes, icone: <CheckCircle size={14} color={COULEURS.succes} /> };
-    return { label: 'Moyenne', couleur: COULEURS.ambre, icone: <AlertTriangle size={14} color={COULEURS.ambre} /> };
+    if (value <= 33) return { label: t('routes.mauvaise'), couleur: COULEURS.rouge, icone: <XCircle size={14} color={COULEURS.rouge} /> };
+    if (value >= 66) return { label: t('routes.bonne'), couleur: COULEURS.succes, icone: <CheckCircle size={14} color={COULEURS.succes} /> };
+    return { label: t('routes.moyenne'), couleur: COULEURS.ambre, icone: <AlertTriangle size={14} color={COULEURS.ambre} /> };
   };
 
   const qualiteInfo = getQualiteInfo(qualite);
 
-  const obtenirNomVillage = (id: string) => villages.find((v) => v.id === id)?.nom || 'Inconnu';
+  const obtenirNomVillage = (id: string) => villages.find((v) => v.id === id)?.nom || t('routes.inconnu');
 
   /** Décode une polyline encodée (algorithme Google) en tableau de coordonnées {lat, lng} */
   const decodePolyline = (encoded: string): { latitude: number; longitude: number }[] => {
@@ -107,11 +108,11 @@ export default function RoutesScreen() {
 
   const soumettre = async () => {
     if (!departId || !arriveeId) {
-      setModalNotif({ type: 'erreur', titre: 'Villages requis', message: 'Sélectionnez un village de départ et un village d\'arrivée' });
+      setModalNotif({ type: 'erreur', titre: t('routes.villagesRequis'), message: t('routes.villagesRequisMsg') });
       return;
     }
     if (departId === arriveeId) {
-      setModalNotif({ type: 'erreur', titre: 'Villages invalides', message: 'Le départ et l\'arrivée doivent être différents' });
+      setModalNotif({ type: 'erreur', titre: t('routes.villagesInvalides'), message: t('routes.villagesInvalidesMsg') });
       return;
     }
     let q: RouteItem['qualiteRoute'] = 'MOYENNE';
@@ -126,7 +127,7 @@ export default function RoutesScreen() {
           qualiteRoute: q,
           estBloquee,
         });
-        setNotification({ type: 'succes', titre: 'Route modifiée', message: 'La route a été modifiée avec succès' });
+        setNotification({ type: 'succes', titre: t('routes.routeModifiee'), message: t('routes.routeModifieeMsg') });
       } else {
         await ajouterRoute({
           villageDepart_id: departId,
@@ -134,7 +135,7 @@ export default function RoutesScreen() {
           qualiteRoute: q,
           estBloquee,
         });
-        setNotification({ type: 'succes', titre: 'Route ajoutée', message: 'La route a été créée avec succès' });
+        setNotification({ type: 'succes', titre: t('routes.routeAjoutee'), message: t('routes.routeAjouteeMsg') });
       }
       setModalVisible(false);
       setEdition(null);
@@ -143,27 +144,59 @@ export default function RoutesScreen() {
       setQualite(50);
       setEstBloquee(false);
     } catch (err: any) {
-      setModalNotif({ type: 'erreur', titre: 'Erreur', message: err.message });
+      setModalNotif({ type: 'erreur', titre: t('routes.erreur'), message: err.message });
     }
   };
 
-  const routesActives = routes.filter((r) => !r.estBloquee);
-  const routesBloquees = routes.filter((r) => r.estBloquee);
+  const filtrerRoutes = (list: RouteItem[]) => {
+    if (!rechercheRoutes) return list;
+    const q = rechercheRoutes.toLowerCase();
+    return list.filter((r) => {
+      const nomDepart = obtenirNomVillage(r.villageDepart_id).toLowerCase();
+      const nomArrivee = obtenirNomVillage(r.village_arrivee_id).toLowerCase();
+      return nomDepart.includes(q) || nomArrivee.includes(q);
+    });
+  };
+
+  const paginer = (list: RouteItem[]) => {
+    const total = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE));
+    const page = Math.min(pageCourante, total);
+    const debut = (page - 1) * ITEMS_PER_PAGE;
+    return { items: list.slice(debut, debut + ITEMS_PER_PAGE), totalPages: total, page };
+  };
+
+  const routesActives = filtrerRoutes(routes.filter((r) => !r.estBloquee));
+  const routesBloquees = filtrerRoutes(routes.filter((r) => r.estBloquee));
+  const activesPaginees = paginer(routesActives);
+  const bloqueesPaginees = paginer(routesBloquees);
+
+  const trouverDeviation = (route: RouteItem): RouteBloqueeDetectee | undefined => {
+    for (const opt of optimisations) {
+      const found = opt.routesBloqueeDetectees?.find(
+        (d) =>
+          (d.fromVillageId === route.villageDepart_id && d.toVillageId === route.village_arrivee_id) ||
+          (d.fromVillageId === route.village_arrivee_id && d.toVillageId === route.villageDepart_id)
+      );
+      if (found) return found;
+    }
+    return undefined;
+  };
 
   const ItemRoute = ({ route }: { route: RouteItem }) => {
     const vd = villages.find((v) => v.id === route.villageDepart_id);
     const va = villages.find((v) => v.id === route.village_arrivee_id);
+    const deviation = route.estBloquee ? trouverDeviation(route) : undefined;
     return (
       <Carte style={styles.routeCard} ombre="sm">
         <View style={styles.routeHeader}>
           <View style={styles.routeNames}>
             <MapPin size={14} color={theme.texteTertiaire} />
             <Text style={[styles.routeText, { color: theme.texte }]}>
-              {vd?.nom || 'Inconnu'}
+              {vd?.nom || t('routes.inconnu')}
             </Text>
             <ArrowRight size={14} color={theme.texteTertiaire} />
             <Text style={[styles.routeText, { color: theme.texte }]}>
-              {va?.nom || 'Inconnu'}
+              {va?.nom || t('routes.inconnu')}
             </Text>
           </View>
         </View>
@@ -181,10 +214,19 @@ export default function RoutesScreen() {
         <View style={styles.routeActionsRow}>
           <Pressable onPress={() => setItineraireModal(route)} style={[styles.btnItineraire, { backgroundColor: theme.primaire + '12' }]}>
             <Navigation size={14} color={theme.primaire} />
-            <Text style={[styles.btnItineraireText, { color: theme.primaire }]}>Voir itinéraire</Text>
+            <Text style={[styles.btnItineraireText, { color: theme.primaire }]}>{t('routes.voirItineraire')}</Text>
           </Pressable>
+          {route.estBloquee && deviation && (
+            <Pressable
+              onPress={() => setDeviationModal(deviation)}
+              style={[styles.btnItineraire, { backgroundColor: COULEURS.ambre + '15' }]}
+            >
+              <Route size={14} color={COULEURS.ambre} />
+              <Text style={[styles.btnItineraireText, { color: COULEURS.ambre }]}>{t('routes.deviation')}</Text>
+            </Pressable>
+          )}
           <Pressable onPress={() => ouvrirEdition(route)} style={[styles.btnItineraire, { backgroundColor: theme.primaire + '12' }]}>
-            <Text style={[styles.btnItineraireText, { color: theme.primaire }]}>Modifier</Text>
+            <Text style={[styles.btnItineraireText, { color: theme.primaire }]}>{t('routes.modifier')}</Text>
           </Pressable>
           <Pressable
             onPress={() => modifierRoute(route.id, { estBloquee: !route.estBloquee })}
@@ -194,7 +236,7 @@ export default function RoutesScreen() {
             ]}
           >
             <Text style={[styles.actionRouteText, { color: route.estBloquee ? COULEURS.succes : COULEURS.rouge }]}>
-              {route.estBloquee ? 'Réactiver' : 'Bloquer'}
+              {route.estBloquee ? t('routes.reactiver') : t('routes.bloquer')}
             </Text>
           </Pressable>
         </View>
@@ -204,46 +246,42 @@ export default function RoutesScreen() {
 
   return (
     <SafeAreaView style={[styles.conteneur, { backgroundColor: theme.fond }]}>
-      <View style={[styles.header, { backgroundColor: theme.fondCarte, borderBottomColor: theme.bordure }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTitle}>
-            <MapPin size={22} color={theme.primaire} />
-            <Text style={[styles.headerText, { color: theme.texte }]}>Gestion des Routes</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable onPress={basculerTheme} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              {mode === 'sombre' ? <Sun size={18} color={theme.primaire} /> : <Moon size={18} color={theme.primaire} />}
-            </Pressable>
-            <Pressable onPress={handleDeconnexion} style={[styles.iconBtn, { backgroundColor: theme.carte }]}>
-              <LogOut size={18} color={theme.texteTertiaire} />
-            </Pressable>
-            {utilisateur && (
-              <Text style={[styles.headerUser, { color: theme.primaire }]}>
-                {utilisateur.nom || 'Utilisateur'}
-              </Text>
-            )}
-            <Pressable onPress={ouvrirAjout} style={[styles.btnAjout, { backgroundColor: theme.primaire }]}>
-              <Plus size={18} color={COULEURS.blanc} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
+      <HeaderApp
+        icone={<Route size={22} color={theme.primaire} />}
+        titre={t('routes.titre')}
+      >
+        <Pressable onPress={ouvrirAjout} style={[styles.btnAjout, { backgroundColor: theme.primaire }]}>
+          <Plus size={18} color={COULEURS.blanc} />
+        </Pressable>
+      </HeaderApp>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.scroll}>
         {/* Stats */}
         <View style={styles.statsRow}>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Total</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('routes.total')}</Text>
             <Text style={[styles.statValue, { color: theme.texte }]}>{routes.length}</Text>
           </Carte>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Actives</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('routes.actives')}</Text>
             <Text style={[styles.statValue, { color: COULEURS.succes }]}>{routesActives.length}</Text>
           </Carte>
           <Carte style={styles.statCard} ombre="sm">
-            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>Bloquées</Text>
+            <Text style={[styles.statLabel, { color: theme.texteTertiaire }]}>{t('routes.bloquees')}</Text>
             <Text style={[styles.statValue, { color: COULEURS.rouge }]}>{routesBloquees.length}</Text>
           </Carte>
+        </View>
+
+        {/* Barre de recherche */}
+        <View style={[styles.searchRow, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
+          <Search size={16} color={theme.texteTertiaire} />
+          <TextInput
+            placeholder={t('routes.rechercher')}
+            placeholderTextColor={theme.texteTertiaire}
+            value={rechercheRoutes}
+            onChangeText={(text) => { setRechercheRoutes(text); setPageCourante(1); }}
+            style={[styles.searchInput, { color: theme.texte }]}
+          />
         </View>
 
         {/* Onglets */}
@@ -253,7 +291,7 @@ export default function RoutesScreen() {
             style={[styles.tab, { borderBottomColor: vue === 'actives' ? theme.primaire : 'transparent' }]}
           >
             <Text style={[styles.tabText, { color: vue === 'actives' ? theme.primaire : theme.texteTertiaire }]}>
-              Actives ({routesActives.length})
+              {t('routes.actives')} ({activesPaginees.items.length}/{routesActives.length})
             </Text>
           </Pressable>
           <Pressable
@@ -261,39 +299,68 @@ export default function RoutesScreen() {
             style={[styles.tab, { borderBottomColor: vue === 'bloquees' ? COULEURS.rouge : 'transparent' }]}
           >
             <Text style={[styles.tabText, { color: vue === 'bloquees' ? COULEURS.rouge : theme.texteTertiaire }]}>
-              Bloquées ({routesBloquees.length})
+              {t('routes.bloquees')} ({bloqueesPaginees.items.length}/{routesBloquees.length})
             </Text>
           </Pressable>
         </View>
+      </View>
 
-        {/* Liste */}
-        {(vue === 'actives' ? routesActives : routesBloquees).length === 0 ? (
+      <FlatList
+        data={vue === 'actives' ? activesPaginees.items : bloqueesPaginees.items}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => <ItemRoute key={item.id} route={item} />}
+        ListEmptyComponent={
           <EtatVide
             icone={<MapPin size={32} color={theme.primaire} />}
-            titre={vue === 'actives' ? 'Aucune route active' : 'Aucune route bloquée'}
-            description={vue === 'actives' ? 'Ajoutez des routes entre vos villages pour les visualiser ici.' : 'Toutes vos routes sont actuellement opérationnelles.'}
-            actionLabel={vue === 'actives' ? 'Ajouter une route' : undefined}
+            titre={vue === 'actives' ? t('routes.videActives') : t('routes.videBloquees')}
+            description={vue === 'actives' ? t('routes.videActivesDesc') : t('routes.videBloqueesDesc')}
+            actionLabel={vue === 'actives' ? t('routes.videCTA') : undefined}
             onAction={vue === 'actives' ? () => setModalVisible(true) : undefined}
           />
-        ) : (
-          (vue === 'actives' ? routesActives : routesBloquees).map((r) => (
-            <ItemRoute key={r.id} route={r} />
-          ))
-        )}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          (() => {
+            const pag = vue === 'actives' ? activesPaginees : bloqueesPaginees;
+            if (pag.totalPages <= 1) return null;
+            return (
+              <View style={styles.paginationRow}>
+                <Pressable
+                  disabled={pag.page <= 1}
+                  onPress={() => setPageCourante(p => Math.max(1, p - 1))}
+                  style={[styles.pageBtn, { opacity: pag.page <= 1 ? 0.4 : 1, borderColor: theme.bordure }]}
+                >
+                  <Text style={[styles.pageBtnText, { color: theme.texte }]}>{t('routes.pagePrecedente')}</Text>
+                </Pressable>
+                <Text style={[styles.pageInfo, { color: theme.texteTertiaire }]}>
+                  {pag.page}/{pag.totalPages}
+                </Text>
+                <Pressable
+                  disabled={pag.page >= pag.totalPages}
+                  onPress={() => setPageCourante(p => Math.min(pag.totalPages, p + 1))}
+                  style={[styles.pageBtn, { opacity: pag.page >= pag.totalPages ? 0.4 : 1, borderColor: theme.bordure }]}
+                >
+                  <ChevronRight size={16} color={theme.texte} />
+                </Pressable>
+              </View>
+            );
+          })()
+        }
+        contentContainerStyle={{ padding: ESPACEMENTS.lg, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      />
 
       {/* Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContenu, { backgroundColor: theme.fond }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitre, { color: theme.texte }]}>{edition ? 'Modifier la Route' : 'Nouvelle Route'}</Text>
+              <Text style={[styles.modalTitre, { color: theme.texte }]}>{edition ? t('routes.modifierRoute') : t('routes.nouvelleRoute')}</Text>
               <Pressable onPress={() => { setModalVisible(false); setEdition(null); }}>
                 <X size={22} color={theme.texteTertiaire} />
               </Pressable>
             </View>
 
-            <Text style={[styles.selectLabel, { color: theme.texteSecondaire }]}>Départ</Text>
+            <Text style={[styles.selectLabel, { color: theme.texteSecondaire }]}>{t('routes.depart')}</Text>
             <View style={[styles.selectBox, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
               {villages.map((v) => (
                 <Pressable
@@ -314,7 +381,7 @@ export default function RoutesScreen() {
               ))}
             </View>
 
-            <Text style={[styles.selectLabel, { color: theme.texteSecondaire, marginTop: ESPACEMENTS.lg }]}>Arrivée</Text>
+            <Text style={[styles.selectLabel, { color: theme.texteSecondaire, marginTop: ESPACEMENTS.lg }]}>{t('routes.arrivee')}</Text>
             <View style={[styles.selectBox, { backgroundColor: theme.carte, borderColor: theme.bordure }]}>
               {villages.map((v) => (
                 <Pressable
@@ -336,7 +403,7 @@ export default function RoutesScreen() {
             </View>
 
             <Text style={[styles.selectLabel, { color: theme.texteSecondaire, marginTop: ESPACEMENTS.lg }]}>
-              Qualité : <Text style={{ color: qualiteInfo.couleur, fontWeight: '800' }}>{qualiteInfo.label}</Text>
+              {t('routes.qualite')} : <Text style={{ color: qualiteInfo.couleur, fontWeight: '800' }}>{qualiteInfo.label}</Text>
             </Text>
             <View style={styles.sliderTrack}>
               <View style={[styles.sliderFill, { width: `${qualite}%`, backgroundColor: qualiteInfo.couleur }]} />
@@ -347,21 +414,21 @@ export default function RoutesScreen() {
                 style={[styles.qualiteBtn, qualite <= 33 && { borderColor: COULEURS.rouge, backgroundColor: COULEURS.rouge + '12' }]}
               >
                 <XCircle size={14} color={qualite <= 33 ? COULEURS.rouge : theme.texteTertiaire} />
-                <Text style={[styles.qualiteBtnText, { color: qualite <= 33 ? COULEURS.rouge : theme.texteTertiaire }]}>Mauvaise</Text>
+                <Text style={[styles.qualiteBtnText, { color: qualite <= 33 ? COULEURS.rouge : theme.texteTertiaire }]}>{t('routes.mauvaise')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => setQualite(50)}
                 style={[styles.qualiteBtn, qualite > 33 && qualite < 66 && { borderColor: COULEURS.ambre, backgroundColor: COULEURS.ambre + '12' }]}
               >
                 <AlertTriangle size={14} color={qualite > 33 && qualite < 66 ? COULEURS.ambre : theme.texteTertiaire} />
-                <Text style={[styles.qualiteBtnText, { color: qualite > 33 && qualite < 66 ? COULEURS.ambre : theme.texteTertiaire }]}>Moyenne</Text>
+                <Text style={[styles.qualiteBtnText, { color: qualite > 33 && qualite < 66 ? COULEURS.ambre : theme.texteTertiaire }]}>{t('routes.moyenne')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => setQualite(80)}
                 style={[styles.qualiteBtn, qualite >= 66 && { borderColor: COULEURS.succes, backgroundColor: COULEURS.succes + '12' }]}
               >
                 <CheckCircle size={14} color={qualite >= 66 ? COULEURS.succes : theme.texteTertiaire} />
-                <Text style={[styles.qualiteBtnText, { color: qualite >= 66 ? COULEURS.succes : theme.texteTertiaire }]}>Bonne</Text>
+                <Text style={[styles.qualiteBtnText, { color: qualite >= 66 ? COULEURS.succes : theme.texteTertiaire }]}>{t('routes.bonne')}</Text>
               </Pressable>
             </View>
 
@@ -370,11 +437,11 @@ export default function RoutesScreen() {
                 {estBloquee && <X size={12} color={COULEURS.blanc} />}
               </View>
               <Text style={[styles.bloquerText, { color: estBloquee ? COULEURS.rouge : theme.texteSecondaire }]}>
-                Route bloquée
+                {t('routes.routeBloquee')}
               </Text>
             </Pressable>
 
-            <Bouton titre={edition ? 'Enregistrer les modifications' : 'Ajouter la Route'} onPress={soumettre} variante="primaire" taille="lg" style={{ marginTop: ESPACEMENTS.lg }} />
+            <Bouton titre={edition ? t('routes.enregistrerModifs') : t('routes.ajouterRoute')} onPress={soumettre} variante="primaire" taille="lg" style={{ marginTop: ESPACEMENTS.lg }} />
 
             {modalNotif && (
               <View style={{ marginTop: ESPACEMENTS.md }}>
@@ -390,7 +457,7 @@ export default function RoutesScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.itineraireModal, { backgroundColor: theme.fond }]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitre, { color: theme.texte }]}>Itinéraire</Text>
+              <Text style={[styles.modalTitre, { color: theme.texte }]}>{t('routes.itineraire')}</Text>
               <Pressable onPress={() => setItineraireModal(null)}>
                 <X size={22} color={theme.texteTertiaire} />
               </Pressable>
@@ -457,7 +524,7 @@ export default function RoutesScreen() {
                       <View style={styles.itineraireRow}>
                         <MapPin size={18} color={theme.primaire} />
                         <View>
-                          <Text style={[styles.itineraireLabel, { color: theme.texte }]}>Départ</Text>
+                          <Text style={[styles.itineraireLabel, { color: theme.texte }]}>{t('routes.depart')}</Text>
                           <Text style={[styles.itineraireValue, { color: theme.texteSecondaire }]}>
                             {obtenirNomVillage(itineraireModal.villageDepart_id)}
                           </Text>
@@ -467,7 +534,7 @@ export default function RoutesScreen() {
                       <View style={styles.itineraireRow}>
                         <MapPin size={18} color={COULEURS.rouge} />
                         <View>
-                          <Text style={[styles.itineraireLabel, { color: theme.texte }]}>Arrivée</Text>
+                          <Text style={[styles.itineraireLabel, { color: theme.texte }]}>{t('routes.arrivee')}</Text>
                           <Text style={[styles.itineraireValue, { color: theme.texteSecondaire }]}>
                             {obtenirNomVillage(itineraireModal.village_arrivee_id)}
                           </Text>
@@ -475,13 +542,13 @@ export default function RoutesScreen() {
                       </View>
                       <View style={[styles.itineraireDetail, { backgroundColor: theme.carte }]}>
                         <Text style={[styles.itineraireDetailText, { color: theme.texte }]}>
-                          Distance : {itineraireModal.distance?.toFixed(1)} km
+                          {t('routes.distanceLabel')} : {itineraireModal.distance?.toFixed(1)} km
                         </Text>
                         <Text style={[styles.itineraireDetailText, { color: theme.texte }]}>
-                          Qualité : {itineraireModal.qualiteRoute}
+                          {t('routes.qualiteLabel')} : {itineraireModal.qualiteRoute}
                         </Text>
                         <Text style={[styles.itineraireDetailText, { color: theme.texte }]}>
-                          État : {itineraireModal.estBloquee ? 'Bloquée' : 'Active'}
+                          {t('routes.etatLabel')} : {itineraireModal.estBloquee ? t('routes.bloquee') : t('routes.active')}
                         </Text>
                       </View>
                     </>
@@ -489,6 +556,36 @@ export default function RoutesScreen() {
                 })()}
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Déviation */}
+      <Modal visible={!!deviationModal} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.deviationModal, { backgroundColor: theme.fond }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitre, { color: theme.texte }]}>{t('routes.deviationProposal')}</Text>
+              <Pressable onPress={() => setDeviationModal(null)}>
+                <X size={22} color={theme.texteTertiaire} />
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {deviationModal && (
+                <DeviationProposal
+                  deviation={deviationModal}
+                  onAccepter={() => {
+                    setNotification({ type: 'succes', titre: t('routes.deviationAcceptee'), message: t('routes.deviationAccepteeMsg') });
+                    setDeviationModal(null);
+                  }}
+                  onRefuser={() => {
+                    setNotification({ type: 'info', titre: t('routes.deviationRefusee'), message: t('routes.deviationRefuseeMsg') });
+                    setDeviationModal(null);
+                  }}
+                  actions
+                />
+              )}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -539,6 +636,7 @@ const styles = StyleSheet.create({
   itineraireValue: { fontSize: 14, fontWeight: '500' },
   itineraireDetail: { borderRadius: RAYONS.md, padding: ESPACEMENTS.md, marginTop: ESPACEMENTS.md },
   itineraireDetailText: { fontSize: 13, fontWeight: '500', marginBottom: 4 },
+  deviationModal: { borderRadius: RAYONS.xl, padding: ESPACEMENTS.xl, margin: ESPACEMENTS.lg, marginTop: 'auto', marginBottom: 'auto', backgroundColor: COULEURS.blanc, maxHeight: '90%' },
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
   modalContenu: { borderTopLeftRadius: RAYONS.xl, borderTopRightRadius: RAYONS.xl, padding: ESPACEMENTS.xl, paddingBottom: ESPACEMENTS.xxl },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: ESPACEMENTS.lg },
@@ -556,4 +654,10 @@ const styles = StyleSheet.create({
   bloquerRow: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm },
   checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#94a3b8', alignItems: 'center', justifyContent: 'center' },
   bloquerText: { fontSize: 13, fontWeight: '600' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: ESPACEMENTS.sm, paddingHorizontal: ESPACEMENTS.md, paddingVertical: ESPACEMENTS.xs, borderRadius: RAYONS.md, borderWidth: 1, marginBottom: ESPACEMENTS.md },
+  searchInput: { flex: 1, fontSize: 14, paddingVertical: ESPACEMENTS.sm },
+  paginationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACEMENTS.md, marginTop: ESPACEMENTS.md, marginBottom: ESPACEMENTS.lg },
+  pageBtn: { paddingHorizontal: ESPACEMENTS.md, paddingVertical: ESPACEMENTS.sm, borderRadius: RAYONS.md, borderWidth: 1 },
+  pageBtnText: { fontSize: 13, fontWeight: '600' },
+  pageInfo: { fontSize: 13, fontWeight: '600' },
 });
